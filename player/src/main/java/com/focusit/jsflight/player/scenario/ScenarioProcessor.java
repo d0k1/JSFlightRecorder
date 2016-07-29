@@ -173,6 +173,10 @@ public class ScenarioProcessor
                     .setFormDialogXpath(commonConfiguration.getFormOrDialogXpath());
 
             theWebDriver = getWebDriver(scenario, seleniumDriver, event);
+            if (theWebDriver == null)
+            {
+                throw new NullPointerException("getWebDriver return null");
+            }
             seleniumDriver.openEventUrl(theWebDriver, event);
 
             String target = scenario.getTargetForEvent(event);
@@ -217,6 +221,11 @@ public class ScenarioProcessor
                 processClickException(position, e);
             }
 
+        }
+        catch (NullPointerException e)
+        {
+            LOG.error(e.getMessage(), e);
+            throw new RuntimeException(e);
         }
         catch (Exception e)
         {

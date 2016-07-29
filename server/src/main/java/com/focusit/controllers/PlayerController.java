@@ -3,6 +3,7 @@ package com.focusit.controllers;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -93,7 +94,7 @@ public class PlayerController
      * @param recordingId id of existing recording
      * @return
      */
-    @RequestMapping(value = "/start", method = RequestMethod.GET)
+    @RequestMapping(value = "/startById", method = RequestMethod.GET)
     public Experiment start(@RequestParam("recordingId") String recordingId,
             @RequestParam(value = "withScreenshots", defaultValue = "false") Boolean withScreenshots,
             @RequestParam(value = "paused", defaultValue = "true") Boolean paused) throws Exception
@@ -101,6 +102,40 @@ public class PlayerController
         return player.start(recordingId, withScreenshots, paused);
     }
 
+    /**
+     * Play a scenario
+     *
+     * $ curl "127.0.0.1:8080/player/start?recordingName=dvic"
+     * $ curl "127.0.0.1:8080/player/start?recordingName=farmaimpex&withScreenshots=true&paused=false"
+     * $ curl "127.0.0.1:8080/player/start?recordingName=dvic&paused=true"
+     * @param recordingName name of existing recording
+     * @return Experiment object
+     */
+    @RequestMapping(value = "/startByName", method = RequestMethod.GET)
+    public Experiment start(@RequestParam("recordingName") String recordingName,
+                            @RequestParam(value = "withScreenshots", defaultValue = "false") Boolean withScreenshots,
+                            @RequestParam(value = "paused", defaultValue = "true") Boolean paused,
+                            HttpServletRequest request, HttpServletResponse response) throws Exception
+    {
+        Optional<Recording> maybeRecording = recordingsService.getAllRecordings()
+                .stream()
+                .filter(r -> r.getName().equals(recordingName))
+                .findAny();
+        for (Recording r : recordingsService.getAllRecordings())
+        {
+            LOG.debug(r.getName());
+        }
+        Recording recording = null;
+        if (maybeRecording.isPresent())
+            recording = maybeRecording.get();
+        if (recording == null)
+        {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND,
+                    String.format("Recording with name '%s' was not found", recordingName));
+            return null;
+        }
+        return start(recording.getId(), withScreenshots, paused);
+    }
     /**
      * Get current experiment status: is it played, what is current step
      *
