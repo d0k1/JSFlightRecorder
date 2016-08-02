@@ -13,6 +13,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.Transient;
@@ -58,8 +59,10 @@ public class CommonConfiguration {
      */
     private long intervalBetweenUiChecksMs = 2000;
     @Transient
+    @JsonIgnore
     transient private ArrayList<URL> urls = new ArrayList<>();
     @Transient
+    @JsonIgnore
     transient private ScriptsClassLoader scriptClassloader = null;
 
     public CommonConfiguration() {
