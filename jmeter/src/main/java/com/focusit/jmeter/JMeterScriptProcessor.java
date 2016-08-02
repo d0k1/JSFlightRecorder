@@ -19,7 +19,7 @@ import groovy.lang.Script;
  */
 public class JMeterScriptProcessor
 {
-    private static final Logger log = LoggerFactory.getLogger(JMeterScriptProcessor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JMeterScriptProcessor.class);
     // script called at recording phase. Can skip sample
     private String recordingScript;
     // script callled at storing phase. Can skip sample
@@ -31,6 +31,7 @@ public class JMeterScriptProcessor
     public JMeterScriptProcessor(JMeterRecorder recorder, ScriptsClassLoader classLoader)
     {
         this.classLoader = classLoader;
+        LOG.info(classLoader == null ? "Classloader is null" : classLoader.toString());
         engine = new ScriptEngine(classLoader);
         this.recorder = recorder;
     }
@@ -65,7 +66,7 @@ public class JMeterScriptProcessor
     public boolean processSampleDuringRecord(HTTPSamplerBase sampler, SampleResult result)
     {
         Binding binding = new Binding();
-        binding.setVariable("logger", log);
+        binding.setVariable("logger", LOG);
         binding.setVariable("request", sampler);
         binding.setVariable("response", result);
         binding.setVariable("ctx", recorder.getContext());
@@ -77,12 +78,12 @@ public class JMeterScriptProcessor
         Script s = engine.getThreadBindedScript(recordingScript);
         if (s == null)
         {
-            log.error(Thread.currentThread().getName() + ":" + "Sample " + sampler.getName()
+            LOG.error(Thread.currentThread().getName() + ":" + "Sample " + sampler.getName()
                     + "No script found. default result " + isOk);
             return isOk;
         }
         s.setBinding(binding);
-        log.info(Thread.currentThread().getName() + ":" + "running " + sampler.getName() + " compiled script");
+        LOG.info(Thread.currentThread().getName() + ":" + "running " + sampler.getName() + " compiled script");
         Object scriptResult = s.run();
 
         if (scriptResult != null && scriptResult instanceof Boolean)
@@ -91,11 +92,11 @@ public class JMeterScriptProcessor
         }
         else
         {
-            log.error(Thread.currentThread().getName() + ":" + "Sample " + sampler.getName()
+            LOG.error(Thread.currentThread().getName() + ":" + "Sample " + sampler.getName()
                     + " script result UNDEFINED shifted to" + isOk);
         }
 
-        log.error(Thread.currentThread().getName() + ":" + "Sample " + sampler.getName() + " script result " + isOk);
+        LOG.error(Thread.currentThread().getName() + ":" + "Sample " + sampler.getName() + " script result " + isOk);
         return isOk;
     }
 
@@ -107,7 +108,7 @@ public class JMeterScriptProcessor
     public void processScenario(HTTPSamplerBase sample, HashTree tree, Arguments userVariables)
     {
         Binding binding = new Binding();
-        binding.setVariable("logger", log);
+        binding.setVariable("logger", LOG);
         binding.setVariable("sample", sample);
         binding.setVariable("tree", tree);
         binding.setVariable("ctx", recorder.getContext());

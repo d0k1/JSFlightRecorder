@@ -542,7 +542,7 @@ public class SeleniumDriver
 
     public void processScroll(WebDriver wd, JSONObject event, String target)
     {
-        long timeout = System.currentTimeMillis() + 20000l;
+        long timeout = System.currentTimeMillis() + 20000L;
         if (checkElementPresent(wd, target))
         {
             return;

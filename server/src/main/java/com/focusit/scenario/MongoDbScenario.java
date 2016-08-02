@@ -62,8 +62,7 @@ public class MongoDbScenario extends UserScenario
         {
             throw new IllegalArgumentException("No event found at position " + position);
         }
-        JSONObject object = new JSONObject(event);
-        return object;
+        return new JSONObject(event);
     }
 
     @Override

@@ -32,11 +32,12 @@ public class ScriptEngine
         }
     };
     private volatile ClassLoader loader;
-    private final GroovyShell shell = new GroovyShell(loader);
+    private GroovyShell shell;
 
     public ScriptEngine(ClassLoader classLoader)
     {
         this.loader = classLoader;
+        shell = new GroovyShell(loader);
     }
 
     public ClassLoader getClassLoader()

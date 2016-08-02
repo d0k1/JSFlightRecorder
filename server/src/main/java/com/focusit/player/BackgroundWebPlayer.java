@@ -30,12 +30,11 @@ import com.focusit.service.MongoDbStorageService;
 
 /**
  * Component that plays a scenario in background
- *
+ * <p>
  * Created by dkirpichenkov on 05.05.16.
  */
 @Service
-public class BackgroundWebPlayer
-{
+public class BackgroundWebPlayer {
     private static final Logger LOG = LoggerFactory.getLogger(BackgroundWebPlayer.class);
 
     private MongoDbStorageService storageService;
@@ -51,9 +50,8 @@ public class BackgroundWebPlayer
 
     @Inject
     public BackgroundWebPlayer(MongoDbStorageService screenshotsService, RecordingRepository recordingRepository,
-            EventRepositoryCustom eventRepository, ExperimentRepository experimentRepository,
-            EmailNotificationService notificationService, JMeterRecorderService recorderService)
-    {
+                               EventRepositoryCustom eventRepository, ExperimentRepository experimentRepository,
+                               EmailNotificationService notificationService, JMeterRecorderService recorderService) {
         this.storageService = screenshotsService;
         this.recordingRepository = recordingRepository;
         this.eventRepository = eventRepository;
@@ -62,11 +60,9 @@ public class BackgroundWebPlayer
         this.recorderService = recorderService;
     }
 
-    public Experiment start(String recordingId, boolean withScreenshots, boolean paused) throws Exception
-    {
+    public Experiment start(String recordingId, boolean withScreenshots, boolean paused) throws Exception {
         Recording rec = recordingRepository.findOne(new ObjectId(recordingId));
-        if (rec == null)
-        {
+        if (rec == null) {
             throw new IllegalArgumentException("no recording found for id " + recordingId);
         }
 
@@ -75,14 +71,13 @@ public class BackgroundWebPlayer
         experiment.setRecordingName(rec.getName());
         experiment.setRecordingId(rec.getId());
         experiment.setScreenshots(withScreenshots);
-        experiment.setSteps((int)eventRepository.countByRecordingId(new ObjectId(recordingId)));
+        experiment.setSteps((int) eventRepository.countByRecordingId(new ObjectId(recordingId)));
         experiment.setPosition(0);
         experiment.setLimit(0);
 
         experimentRepository.save(experiment);
 
-        if (!Boolean.TRUE.equals(paused))
-        {
+        if (!Boolean.TRUE.equals(paused)) {
             resume(experiment.getId());
         }
 
@@ -90,26 +85,22 @@ public class BackgroundWebPlayer
 
     }
 
-    private void startJMeter(MongoDbScenario scenario) throws Exception
-    {
+    private void startJMeter(MongoDbScenario scenario) throws Exception {
         recorderService.startJMeter(scenario);
     }
 
-    private void stopJMeter(MongoDbScenario scenario) throws Exception
-    {
+    private void stopJMeter(MongoDbScenario scenario) throws Exception {
         recorderService.stopJMeter(scenario);
     }
 
-    public void resume(String experimentId) throws Exception
-    {
+    public void resume(String experimentId) throws Exception {
         Experiment experiment = experimentRepository.findOne(new ObjectId(experimentId));
-        if (experiment == null)
-        {
+        if (experiment == null) {
             throw new IllegalArgumentException("No experiment found by given id " + experimentId);
         }
 
         experiment.setPlaying(true);
-        int stepCount = (int)eventRepository.countByRecordingId(new ObjectId(experiment.getRecordingId()));
+        int stepCount = (int) eventRepository.countByRecordingId(new ObjectId(experiment.getRecordingId()));
         experiment.setSteps(stepCount);
         experimentRepository.save(experiment);
 
@@ -119,145 +110,106 @@ public class BackgroundWebPlayer
         startJMeter(scenario);
         experimentRepository.save(experiment);
 
-        Map lastUrls = experimentLastUrls.getOrDefault(experimentId, new ConcurrentHashMap<>());
+        Map<String, String> lastUrls = experimentLastUrls.getOrDefault(experimentId, new ConcurrentHashMap<>());
         experimentLastUrls.put(experimentId, lastUrls);
 
-        Map finalLastUrls = lastUrls;
-
         SeleniumDriver driver = experimentDriver.getOrDefault(experimentId, new SeleniumDriver(scenario))
-                .setLastUrls(finalLastUrls);
+                .setLastUrls(lastUrls);
         experimentDriver.put(experimentId, driver);
 
         playingFutures.put(experimentId,
                 CompletableFuture
-                        .runAsync(
-                                () -> processor.play(scenario, driver, scenario.getFirstStep(), scenario.getMaxStep()))
+                        .runAsync(() -> processor.play(scenario, driver, scenario.getFirstStep(),
+                                scenario.getMaxStep()))
                         .whenCompleteAsync((aVoid, throwable) -> {
                             playingFutures.remove(experimentId);
-
-                            if (throwable == null)
-                            {
-                                experiment.setPlaying(false);
+                            if (throwable == null) {
                                 experiment.setFinished(true);
-                                experimentRepository.save(experiment);
                                 experimentLastUrls.remove(experimentId);
                                 experimentDriver.remove(experimentId);
                                 notificationService.notifyScenarioDone(scenario, throwable);
-                            }
-                            else
-                            {
-                                LOG.error(throwable.toString(), throwable);
-                                if (throwable instanceof PausePlaybackException)
-                                {
-                                    experiment.setPlaying(false);
-                                    experimentRepository.save(experiment);
+                                LOG.info("Playing experiment with ID: '{}' finished", experimentId);
+                            } else {
+                                LOG.error(throwable.getMessage(), throwable);
+                                if (throwable instanceof PausePlaybackException) {
                                     notificationService.notifyScenarioPaused(scenario, null);
-                                    return;
-                                }
-                                else if (throwable instanceof ErrorInBrowserPlaybackException)
-                                {
-                                    experiment.setPlaying(false);
-                                    experimentRepository.save(experiment);
+                                } else if (throwable instanceof ErrorInBrowserPlaybackException) {
                                     notificationService.notifyErrorInBrowserOccured(scenario, throwable);
-                                    return;
-                                }
-                                else if (throwable instanceof TerminatePlaybackException)
-                                {
-                                    experiment.setPlaying(false);
+                                } else if (throwable instanceof TerminatePlaybackException) {
                                     experiment.setFinished(true);
-                                    experimentRepository.save(experiment);
                                     experimentLastUrls.remove(experimentId);
                                     experimentDriver.remove(experimentId);
                                     notificationService.notifyScenarioTerminated(scenario, throwable);
-                                }
-                                else
-                                {
-                                    experiment.setPlaying(false);
+                                } else {
                                     experiment.setFinished(false);
                                     experiment.setError(true);
                                     experiment.setErrorMessage(throwable.toString());
-                                    experimentRepository.save(experiment);
                                     notificationService.notifyUnknownException(scenario, throwable);
-                                    return;
                                 }
                             }
-                            try
-                            {
+                            experiment.setPlaying(false);
+                            experimentRepository.save(experiment);
+                            try {
                                 stopJMeter(scenario);
-                                experimentRepository.save(experiment);
-                            }
-                            catch (Exception e)
-                            {
+                            } catch (Exception e) {
                                 LOG.error(e.toString(), e);
                             }
                         }));
     }
 
-    public void pause(String experimentId)
-    {
+    public void pause(String experimentId) {
         CompletableFuture future = playingFutures.get(experimentId);
-        if (future == null)
-        {
+        if (future == null) {
             throw new IllegalArgumentException("Experiment " + experimentId + " is not playing now");
         }
         future.completeExceptionally(new PausePlaybackException());
     }
 
-    public void cancel(String experimentId)
-    {
+    public void cancel(String experimentId) {
         CompletableFuture future = playingFutures.get(experimentId);
-        if (future == null)
-        {
+        if (future == null) {
             throw new IllegalArgumentException("Experiment " + experimentId + " is not playing now");
         }
         future.completeExceptionally(new TerminatePlaybackException());
     }
 
-    public Experiment status(String experimentId)
-    {
+    public Experiment status(String experimentId) {
         Experiment experiment = experimentRepository.findOne(new ObjectId(experimentId));
 
-        if (experiment == null)
-        {
+        if (experiment == null) {
             throw new IllegalArgumentException("no experiment found for id " + experimentId);
         }
 
         return experiment;
     }
 
-    public InputStream getScreenshot(String experimentId, int step)
-    {
+    public InputStream getScreenshot(String experimentId, int step) {
         Experiment experiment = experimentRepository.findOne(new ObjectId(experimentId));
         return storageService.getScreenshot(experiment.getRecordingName(), experimentId, step);
     }
 
-    public InputStream getErrorScreenshot(String experimentId, int step)
-    {
+    public InputStream getErrorScreenshot(String experimentId, int step) {
         Experiment experiment = experimentRepository.findOne(new ObjectId(experimentId));
         return storageService.getErrorScreenShot(experiment.getRecordingName(), experimentId, step);
     }
 
-    public void move(String experimentId, int step)
-    {
+    public void move(String experimentId, int step) {
         Experiment experiment = experimentRepository.findOne(new ObjectId(experimentId));
         experiment.setPosition(step);
         experimentRepository.save(experiment);
     }
 
-    public void terminable()
-    {
+    public void terminable() {
 
     }
 
-    public List<Experiment> getAllExperiments()
-    {
+    public List<Experiment> getAllExperiments() {
         ArrayList<Experiment> result = new ArrayList<>();
         experimentRepository.findAll().forEach(result::add);
         return result;
     }
 
-    public InputStream getJMX(String experimentId)
-    {
+    public InputStream getJMX(String experimentId) {
         Experiment experiment = experimentRepository.findOne(new ObjectId(experimentId));
         return storageService.getJMeterScenario(experiment.getRecordingName(), experimentId);
     }
