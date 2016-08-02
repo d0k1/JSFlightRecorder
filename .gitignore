@@ -19,3 +19,7 @@ ApacheJMeterTemporaryRootCA.usr
 player/params/
 player/test.json
 player/test.json.pretty
+
+# IDEA
+*.iml
+.idea/*
