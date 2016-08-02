@@ -101,7 +101,7 @@ public class CommonConfiguration {
                     .map(CommonConfiguration::toUrl)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList()));
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOG.error(e.toString(), e);
         }
     }
