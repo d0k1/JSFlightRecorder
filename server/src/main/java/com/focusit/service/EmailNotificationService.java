@@ -22,30 +22,44 @@ import com.focusit.scenario.MongoDbScenario;
  * Created by doki on 14.05.16.
  */
 @Service
-public class EmailNotificationService
-{
+public class EmailNotificationService {
+    public enum EventType {
+        PUASED("paused"),
+        TERMINATED("terminated"),
+        DONE("done"),
+        ERROR_IN_BROWSER("error in browser"),
+        UNKNOWN_ERROR("unknown exception")
+        ;
+
+        private String text;
+
+        EventType(String text) {
+            this.text = text;
+        }
+
+        @Override
+        public String toString() {
+            return text;
+        }
+    }
     private static final Logger LOG = LoggerFactory.getLogger(EmailNotificationService.class);
     private SettingsService settingsService;
     private JavaMailSender sender;
 
     @Inject
-    public EmailNotificationService(SettingsService settingsService)
-    {
+    public EmailNotificationService(SettingsService settingsService) {
         this.settingsService = settingsService;
     }
 
     @PostConstruct
-    public void init()
-    {
+    public void init() {
         Settings settings = settingsService.getSettings();
         JavaMailSenderImpl javaMailSender = new JavaMailSenderImpl();
 
-        if (!settings.getSmtpServer().isEmpty())
-        {
+        if (!settings.getSmtpServer().isEmpty()) {
             javaMailSender.setHost(settings.getSmtpServer());
         }
-        if (!settings.getSmtpPort().isEmpty())
-        {
+        if (!settings.getSmtpPort().isEmpty()) {
             javaMailSender.setPort(Integer.parseInt(settings.getSmtpPort()));
         }
 
@@ -57,8 +71,7 @@ public class EmailNotificationService
         sender = javaMailSender;
     }
 
-    private Properties getMailProperties(Settings settings)
-    {
+    private Properties getMailProperties(Settings settings) {
         Properties properties = new Properties();
         properties.setProperty("mail.transport.protocol", "smtp");
         properties.setProperty("mail.smtp.auth", settings.getSmtpAuth());
@@ -67,16 +80,14 @@ public class EmailNotificationService
         return properties;
     }
 
-    private SimpleMailMessage getMessageTemplate(MongoDbScenario scenario, Throwable ex)
-    {
+    private SimpleMailMessage getMessageTemplate(MongoDbScenario scenario, Throwable ex) {
         Settings settings = settingsService.getSettings();
 
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setFrom(settings.getSmtpFrom());
         mailMessage.setTo(settings.getAlarmEmails().split(","));
         String body = "";
-        if (ex != null)
-        {
+        if (ex != null) {
             body += ex.toString() + "\n\n\n";
         }
         body += new JSONObject((scenario)).toString(4);
@@ -84,51 +95,22 @@ public class EmailNotificationService
         return mailMessage;
     }
 
-    private void sendMail(SimpleMailMessage mailMessage)
-    {
-        try
-        {
+    private void sendMail(SimpleMailMessage mailMessage) {
+        try {
             sender.send(mailMessage);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             LOG.error(e.toString(), e);
             throw e;
         }
     }
 
-    public void notifyScenarioPaused(MongoDbScenario scenario, Throwable ex)
-    {
+    public void notifySubscribers(MongoDbScenario scenario, Throwable ex, String message) {
         SimpleMailMessage mailMessage = getMessageTemplate(scenario, ex);
-        mailMessage.setSubject("[" + scenario.getScenarioFilename() + "] Scenario paused");
+        mailMessage.setSubject("[" + scenario.getScenarioFilename() + "] Scenario " + message);
         sendMail(mailMessage);
     }
 
-    public void notifyScenarioTerminated(MongoDbScenario scenario, Throwable ex)
-    {
-        SimpleMailMessage mailMessage = getMessageTemplate(scenario, ex);
-        mailMessage.setSubject("[" + scenario.getScenarioFilename() + "] Scenario terminated");
-        sendMail(mailMessage);
-    }
-
-    public void notifyScenarioDone(MongoDbScenario scenario, Throwable ex)
-    {
-        SimpleMailMessage mailMessage = getMessageTemplate(scenario, ex);
-        mailMessage.setSubject("[" + scenario.getScenarioFilename() + "] Scenario done!!");
-        sendMail(mailMessage);
-    }
-
-    public void notifyErrorInBrowserOccured(MongoDbScenario scenario, Throwable ex)
-    {
-        SimpleMailMessage mailMessage = getMessageTemplate(scenario, ex);
-        mailMessage.setSubject("[" + scenario.getScenarioFilename() + "] Scenario error in browser");
-        sendMail(mailMessage);
-    }
-
-    public void notifyUnknownException(MongoDbScenario scenario, Throwable ex)
-    {
-        SimpleMailMessage mailMessage = getMessageTemplate(scenario, ex);
-        mailMessage.setSubject("[" + scenario.getScenarioFilename() + "] Scenario unknown exception");
-        sendMail(mailMessage);
+    public void notifySubscribers(MongoDbScenario scenario, Throwable ex, EventType eventType) {
+        notifySubscribers(scenario, ex, eventType.toString());
     }
 }

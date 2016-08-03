@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Inject;
 
+import com.focusit.service.EmailNotificationService.EventType;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,28 +124,38 @@ public class BackgroundWebPlayer {
                                 .play(scenario, driver, scenario.getFirstStep(), scenario.getMaxStep()))
                         .whenCompleteAsync((aVoid, throwable) -> {
                             playingFutures.remove(experimentId);
+
+                            boolean finished = true;
+                            boolean error = false;
+
+                            EventType eventType;
                             if (throwable == null) {
-                                experiment.setFinished(true);
                                 experimentLastUrls.remove(experimentId);
                                 experimentDriver.remove(experimentId);
-                                notificationService.notifyScenarioDone(scenario, throwable);
                                 LOG.info("Playing experiment with ID: '{}' finished", experimentId);
+
+                                finished = true;
+                                eventType = EventType.DONE;
                             } else {
                                 LOG.error(throwable.getMessage(), throwable);
                                 if (throwable instanceof PausePlaybackException) {
-                                    notificationService.notifyScenarioPaused(scenario, null);
+                                    finished = false;
+                                    eventType = EventType.PUASED;
                                 } else if (throwable instanceof ErrorInBrowserPlaybackException) {
-                                    notificationService.notifyErrorInBrowserOccured(scenario, throwable);
+                                    finished = false;
+                                    eventType = EventType.ERROR_IN_BROWSER;
                                 } else if (throwable instanceof TerminatePlaybackException) {
-                                    experiment.setFinished(true);
                                     experimentLastUrls.remove(experimentId);
                                     experimentDriver.remove(experimentId);
-                                    notificationService.notifyScenarioTerminated(scenario, throwable);
+
+                                    finished = true;
+                                    eventType = EventType.TERMINATED;
                                 } else {
-                                    experiment.setFinished(false);
-                                    experiment.setError(true);
                                     experiment.setErrorMessage(throwable.toString());
-                                    notificationService.notifyUnknownException(scenario, throwable);
+
+                                    finished = false;
+                                    error = true;
+                                    eventType = EventType.UNKNOWN_ERROR;
                                 }
                             }
                             try {
@@ -153,7 +164,11 @@ public class BackgroundWebPlayer {
                                 LOG.error(e.toString(), e);
                             }
                             experiment.setPlaying(false);
+                            experiment.setFinished(finished);
+                            experiment.setError(error);
                             experimentRepository.save(experiment);
+
+                            notificationService.notifySubscribers(scenario, throwable, eventType);
                         }));
     }
 
