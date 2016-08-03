@@ -1,24 +1,21 @@
 package com.focusit.model;
 
-import java.util.Date;
-
+import com.focusit.jsflight.player.config.Configuration;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.focusit.jsflight.player.config.Configuration;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.Date;
 
 /**
  * Playing process state
- *
+ * <p>
  * Created by dkirpichenkov on 29.04.16.
  */
 @Document
-public class Experiment
-{
+public class Experiment {
     @Id
     private ObjectId id;
 
@@ -51,164 +48,132 @@ public class Experiment
 
     private String errorMessage = "";
 
-    public String getId()
-    {
+    public String getId() {
         return id.toString();
     }
 
-    public void setId(ObjectId id)
-    {
-        this.id = id;
-    }
-
-    public void setId(String id)
-    {
+    public void setId(String id) {
         this.id = new ObjectId(id);
     }
 
-    public String getRecordingId()
-    {
+    public void setId(ObjectId id) {
+        this.id = id;
+    }
+
+    public String getRecordingId() {
         return recordingId.toString();
     }
 
-    public void setRecordingId(ObjectId recordingId)
-    {
-        this.recordingId = recordingId;
-    }
-
-    public void setRecordingId(String recordingId)
-    {
+    public void setRecordingId(String recordingId) {
         this.recordingId = new ObjectId(recordingId);
     }
 
-    public String getRecordingName()
-    {
+    public void setRecordingId(ObjectId recordingId) {
+        this.recordingId = recordingId;
+    }
+
+    public String getRecordingName() {
         return recordingName;
     }
 
-    public void setRecordingName(String recordingName)
-    {
+    public void setRecordingName(String recordingName) {
         this.recordingName = recordingName;
     }
 
     @SuppressFBWarnings("EI_EXPOSE_REP")
-    public Date getCreated()
-    {
+    public Date getCreated() {
         return created;
     }
 
-    public void setCreated(Date created)
-    {
+    public void setCreated(Date created) {
         this.created = created;
     }
 
-    public Boolean getScreenshots()
-    {
+    public Boolean getScreenshots() {
         return configuration.getCommonConfiguration().getMakeShots();
     }
 
-    public void setScreenshots(Boolean screenshots)
-    {
+    public void setScreenshots(Boolean screenshots) {
         this.configuration.getCommonConfiguration().setMakeShots(screenshots);
     }
 
-    public String getTag()
-    {
+    public String getTag() {
         return tag;
     }
 
-    public void setTag(String tag)
-    {
+    public void setTag(String tag) {
         this.tag = tag;
     }
 
-    public String getTagHash()
-    {
+    public String getTagHash() {
         return tagHash;
     }
 
-    public void setTagHash(String tagHash)
-    {
+    public void setTagHash(String tagHash) {
         this.tagHash = tagHash;
     }
 
-    public Configuration getConfiguration()
-    {
+    public Configuration getConfiguration() {
         return configuration;
     }
 
-    public void setConfiguration(Configuration configuration)
-    {
+    public void setConfiguration(Configuration configuration) {
         this.configuration = configuration;
     }
 
-    public int getPosition()
-    {
+    public int getPosition() {
         return position;
     }
 
-    public void setPosition(int position)
-    {
+    public void setPosition(int position) {
         this.position = position;
     }
 
-    public int getLimit()
-    {
+    public int getLimit() {
         return limit;
     }
 
-    public void setLimit(int limit)
-    {
+    public void setLimit(int limit) {
         this.limit = limit;
     }
 
-    public Boolean getPlaying()
-    {
+    public Boolean getPlaying() {
         return playing;
     }
 
-    public void setPlaying(Boolean playing)
-    {
+    public void setPlaying(Boolean playing) {
         this.playing = playing;
     }
 
-    public Boolean getError()
-    {
+    public Boolean getError() {
         return error;
     }
 
-    public void setError(Boolean error)
-    {
+    public void setError(Boolean error) {
         this.error = error;
     }
 
-    public String getErrorMessage()
-    {
+    public String getErrorMessage() {
         return errorMessage;
     }
 
-    public void setErrorMessage(String errorMessage)
-    {
+    public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
     }
 
-    public int getSteps()
-    {
+    public int getSteps() {
         return steps;
     }
 
-    public void setSteps(int steps)
-    {
+    public void setSteps(int steps) {
         this.steps = steps;
     }
 
-    public Boolean getFinished()
-    {
+    public Boolean getFinished() {
         return finished;
     }
 
-    public void setFinished(Boolean finished)
-    {
+    public void setFinished(Boolean finished) {
         this.finished = finished;
     }
 }

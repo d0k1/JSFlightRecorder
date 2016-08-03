@@ -1,27 +1,22 @@
 package com.focusit.service;
 
+import com.focusit.jmeter.JMeterRecorder;
+import com.focusit.jsflight.player.config.JMeterConfiguration;
+import com.focusit.scenario.MongoDbScenario;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import javax.inject.Inject;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
-
-import javax.inject.Inject;
-
-import com.focusit.jsflight.player.config.Configuration;
-import com.focusit.jsflight.player.config.JMeterConfiguration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
-import com.focusit.jmeter.JMeterRecorder;
-import com.focusit.scenario.MongoDbScenario;
 
 /**
  * Created by dkirpichenkov on 19.05.16.

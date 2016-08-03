@@ -1,21 +1,5 @@
 package com.focusit.player;
 
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.inject.Inject;
-
-import com.focusit.service.EmailNotificationService.EventType;
-import org.bson.types.ObjectId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 import com.focusit.model.Experiment;
 import com.focusit.model.Recording;
@@ -25,9 +9,23 @@ import com.focusit.repository.RecordingRepository;
 import com.focusit.scenario.MongoDbScenario;
 import com.focusit.scenario.MongoDbScenarioProcessor;
 import com.focusit.service.EmailNotificationService;
+import com.focusit.service.EmailNotificationService.EventType;
 import com.focusit.service.ExperimentFactory;
 import com.focusit.service.JMeterRecorderService;
 import com.focusit.service.MongoDbStorageService;
+import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import javax.inject.Inject;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Component that plays a scenario in background
@@ -132,17 +130,15 @@ public class BackgroundWebPlayer {
                             if (throwable == null) {
                                 experimentLastUrls.remove(experimentId);
                                 experimentDriver.remove(experimentId);
-                                LOG.info("Playing experiment with ID: '{}' finished", experimentId);
 
-                                finished = true;
                                 eventType = EventType.DONE;
                             } else {
                                 LOG.error(throwable.getMessage(), throwable);
+                                finished = false;
+
                                 if (throwable instanceof PausePlaybackException) {
-                                    finished = false;
                                     eventType = EventType.PUASED;
                                 } else if (throwable instanceof ErrorInBrowserPlaybackException) {
-                                    finished = false;
                                     eventType = EventType.ERROR_IN_BROWSER;
                                 } else if (throwable instanceof TerminatePlaybackException) {
                                     experimentLastUrls.remove(experimentId);
@@ -153,7 +149,6 @@ public class BackgroundWebPlayer {
                                 } else {
                                     experiment.setErrorMessage(throwable.toString());
 
-                                    finished = false;
                                     error = true;
                                     eventType = EventType.UNKNOWN_ERROR;
                                 }
@@ -167,6 +162,15 @@ public class BackgroundWebPlayer {
                             experiment.setFinished(finished);
                             experiment.setError(error);
                             experimentRepository.save(experiment);
+
+                            if (finished) {
+                                LOG.info("Playing experiment with ID: '{}' finished", experimentId);
+                            } else if (error) {
+                                LOG.info("While playing experiment with ID: '{}' an error occurred", experimentId);
+                            } else {
+                                LOG.info("Playing experiment with ID: '{}' paused, ot error in browser occurred",
+                                        experimentId);
+                            }
 
                             notificationService.notifySubscribers(scenario, throwable, eventType);
                         }));

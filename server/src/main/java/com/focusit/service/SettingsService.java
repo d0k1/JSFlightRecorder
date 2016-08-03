@@ -1,26 +1,23 @@
 package com.focusit.service;
 
-import static com.focusit.model.Settings.SETTINGS_ID;
-
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-
+import com.focusit.model.Settings;
+import com.focusit.repository.SettingsRepository;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import com.focusit.model.Settings;
-import com.focusit.repository.SettingsRepository;
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import static com.focusit.model.Settings.SETTINGS_ID;
 
 /**
  * Created by doki on 30.04.16.
  */
 @Service
-public class SettingsService
-{
+public class SettingsService {
     private static final Logger LOG = LoggerFactory.getLogger(SettingsService.class);
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
     private SettingsRepository repository;
@@ -32,35 +29,26 @@ public class SettingsService
     }
 
     @PostConstruct
-    public void init()
-    {
+    public void init() {
         lock.writeLock().lock();
-        try
-        {
+        try {
             Settings settings = repository.findOne(new ObjectId(SETTINGS_ID));
-            if (settings == null)
-            {
+            if (settings == null) {
                 System.err.println("No settings found. Creating default");
                 settings = new Settings();
                 repository.save(settings);
             }
             this.settings = settings;
-        }
-        finally
-        {
+        } finally {
             lock.writeLock().unlock();
         }
     }
 
-    public Settings getSettings()
-    {
+    public Settings getSettings() {
         lock.readLock().lock();
-        try
-        {
+        try {
             return settings;
-        }
-        finally
-        {
+        } finally {
             lock.readLock().unlock();
         }
     }

@@ -1,16 +1,14 @@
 package com.focusit.repository;
 
-import java.util.List;
-
+import com.focusit.model.Event;
 import org.bson.types.ObjectId;
 
-import com.focusit.model.Event;
+import java.util.List;
 
 /**
  * Created by dkirpichenkov on 20.05.16.
  */
-public interface EventRepositoryCustom
-{
+public interface EventRepositoryCustom {
     Event getEventToReplay(ObjectId recordingId, int offset);
 
     long countByRecordingId(ObjectId recordingId);

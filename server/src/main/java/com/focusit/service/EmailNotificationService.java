@@ -1,10 +1,7 @@
 package com.focusit.service;
 
-import java.util.Properties;
-
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-
+import com.focusit.model.Settings;
+import com.focusit.scenario.MongoDbScenario;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,8 +10,9 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
 
-import com.focusit.model.Settings;
-import com.focusit.scenario.MongoDbScenario;
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+import java.util.Properties;
 
 /**
  * Email sender.
@@ -23,29 +21,9 @@ import com.focusit.scenario.MongoDbScenario;
  */
 @Service
 public class EmailNotificationService {
-    public enum EventType {
-        PUASED("paused"),
-        TERMINATED("terminated"),
-        DONE("done"),
-        ERROR_IN_BROWSER("error in browser"),
-        UNKNOWN_ERROR("unknown exception")
-        ;
-
-        private String text;
-
-        EventType(String text) {
-            this.text = text;
-        }
-
-        @Override
-        public String toString() {
-            return text;
-        }
-    }
     private static final Logger LOG = LoggerFactory.getLogger(EmailNotificationService.class);
     private SettingsService settingsService;
     private JavaMailSender sender;
-
     @Inject
     public EmailNotificationService(SettingsService settingsService) {
         this.settingsService = settingsService;
@@ -112,5 +90,24 @@ public class EmailNotificationService {
 
     public void notifySubscribers(MongoDbScenario scenario, Throwable ex, EventType eventType) {
         notifySubscribers(scenario, ex, eventType.toString());
+    }
+
+    public enum EventType {
+        PUASED("paused"),
+        TERMINATED("terminated"),
+        DONE("done"),
+        ERROR_IN_BROWSER("error in browser"),
+        UNKNOWN_ERROR("unknown exception");
+
+        private String text;
+
+        EventType(String text) {
+            this.text = text;
+        }
+
+        @Override
+        public String toString() {
+            return text;
+        }
     }
 }

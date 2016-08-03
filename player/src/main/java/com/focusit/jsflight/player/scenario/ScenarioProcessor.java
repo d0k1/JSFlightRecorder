@@ -1,20 +1,19 @@
 package com.focusit.jsflight.player.scenario;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Paths;
-
-import org.json.JSONObject;
-import org.openqa.selenium.WebDriver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.focusit.jsflight.player.config.CommonConfiguration;
 import com.focusit.jsflight.player.constants.EventConstants;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
+import org.json.JSONObject;
+import org.openqa.selenium.WebDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Paths;
 
 /**
  * Class that really replays an event in given scenario and given selenium driver
@@ -238,9 +237,6 @@ public class ScenarioProcessor {
         do {
             LOG.info("Step " + scenario.getPosition());
             applyStep(scenario, seleniumDriver, scenario.getPosition());
-            if (scenario.getPosition() + 1 == maxPosition) {
-                break;
-            }
             scenario.moveToNextStep();
         } while (scenario.getPosition() != maxPosition);
         LOG.info(String.format("Done(%d):playing", System.currentTimeMillis() - begin));

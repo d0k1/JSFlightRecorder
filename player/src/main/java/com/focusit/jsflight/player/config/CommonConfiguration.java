@@ -1,24 +1,22 @@
 package com.focusit.jsflight.player.config;
 
-import java.io.File;
-import java.io.IOException;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.focusit.script.ScriptsClassLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.annotation.Transient;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.annotation.Transient;
-
-import com.focusit.script.ScriptsClassLoader;
 
 /**
  * Common configuration i.e. everything about player. browser settings, timeout settings
@@ -70,6 +68,15 @@ public class CommonConfiguration {
         scriptClassloaderLock = new ReentrantLock();
     }
 
+    private static URL toUrl(Path file) {
+        try {
+            return file.toUri().toURL();
+        } catch (MalformedURLException e) {
+            LOG.error(e.toString(), e);
+            return null;
+        }
+    }
+
     public String getDriverSignalScript() {
         return driverSignalScript;
     }
@@ -103,15 +110,6 @@ public class CommonConfiguration {
                     .collect(Collectors.toList()));
         } catch (Exception e) {
             LOG.error(e.toString(), e);
-        }
-    }
-
-    private static URL toUrl(Path file) {
-        try {
-            return file.toUri().toURL();
-        } catch (MalformedURLException e) {
-            LOG.error(e.toString(), e);
-            return null;
         }
     }
 

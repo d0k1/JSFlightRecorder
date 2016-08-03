@@ -10,8 +10,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class ScriptDialog extends JDialog
-{
+public class ScriptDialog extends JDialog {
     private static final long serialVersionUID = 1L;
 
     private final JPanel contentPanel = new JPanel();
@@ -23,8 +22,7 @@ public class ScriptDialog extends JDialog
     /**
      * Create the dialog.
      */
-    public ScriptDialog()
-    {
+    public ScriptDialog() {
         setTitle("Enter script");
         setModalityType(ModalityType.APPLICATION_MODAL);
         setBounds(100, 100, 450, 300);
@@ -48,11 +46,9 @@ public class ScriptDialog extends JDialog
             getContentPane().add(buttonPane, BorderLayout.SOUTH);
             {
                 JButton okButton = new JButton("OK");
-                okButton.addActionListener(new ActionListener()
-                {
+                okButton.addActionListener(new ActionListener() {
                     @Override
-                    public void actionPerformed(ActionEvent e)
-                    {
+                    public void actionPerformed(ActionEvent e) {
                         applyEditor();
                     }
                 });
@@ -62,11 +58,9 @@ public class ScriptDialog extends JDialog
             }
             {
                 JButton cancelButton = new JButton("Cancel");
-                cancelButton.addActionListener(new ActionListener()
-                {
+                cancelButton.addActionListener(new ActionListener() {
                     @Override
-                    public void actionPerformed(ActionEvent e)
-                    {
+                    public void actionPerformed(ActionEvent e) {
                         cancelEditor();
                     }
                 });
@@ -76,34 +70,28 @@ public class ScriptDialog extends JDialog
         }
     }
 
-    public StepScriptEditorDialog getEditor()
-    {
+    public StepScriptEditorDialog getEditor() {
         return editor;
     }
 
-    public void setEditor(StepScriptEditorDialog editor)
-    {
+    public void setEditor(StepScriptEditorDialog editor) {
         this.editor = editor;
     }
 
-    public String getNewValue()
-    {
+    public String getNewValue() {
         return this.scriptArea.getText();
     }
 
-    public void setOldValue(String value)
-    {
+    public void setOldValue(String value) {
         this.scriptArea.setText(value);
     }
 
-    private void applyEditor()
-    {
+    private void applyEditor() {
         getEditor().endEdit();
         dispose();
     }
 
-    private void cancelEditor()
-    {
+    private void cancelEditor() {
         getEditor().cancelEdit();
         dispose();
     }

@@ -6,8 +6,7 @@ import javax.swing.*;
 import javax.swing.table.TableCellEditor;
 import java.awt.*;
 
-public class StepScriptEditorDialog extends DefaultCellEditor implements TableCellEditor
-{
+public class StepScriptEditorDialog extends DefaultCellEditor implements TableCellEditor {
     private static final long serialVersionUID = 1L;
 
     private String newInput;
@@ -18,18 +17,14 @@ public class StepScriptEditorDialog extends DefaultCellEditor implements TableCe
     private String stepProperty = "";
     private int position = -1;
 
-    public StepScriptEditorDialog(UserScenario scenario, boolean pre)
-    {
+    public StepScriptEditorDialog(UserScenario scenario, boolean pre) {
         super(new JTextField());
         setClickCountToStart(1);
         this.scenario = scenario;
 
-        if (pre)
-        {
+        if (pre) {
             stepProperty = "pre";
-        }
-        else
-        {
+        } else {
             stepProperty = "post";
         }
 
@@ -44,17 +39,14 @@ public class StepScriptEditorDialog extends DefaultCellEditor implements TableCe
         dialog = new ScriptDialog();
     }
 
-    public void cancelEdit()
-    {
+    public void cancelEdit() {
         fireEditingCanceled();
     }
 
-    public void endEdit()
-    {
+    public void endEdit() {
         newInput = dialog.getNewValue();
 
-        if (newInput.trim().length() > 0)
-        {
+        if (newInput.trim().length() > 0) {
             scenario.getStepAt(position).put(stepProperty, newInput);
         }
 
@@ -62,14 +54,12 @@ public class StepScriptEditorDialog extends DefaultCellEditor implements TableCe
     }
 
     @Override
-    public Object getCellEditorValue()
-    {
+    public Object getCellEditorValue() {
         return null;
     }
 
     @Override
-    public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column)
-    {
+    public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
         oldValue = scenario.getStepAt(row).has(stepProperty)
                 ? oldValue = scenario.getStepAt(row).getString(stepProperty) : "";
 

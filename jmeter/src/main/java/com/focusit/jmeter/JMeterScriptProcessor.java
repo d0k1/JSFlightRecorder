@@ -1,5 +1,9 @@
 package com.focusit.jmeter;
 
+import com.focusit.script.ScriptEngine;
+import com.focusit.script.ScriptsClassLoader;
+import groovy.lang.Binding;
+import groovy.lang.Script;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase;
 import org.apache.jmeter.samplers.SampleResult;
@@ -7,18 +11,11 @@ import org.apache.jorphan.collections.HashTree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.focusit.script.ScriptEngine;
-import com.focusit.script.ScriptsClassLoader;
-
-import groovy.lang.Binding;
-import groovy.lang.Script;
-
 /**
  * Helper class to run groovy scripts against recorded samples
  * Created by doki on 25.03.16.
  */
-public class JMeterScriptProcessor
-{
+public class JMeterScriptProcessor {
     private static final Logger LOG = LoggerFactory.getLogger(JMeterScriptProcessor.class);
     // script called at recording phase. Can skip sample
     private String recordingScript;
@@ -28,31 +25,26 @@ public class JMeterScriptProcessor
     private ScriptsClassLoader classLoader;
     private ScriptEngine engine;
 
-    public JMeterScriptProcessor(JMeterRecorder recorder, ScriptsClassLoader classLoader)
-    {
+    public JMeterScriptProcessor(JMeterRecorder recorder, ScriptsClassLoader classLoader) {
         this.classLoader = classLoader;
         LOG.info(classLoader == null ? "Classloader is null" : classLoader.toString());
         engine = new ScriptEngine(classLoader);
         this.recorder = recorder;
     }
 
-    public String getRecordingScript()
-    {
+    public String getRecordingScript() {
         return recordingScript;
     }
 
-    public void setRecordingScript(String recordingScript)
-    {
+    public void setRecordingScript(String recordingScript) {
         this.recordingScript = recordingScript;
     }
 
-    public String getProcessScript()
-    {
+    public String getProcessScript() {
         return processScript;
     }
 
-    public void setProcessScript(String processScript)
-    {
+    public void setProcessScript(String processScript) {
         this.processScript = processScript;
     }
 
@@ -63,8 +55,7 @@ public class JMeterScriptProcessor
      * @param result
      * @return is sample ok
      */
-    public boolean processSampleDuringRecord(HTTPSamplerBase sampler, SampleResult result)
-    {
+    public boolean processSampleDuringRecord(HTTPSamplerBase sampler, SampleResult result) {
         Binding binding = new Binding();
         binding.setVariable("logger", LOG);
         binding.setVariable("request", sampler);
@@ -76,8 +67,7 @@ public class JMeterScriptProcessor
         boolean isOk = true;
 
         Script s = engine.getThreadBindedScript(recordingScript);
-        if (s == null)
-        {
+        if (s == null) {
             LOG.error(Thread.currentThread().getName() + ":" + "Sample " + sampler.getName()
                     + "No script found. default result " + isOk);
             return isOk;
@@ -86,12 +76,9 @@ public class JMeterScriptProcessor
         LOG.info(Thread.currentThread().getName() + ":" + "running " + sampler.getName() + " compiled script");
         Object scriptResult = s.run();
 
-        if (scriptResult != null && scriptResult instanceof Boolean)
-        {
-            isOk = (boolean)scriptResult;
-        }
-        else
-        {
+        if (scriptResult != null && scriptResult instanceof Boolean) {
+            isOk = (boolean) scriptResult;
+        } else {
             LOG.error(Thread.currentThread().getName() + ":" + "Sample " + sampler.getName()
                     + " script result UNDEFINED shifted to" + isOk);
         }
@@ -102,11 +89,11 @@ public class JMeterScriptProcessor
 
     /**
      * Post process every stored request just before it get saved to disk
-     * @param sample  recorded http-request (sample)
-     * @param tree HashTree (XML like data structure) that represents exact recorded sample
+     *
+     * @param sample recorded http-request (sample)
+     * @param tree   HashTree (XML like data structure) that represents exact recorded sample
      */
-    public void processScenario(HTTPSamplerBase sample, HashTree tree, Arguments userVariables)
-    {
+    public void processScenario(HTTPSamplerBase sample, HashTree tree, Arguments userVariables) {
         Binding binding = new Binding();
         binding.setVariable("logger", LOG);
         binding.setVariable("sample", sample);
@@ -117,16 +104,14 @@ public class JMeterScriptProcessor
         binding.setVariable("classloader", classLoader);
 
         Script compiledProcessScript = engine.getThreadBindedScript(processScript);
-        if (compiledProcessScript == null)
-        {
+        if (compiledProcessScript == null) {
             return;
         }
         compiledProcessScript.setBinding(binding);
         compiledProcessScript.run();
     }
 
-    public JMeterRecorder getRecorder()
-    {
+    public JMeterRecorder getRecorder() {
         return recorder;
     }
 }

@@ -1,7 +1,6 @@
 package com.focusit;
 
-import javax.inject.Inject;
-
+import com.focusit.service.SettingsService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -11,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
-import com.focusit.service.SettingsService;
+import javax.inject.Inject;
 
 /**
  * Generic Spring Boot Application entry point
@@ -22,19 +21,16 @@ import com.focusit.service.SettingsService;
 @SpringBootApplication
 @EnableMongoRepositories(basePackages = "com.focusit.repository")
 @PropertySource(value = "classpath:application.properties", ignoreResourceNotFound = true)
-public class ServerApplication implements CommandLineRunner
-{
+public class ServerApplication implements CommandLineRunner {
     @Inject
     SettingsService settingsService;
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         SpringApplication.run(ServerApplication.class, args);
     }
 
     @Override
-    public void run(String... strings) throws Exception
-    {
+    public void run(String... strings) throws Exception {
         settingsService.getSettings();
     }
 }

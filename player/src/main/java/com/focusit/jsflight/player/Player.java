@@ -12,17 +12,14 @@ import org.slf4j.LoggerFactory;
 import java.awt.*;
 import java.lang.Thread.UncaughtExceptionHandler;
 
-public class Player
-{
+public class Player {
     private static final Logger log = LoggerFactory.getLogger(Player.class);
 
-    public static void main(String[] args) throws Exception
-    {
+    public static void main(String[] args) throws Exception {
         CliConfig config = new CliConfig();
         JCommander jc = new JCommander(config, args);
         jc.setProgramName(Player.class.getSimpleName());
-        if (config.showHelp())
-        {
+        if (config.showHelp()) {
             jc.usage();
             System.exit(0);
         }
@@ -30,55 +27,39 @@ public class Player
         LoggingManager.setPriority(config.getJMeterLogLevel(), "jmeter");
         LoggingManager.setPriority(config.getJMeterLogLevel(), "jorphan");
 
-        if (config.isHeadLess())
-        {
+        if (config.isHeadLess()) {
             CliPlayer player = new CliPlayer(config);
-            try
-            {
+            try {
                 player.play();
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 log.error(e.toString(), e);
                 System.exit(1);
-            }
-            finally
-            {
+            } finally {
                 player.getSeleniumDriver().closeWebDrivers();
                 System.exit(0);
             }
-        }
-        else
-        {
+        } else {
             startWithUI();
         }
     }
 
-    private static void startWithUI()
-    {
-        Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler()
-        {
+    private static void startWithUI() {
+        Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
 
             @Override
-            public void uncaughtException(Thread t, Throwable e)
-            {
+            public void uncaughtException(Thread t, Throwable e) {
                 log.error(e.toString(), e);
                 ExceptionDialog ld = new ExceptionDialog("Error", e.toString(), e);
                 ld.setVisible(true);
             }
         });
-        EventQueue.invokeLater(new Runnable()
-        {
+        EventQueue.invokeLater(new Runnable() {
             @Override
-            public void run()
-            {
-                try
-                {
+            public void run() {
+                try {
                     MainFrame window = new MainFrame();
                     window.getFrame().setVisible(true);
-                }
-                catch (Exception e)
-                {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }

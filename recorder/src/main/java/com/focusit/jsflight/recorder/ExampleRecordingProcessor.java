@@ -1,23 +1,19 @@
 package com.focusit.jsflight.recorder;
 
-import java.io.IOException;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 /**
  * A custom logic example to serve tracked data
- * 
- * @author Denis V. Kirpichenkov
  *
+ * @author Denis V. Kirpichenkov
  */
-public class ExampleRecordingProcessor implements RecordingProcessor
-{
+public class ExampleRecordingProcessor implements RecordingProcessor {
 
     @Override
     public void processDownloadRequest(HttpServletRequest req, HttpServletResponse resp, String result)
-            throws IOException
-    {
+            throws IOException {
         byte[] data = result.getBytes();
         String name = "record_" + System.currentTimeMillis() + ".json";
         resp.setContentType("application/json");
@@ -29,13 +25,11 @@ public class ExampleRecordingProcessor implements RecordingProcessor
     }
 
     @Override
-    public void processRecordStop(HttpServletRequest req, HttpServletResponse resp, String data) throws IOException
-    {
+    public void processRecordStop(HttpServletRequest req, HttpServletResponse resp, String data) throws IOException {
     }
 
     @Override
-    public void processStoreEvent(HttpServletRequest req, HttpServletResponse resp, String jsonData) throws IOException
-    {
+    public void processStoreEvent(HttpServletRequest req, HttpServletResponse resp, String jsonData) throws IOException {
         System.err.println(jsonData);
         resp.getWriter().print("{\"OK\"}");
         resp.setStatus(HttpServletResponse.SC_OK);

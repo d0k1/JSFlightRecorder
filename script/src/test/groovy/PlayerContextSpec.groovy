@@ -16,34 +16,34 @@ class PlayerContextSpec extends Specification {
 
     def "can put an element to the context"() {
         when:
-            ctx.put(TEST_KEY, TEST_VALUE);
+        ctx.put(TEST_KEY, TEST_VALUE);
         then:
-            ctx.get(TEST_KEY)!=null;
-            ctx.get(TEST_KEY).equals(TEST_VALUE);
+        ctx.get(TEST_KEY) != null;
+        ctx.get(TEST_KEY).equals(TEST_VALUE);
     }
 
-    def "context is empty after clean"(){
+    def "context is empty after clean"() {
         ctx.put("123", "321");
         when:
-            ctx.put(TEST_KEY, TEST_VALUE);
+        ctx.put(TEST_KEY, TEST_VALUE);
         then:
-            ctx.get(TEST_KEY)!=null;
+        ctx.get(TEST_KEY) != null;
 
         when:
-            ctx.reset();
+        ctx.reset();
         then:
-            ctx.get(TEST_KEY)==null;
-            ctx.get("123")==null;
+        ctx.get(TEST_KEY) == null;
+        ctx.get("123") == null;
     }
 
-    def "can set current scenario step in jmeter's bridge"(){
+    def "can set current scenario step in jmeter's bridge"() {
         JMeterJSFlightBridge bridge = new JMeterJSFlightBridge();
         ctx.setJMeterBridge(bridge);
         JSONObject step = new JSONObject();
 
         when:
-            ctx.setCurrentScenarioStep(step);
+        ctx.setCurrentScenarioStep(step);
         then:
-            bridge.getCurrentScenarioStep()==step;
+        bridge.getCurrentScenarioStep() == step;
     }
 }

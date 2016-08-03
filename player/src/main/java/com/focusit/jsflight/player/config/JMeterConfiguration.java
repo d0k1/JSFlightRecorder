@@ -12,58 +12,48 @@ import java.io.InputStream;
 /**
  * Created by dkirpichenkov on 06.05.16.
  */
-public class JMeterConfiguration
-{
+public class JMeterConfiguration {
     private static final Logger LOG = LoggerFactory.getLogger(JMeterConfiguration.class);
 
     private String stepProcessorScript = "";
     private String scenarioProcessorScript = "";
 
-    public String getStepProcessorScript()
-    {
+    public String getStepProcessorScript() {
         return stepProcessorScript;
     }
 
-    public void setStepProcessorScript(@Nullable JMeterRecorder recorder, String stepProcessorScript)
-    {
+    public void setStepProcessorScript(@Nullable JMeterRecorder recorder, String stepProcessorScript) {
         this.stepProcessorScript = stepProcessorScript;
-        if (recorder != null)
-        {
+        if (recorder != null) {
             syncScripts(recorder);
         }
     }
 
-    public String getScenarioProcessorScript()
-    {
+    public String getScenarioProcessorScript() {
         return scenarioProcessorScript;
     }
 
-    public void setScenarioProcessorScript(@Nullable JMeterRecorder recorder, String scenarioProcessorScript)
-    {
+    public void setScenarioProcessorScript(@Nullable JMeterRecorder recorder, String scenarioProcessorScript) {
         this.scenarioProcessorScript = scenarioProcessorScript;
-        if (recorder != null)
-        {
+        if (recorder != null) {
             syncScripts(recorder);
         }
     }
 
-    public void syncScripts(JMeterRecorder recorder)
-    {
-        if (getStepProcessorScript() != null)
-        {
+    public void syncScripts(JMeterRecorder recorder) {
+        if (getStepProcessorScript() != null) {
             recorder.getScriptProcessor().setRecordingScript(getStepProcessorScript());
         }
 
-        if (getScenarioProcessorScript() != null)
-        {
+        if (getScenarioProcessorScript() != null) {
             recorder.getScriptProcessor().setProcessScript(getScenarioProcessorScript());
         }
     }
 
-    private void loadDefaultStepProcessorScript(){
+    private void loadDefaultStepProcessorScript() {
         try {
             InputStream script = this.getClass().getClassLoader().getResourceAsStream("example-scripts/jmeter/step/example02.groovy");
-            if(script!=null) {
+            if (script != null) {
                 stepProcessorScript = IOUtils.toString(script, "UTF-8");
             }
         } catch (IOException e) {
@@ -71,10 +61,10 @@ public class JMeterConfiguration
         }
     }
 
-    private void loadDefaultScenarioProcessorScript(){
+    private void loadDefaultScenarioProcessorScript() {
         try {
             InputStream script = this.getClass().getClassLoader().getResourceAsStream("example-scripts/jmeter/scenario/example03.groovy");
-            if(script!=null) {
+            if (script != null) {
                 scenarioProcessorScript = IOUtils.toString(script, "UTF-8");
             }
         } catch (IOException e) {
@@ -82,7 +72,7 @@ public class JMeterConfiguration
         }
     }
 
-    public void loadDefaults(){
+    public void loadDefaults() {
         loadDefaultStepProcessorScript();
         loadDefaultScenarioProcessorScript();
     }

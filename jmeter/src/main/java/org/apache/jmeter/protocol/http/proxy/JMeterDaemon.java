@@ -17,10 +17,10 @@ import java.util.Map;
 /**
  * Copy past of org.apache.jmeter.protocol.http.proxy.Daemon
  * Created to modify jmeter proxy creation
- * @author Denis V. Kirpichenkov
  *
+ * @author Denis V. Kirpichenkov
  */
-public class JMeterDaemon  extends Thread implements Stoppable {
+public class JMeterDaemon extends Thread implements Stoppable {
 
     private static final Logger log = LoggingManager.getLoggerForClass();
 
@@ -32,15 +32,21 @@ public class JMeterDaemon  extends Thread implements Stoppable {
      */
     private static final int ACCEPT_TIMEOUT = 20000;
 
-    /** The port to listen on. */
+    /**
+     * The port to listen on.
+     */
     private int daemonPort;
 
     private ServerSocket mainSocket;
 
-    /** True if the Daemon is currently running. */
+    /**
+     * True if the Daemon is currently running.
+     */
     private volatile boolean running;
 
-    /** The target which will receive the generated JMeter test components. */
+    /**
+     * The target which will receive the generated JMeter test components.
+     */
     private JMeterProxyControl target;
 
     /**
@@ -52,14 +58,12 @@ public class JMeterDaemon  extends Thread implements Stoppable {
     /**
      * Create a new Daemon with the specified port and target.
      *
-     * @param port
-     *            the port to listen on.
-     * @param target
-     *            the target which will receive the generated JMeter test
-     *            components.
-     * @throws IOException if an I/O error occurs opening the socket
+     * @param port   the port to listen on.
+     * @param target the target which will receive the generated JMeter test
+     *               components.
+     * @throws IOException              if an I/O error occurs opening the socket
      * @throws IllegalArgumentException if <code>port</code> is outside the allowed range from <code>0</code> to <code>65535</code>
-     * @throws SocketException when something is wrong on the underlying protocol layer
+     * @throws SocketException          when something is wrong on the underlying protocol layer
      */
     public JMeterDaemon(int port, JMeterProxyControl target) throws IOException {
         this(port, target, JMeterProxy.class);
@@ -69,17 +73,14 @@ public class JMeterDaemon  extends Thread implements Stoppable {
      * Create a new Daemon with the specified port and target, using the
      * specified class to handle individual requests.
      *
-     * @param port
-     *            the port to listen on.
-     * @param target
-     *            the target which will receive the generated JMeter test
-     *            components.
-     * @param proxyClass
-     *            the proxy class to use to handle individual requests. This
-     *            class must be the {@link Proxy} class or a subclass.
-     * @throws IOException if an I/O error occurs opening the socket
+     * @param port       the port to listen on.
+     * @param target     the target which will receive the generated JMeter test
+     *                   components.
+     * @param proxyClass the proxy class to use to handle individual requests. This
+     *                   class must be the {@link Proxy} class or a subclass.
+     * @throws IOException              if an I/O error occurs opening the socket
      * @throws IllegalArgumentException if <code>port</code> is outside the allowed range from <code>0</code> to <code>65535</code>
-     * @throws SocketException when something is wrong on the underlying protocol layer
+     * @throws SocketException          when something is wrong on the underlying protocol layer
      */
     public JMeterDaemon(int port, JMeterProxyControl target, Class<? extends JMeterProxy> proxyClass) throws IOException {
         super("HTTP Proxy Daemon");
@@ -137,7 +138,7 @@ public class JMeterDaemon  extends Thread implements Stoppable {
 
     /**
      * Stop the proxy daemon. The daemon may not stop immediately.
-     *
+     * <p>
      * see #ACCEPT_TIMEOUT
      */
     @Override
