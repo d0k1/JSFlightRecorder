@@ -78,16 +78,14 @@ public class JMeterRecorderService {
     }
 
     public void stopJMeter(MongoDbScenario scenario) throws Exception {
-        if (scenario.getConfiguration().getCommonConfiguration().getProxyPort().isEmpty()) {
-            return;
-        }
-
-        if (scenario.getConfiguration().getCommonConfiguration().getProxyPort().equalsIgnoreCase("-1")) {
+        String proxyPort = scenario.getConfiguration().getCommonConfiguration().getProxyPort();
+        if (proxyPort.isEmpty() || proxyPort.equalsIgnoreCase("-1")) {
             return;
         }
 
         if (!jmeterStartStopLock.tryLock() && !jmeterStartStopLock.tryLock(10, TimeUnit.SECONDS)) {
             LOG.error("Can't acquire a lock to stop JMeter");
+            throw new IllegalStateException("Can't acquire a lock to stop JMeter");
         }
         try {
             JMeterRecorder recorder = jmeters.get(scenario.getExperimentId());
@@ -97,7 +95,7 @@ public class JMeterRecorderService {
 
             recorder.stopRecording();
 
-            availablePorts.add(Integer.parseInt(scenario.getConfiguration().getCommonConfiguration().getProxyPort()));
+            availablePorts.add(Integer.parseInt(proxyPort));
             scenario.getConfiguration().getCommonConfiguration().setProxyPort("");
 
             try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {

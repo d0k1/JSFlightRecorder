@@ -130,7 +130,7 @@ public class MongoDbScenarioSpec extends Specification {
 
         MongoDbScenario scenario = new MongoDbScenario(experiment, eventRepositoryCustom, experimentRepository);
         when:
-        scenario.next();
+        scenario.moveToNextStep();
         then:
         experimentRepository.findOne(experiment.getId()).position == position + 1;
     }
@@ -147,7 +147,7 @@ public class MongoDbScenarioSpec extends Specification {
 
         MongoDbScenario scenario = new MongoDbScenario(experiment, eventRepositoryCustom, experimentRepository);
         when:
-        scenario.next();
+        scenario.moveToNextStep();
         then:
         experimentRepository.findOne(experiment.getId()).position == 0;
     }

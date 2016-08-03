@@ -2,12 +2,15 @@ package com.focusit.script;
 
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.LogManager;
 
 import javax.annotation.Nullable;
 
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Groovy script "compiler"
@@ -19,7 +22,8 @@ public class ScriptEngine
 {
     // Storage to hold compiled script(s) in thread's bounds. Thread safe!
     // One script for one thread. No way to manipulate script's bindings outside calling thread
-    private static final ThreadLocal<HashMap<String, Script>> threadBindedScripts = new ThreadLocal();
+    private static final ThreadLocal<HashMap<String, Script>> threadBindedScripts = new ThreadLocal<>();
+    private static final Logger LOG = LoggerFactory.getLogger(ScriptEngine.class);
     // General purpose script storage.
     // Not Thread Safe, because compiled script has writable bindings. So one thread can easily change other one's bindings
     private final ConcurrentHashMap<String, Script> generalScripts = new ConcurrentHashMap<>();
@@ -86,6 +90,7 @@ public class ScriptEngine
 
         if (script == null)
         {
+
             return null;
         }
 

@@ -119,8 +119,8 @@ public class BackgroundWebPlayer {
 
         playingFutures.put(experimentId,
                 CompletableFuture
-                        .runAsync(() -> processor.play(scenario, driver, scenario.getFirstStep(),
-                                scenario.getMaxStep()))
+                        .runAsync(() -> processor
+                                .play(scenario, driver, scenario.getFirstStep(), scenario.getMaxStep()))
                         .whenCompleteAsync((aVoid, throwable) -> {
                             playingFutures.remove(experimentId);
                             if (throwable == null) {
@@ -147,13 +147,13 @@ public class BackgroundWebPlayer {
                                     notificationService.notifyUnknownException(scenario, throwable);
                                 }
                             }
-                            experiment.setPlaying(false);
-                            experimentRepository.save(experiment);
                             try {
                                 stopJMeter(scenario);
                             } catch (Exception e) {
                                 LOG.error(e.toString(), e);
                             }
+                            experiment.setPlaying(false);
+                            experimentRepository.save(experiment);
                         }));
     }
 

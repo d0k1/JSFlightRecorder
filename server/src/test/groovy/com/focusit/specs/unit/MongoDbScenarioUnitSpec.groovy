@@ -22,14 +22,14 @@ class MongoDbScenarioUnitSpec extends Specification {
         experiment.position = 1;
         experiment.steps = 2;
         when:
-        scenario.next();
+        scenario.moveToNextStep();
         then:
         experiment.position == 0;
 
         when:
         experiment.position = 2;
         experiment.steps = 2;
-        scenario.next();
+        scenario.moveToNextStep();
         then:
         experiment.position == 0;
     }

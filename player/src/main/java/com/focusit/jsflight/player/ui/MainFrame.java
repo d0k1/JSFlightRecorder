@@ -591,11 +591,11 @@ public class MainFrame
             public void mouseClicked(MouseEvent e)
             {
                 new ScenarioProcessor().applyStep(scenario, seleniumDriver, scenario.getPosition());
-                scenario.next();
+                scenario.moveToNextStep();
                 model.fireTableDataChanged();
             }
         });
-        btnPrev.addActionListener(e -> scenario.prev());
+        btnPrev.addActionListener(e -> scenario.moveToPreviousStep());
         btnRewind.addMouseListener(new MouseAdapter()
         {
             @Override

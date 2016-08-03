@@ -1,3 +1,4 @@
+import com.focusit.jsflight.player.constants.EventConstants
 import com.focusit.script.jmeter.JMeterJSFlightBridge
 
 boolean accesKeyFound = false;
@@ -127,7 +128,7 @@ if(!accesKeyFound) {
         tree.add(cookies);
 
         String cooks = "employee=" + JMeterJSFlightBridge.getInstace()
-                .getSourceEvent((org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase)sample).getString(JMeterJSFlightBridge.TAG_FIELD);
+                .getSourceEvent((org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase)sample).getString(EventConstants.TAG);
 
         String pattern = 'employee=(\\w+)\\$(\\d+)';
         def r = java.util.regex.Pattern.compile(pattern);

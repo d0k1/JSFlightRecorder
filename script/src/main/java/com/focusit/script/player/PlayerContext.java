@@ -15,8 +15,7 @@ public class PlayerContext
 
     public Binding asBindings()
     {
-        Binding binding = new Binding(context);
-        return binding;
+        return new Binding(context);
     }
 
     public Object get(String key)
@@ -39,9 +38,7 @@ public class PlayerContext
 
     public void reset()
     {
-        context.keySet().forEach(it -> {
-            context.remove(it);
-        });
+        context.keySet().forEach(context::remove);
     }
 
     public void setJMeterBridge(JMeterJSFlightBridge JMeterBridge)

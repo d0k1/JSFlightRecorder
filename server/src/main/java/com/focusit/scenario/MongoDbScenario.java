@@ -66,7 +66,7 @@ public class MongoDbScenario extends UserScenario
     }
 
     @Override
-    public void next()
+    public void moveToNextStep()
     {
         setPosition(getPosition() + 1);
         if (getPosition() >= getStepsCount())

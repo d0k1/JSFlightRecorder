@@ -11,7 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class JMeterJSFlightBridge
 {
     public final JSONObject NO_SCENARIO_STEP;
-    public static String TAG_FIELD = "uuid";
     private final ConcurrentHashMap<Object, JSONObject> samplersEvents = new ConcurrentHashMap<>();
     private JSONObject currentScenarioStep;
 
@@ -43,8 +42,6 @@ public class JMeterJSFlightBridge
 
     public JSONObject getSourceEvent(Object sampler)
     {
-    	JSONObject result = samplersEvents.get(sampler);
-
-    	return result;
+        return samplersEvents.get(sampler);
     }
 }

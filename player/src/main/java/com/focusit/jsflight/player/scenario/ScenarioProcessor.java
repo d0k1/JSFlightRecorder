@@ -117,7 +117,7 @@ public class ScenarioProcessor {
         try {
             if (scenario.isStepDuplicates(scenario.getConfiguration().getWebConfiguration().getDuplicationScript(),
                     event)) {
-                LOG.warn("Event duplicates prev");
+                LOG.warn("Event duplicates moveToPreviousStep");
                 return;
             }
 
@@ -207,7 +207,7 @@ public class ScenarioProcessor {
         } finally {
             //webdriver can stay null if event is ignored or bad, thus can`t be postprocessed
             if (!error && theWebDriver != null) {
-                scenario.updatePrevEvent(event);
+                scenario.updateEvent(event);
                 try {
                     new PlayerScriptProcessor(scenario).runStepPrePostScript(event, position, false);
                 } catch (Exception e) {
@@ -235,15 +235,14 @@ public class ScenarioProcessor {
 
         int maxPosition = finish > 0 ? finish : scenario.getStepsCount();
 
-        while (scenario.getPosition() < maxPosition) {
+        do {
             LOG.info("Step " + scenario.getPosition());
             applyStep(scenario, seleniumDriver, scenario.getPosition());
             if (scenario.getPosition() + 1 == maxPosition) {
                 break;
             }
-            scenario.next();
-        }
-        scenario.next();
+            scenario.moveToNextStep();
+        } while (scenario.getPosition() != maxPosition);
         LOG.info(String.format("Done(%d):playing", System.currentTimeMillis() - begin));
         seleniumDriver.closeWebDrivers();
     }

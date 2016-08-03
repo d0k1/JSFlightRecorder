@@ -17,13 +17,6 @@ class JMeterJSFlightBridgeSpec extends Specification {
             bridge.isCurrentStepEmpty();
     }
 
-    def "TAG constant is uuid"(){
-        when:
-            bridge;
-        then:
-            bridge.TAG_FIELD=="uuid";
-    }
-
     def "can change current step"(){
         def step = new JSONObject();
 

@@ -12,7 +12,6 @@ import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.input.Events;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
-import com.focusit.script.jmeter.JMeterJSFlightBridge;
 import com.focusit.script.player.PlayerContext;
 
 /**
@@ -21,7 +20,7 @@ import com.focusit.script.player.PlayerContext;
  * @author Denis V. Kirpichenkov
  */
 public class UserScenario {
-    public static final Set<String> ALLOWED_EVENT_TYPES = new HashSet<>(Arrays.asList(EventType.CLICK, EventType.KEY_PRESS,
+    private static final Set<String> ALLOWED_EVENT_TYPES = new HashSet<>(Arrays.asList(EventType.CLICK, EventType.KEY_PRESS,
             EventType.KEY_UP, EventType.KEY_DOWN, EventType.SCROLL_EMULATION, EventType.MOUSEWHEEL,
             EventType.MOUSEDOWN, EventType.SCRIPT));
     // TODO add classpath for scripts
@@ -84,28 +83,22 @@ public class UserScenario {
     }
 
     public String getTagForEvent(JSONObject event) {
-        String tag = "null";
-        if (event.has(JMeterJSFlightBridge.TAG_FIELD)) {
-            tag = event.getString(JMeterJSFlightBridge.TAG_FIELD);
-        }
-
-        return tag;
+        return event.has(EventConstants.TAG) ? event.getString(EventConstants.TAG) : "null";
     }
 
     public String getTargetForEvent(JSONObject event) {
-        if (event.has("target2")) {
-            return event.getString("target2");
+        if (event.has(EventConstants.SECOND_TARGET)) {
+            return event.getString(EventConstants.SECOND_TARGET);
         }
-        if (!event.has("target1")) {
+        if (!event.has(EventConstants.FIRST_TARGET)) {
             return "";
         }
-        JSONArray array = event.getJSONArray("target1");
+        JSONArray array = event.getJSONArray(EventConstants.FIRST_TARGET);
         if (array.isNull(0)) {
             return "";
         }
 
-        String target = array.getJSONObject(0).getString("getxp");
-        return target;
+        return array.getJSONObject(0).getString("getxp");
     }
 
     public boolean isEventBad(JSONObject event) {
@@ -131,15 +124,19 @@ public class UserScenario {
 
     }
 
-    public void next() {
+    public void moveToNextStep() {
         checks.set(position, true);
-        setPosition(getPosition() + 1);
-        if (getPosition() == getStepsCount()) {
-            for (int i = 0; i < getPosition(); i++) {
-                checks.set(i, false);
-            }
-            position = 0;
-        }
+        setPosition(Math.min(getPosition() + 1, getStepsCount()));
+//        if (isOver()) {
+//            for (int i = 0; i < getPosition(); i++) {
+//                checks.set(i, false);
+//            }
+//            position = 0;
+//        }
+    }
+
+    public boolean isOver() {
+        return getPosition() == getStepsCount();
     }
 
     public void parse(String filename) throws IOException {
@@ -162,29 +159,19 @@ public class UserScenario {
         }
         checks = new ArrayList<>(getStepsCount());
         for (int i = 0; i < getStepsCount(); i++) {
-            checks.add(new Boolean(false));
+            checks.add(Boolean.FALSE);
         }
 
-        long secs = 0;
-
-        if (getStepsCount() > 0) {
-            secs = getStepAt(getStepsCount() - 1).getBigDecimal("timestamp").longValue()
-                    - getStepAt(0).getBigDecimal("timestamp").longValue();
-        }
-
-        return secs;
+        return getStepAt(Math.max(0, getStepsCount() - 1)).getBigDecimal(EventConstants.TIMESTAMP).longValue()
+                - getStepAt(0).getBigDecimal(EventConstants.TIMESTAMP).longValue();
     }
 
-    public void prev() {
-        if (getPosition() > 0) {
-            setPosition(getPosition() - 1);
-        }
+    public void moveToPreviousStep() {
+        setPosition(Math.max(0, getPosition() - 1));
     }
 
     public void rewind() {
-        checks.stream().forEach(it -> {
-            it = Boolean.FALSE;
-        });
+        checks.replaceAll(previousValue -> false);
         context.reset();
         setPosition(0);
     }
@@ -206,7 +193,7 @@ public class UserScenario {
         setPosition(getPosition() + 1);
     }
 
-    public void updatePrevEvent(JSONObject event) {
+    public void updateEvent(JSONObject event) {
         lastEvents.put(getTagForEvent(event), event);
     }
 
