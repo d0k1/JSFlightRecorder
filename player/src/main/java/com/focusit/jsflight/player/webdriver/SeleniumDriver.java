@@ -678,11 +678,10 @@ public class SeleniumDriver {
     }
 
     private void resizeForEvent(WebDriver wd, JSONObject event) {
-        JSONObject target = event.has("window.width")
-                ? event
-                : event.getJSONObject("window");
-        int width = target.getInt("window.width");
-        int height = target.getInt("window.height");
+        boolean hasProperty = event.has("window.width");
+        JSONObject target = hasProperty ? event : event.getJSONObject("window");
+        int width = target.getInt(hasProperty ? "window.width" : "width");
+        int height = target.getInt(hasProperty ? "window.height" : "height");
 
         width = width > 0 ? width : 1000;
         height = height > 0 ? height : 1000;
