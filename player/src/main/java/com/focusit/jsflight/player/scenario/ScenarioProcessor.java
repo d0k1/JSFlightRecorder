@@ -204,6 +204,7 @@ public class ScenarioProcessor {
             throw new RuntimeException(e);
         } catch (Exception e) {
             error = true;
+            LOG.error(e.getMessage(), e);
             makeAShot(scenario, seleniumDriver, theWebDriver, position, error);
             throw new RuntimeException(e);
         } finally {
@@ -213,6 +214,7 @@ public class ScenarioProcessor {
                 try {
                     new PlayerScriptProcessor(scenario).runStepPrePostScript(event, position, false);
                 } catch (Exception e) {
+                    LOG.error(e.getMessage(), e);
                     makeAShot(scenario, seleniumDriver, theWebDriver, position, true);
                     throw e;
                 }

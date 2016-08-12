@@ -1,6 +1,7 @@
 package com.focusit.jsflight.player.config;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.focusit.jsflight.player.constants.ScriptBindingConstants;
 import com.focusit.script.ScriptsClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,8 +48,11 @@ public class CommonConfiguration {
     private int pageShownTimeout;
     private Map<String, Object> customProperties = new ConcurrentHashMap<>();
     private String extraClasspath = null;
-    private String driverSignalScript = "\"kill ${signal} ${webDriver.binary.process.process.executeWatchdog.getPID()}\".execute()";
-    private String getFirefoxPidScript = "\"echo ${webDriver.binary.process.process.executeWatchdog.getPID()}\".execute().text";
+    private String driverSignalScript = String.format("\"kill ${%s} ${%s}\".execute()",
+            ScriptBindingConstants.SIGNAL, ScriptBindingConstants.FIREFOX_PID);
+    private String getFirefoxPidScript =
+            String.format("\"echo ${%s.binary.process.process.executeWatchdog.getPID()}\".execute().text",
+                    ScriptBindingConstants.WEB_DRIVER);
     /**
      * Timeout in seconds for UI to appear
      */
@@ -139,7 +143,7 @@ public class CommonConfiguration {
     }
 
     public boolean getMakeShots() {
-        return Boolean.valueOf(makeShots);
+        return makeShots;
     }
 
     public void setMakeShots(boolean makeShots) {

@@ -1,6 +1,7 @@
 package com.focusit.jsflight.player.constants;
 
 /**
+ * This class contains constants, that should be used in binding and in groovy scripts
  * Created by Gallyam Biktashev on 12.08.16.
  */
 public final class ScriptBindingConstants {
