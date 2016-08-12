@@ -151,7 +151,7 @@ public class PlayerScriptProcessor {
 
     public <T> T executeGroovyScript(String scriptBody, Map<String, Object> bindings, Class<T> clazz) {
         Binding binding = new Binding(bindings);
-        addBasicBinding(binding);
+        addBasicBindings(binding);
 
         Script script = engine.getThreadBindedScript(scriptBody);
 
@@ -169,7 +169,7 @@ public class PlayerScriptProcessor {
         }
     }
 
-    private void addBasicBinding(Binding binding) {
+    private void addBasicBindings(Binding binding) {
         binding.setVariable(ScriptBindingConstants.LOGGER, LOG);
         binding.setVariable(ScriptBindingConstants.CLASSLOADER, engine.getClassLoader());
         binding.setVariable(ScriptBindingConstants.PLAYER_CONTEXT, scenario.getContext());

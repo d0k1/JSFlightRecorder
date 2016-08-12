@@ -572,8 +572,14 @@ public class SeleniumDriver {
     private String getFirefoxPid(WebDriver driver) {
         PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
         Map<String , Object> binding = PlayerScriptProcessor.getEmptyBindingsMap();
-        binding.put(ScriptBindingConstants.WEB_DRIVER, driver);
+        binding.put(ScriptBindingConstants.WEB_DRIVER, getSeleniumDriver(driver));
         return processor.executeGroovyScript(getFirefoxPidScript, binding, String.class);
+    }
+
+    private WebDriver getSeleniumDriver(WebDriver driver) {
+        return driver instanceof WebDriverWrapper
+            ? ((WebDriverWrapper)driver).getWrappedDriver()
+            : driver;
     }
 
     public void resetLastUrls() {
