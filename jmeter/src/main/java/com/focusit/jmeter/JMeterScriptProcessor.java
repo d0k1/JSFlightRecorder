@@ -68,22 +68,22 @@ public class JMeterScriptProcessor {
 
         Script s = engine.getThreadBindedScript(recordingScript);
         if (s == null) {
-            LOG.error(Thread.currentThread().getName() + ":" + "Sample " + sampler.getName()
+            LOG.warn(Thread.currentThread().getName() + ":Sample " + sampler.getName()
                     + "No script found. default result " + isOk);
             return isOk;
         }
         s.setBinding(binding);
-        LOG.info(Thread.currentThread().getName() + ":" + "running " + sampler.getName() + " compiled script");
+        LOG.info(Thread.currentThread().getName() + ":running " + sampler.getName() + " compiled script");
         Object scriptResult = s.run();
 
         if (scriptResult != null && scriptResult instanceof Boolean) {
             isOk = (boolean) scriptResult;
         } else {
-            LOG.error(Thread.currentThread().getName() + ":" + "Sample " + sampler.getName()
+            LOG.warn(Thread.currentThread().getName() + ":Sample " + sampler.getName()
                     + " script result UNDEFINED shifted to" + isOk);
         }
 
-        LOG.error(Thread.currentThread().getName() + ":" + "Sample " + sampler.getName() + " script result " + isOk);
+        LOG.info(Thread.currentThread().getName() + ":" + "Sample " + sampler.getName() + " script result " + isOk);
         return isOk;
     }
 

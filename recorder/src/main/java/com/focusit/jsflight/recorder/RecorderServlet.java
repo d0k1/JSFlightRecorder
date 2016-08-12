@@ -27,7 +27,7 @@ public class RecorderServlet extends HttpServlet {
             filename = "recorder.js";
         }
 
-        if (filename != null && (filename.trim().length() == 0 || !filename.toLowerCase().trim().endsWith(".js"))) {
+        if (filename.trim().length() == 0 || !filename.toLowerCase().trim().endsWith(".js")) {
             filename = "recorder.js";
         }
 

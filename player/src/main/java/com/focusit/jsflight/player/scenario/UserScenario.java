@@ -101,7 +101,7 @@ public class UserScenario {
     }
 
     public boolean isEventBad(JSONObject event) {
-        return !isEventOfType(event, EventType.SCRIPT) && isFieldOfEventIsNull(event, "target");
+        return !isEventOfType(event, EventType.SCRIPT) && isFieldOfEventIsNull(event, EventConstants.TARGET);
     }
 
     private boolean isFieldOfEventIsNull(JSONObject event, String filedName) {

@@ -48,6 +48,7 @@ public class CommonConfiguration {
     private Map<String, Object> customProperties = new ConcurrentHashMap<>();
     private String extraClasspath = null;
     private String driverSignalScript = "\"kill ${signal} ${webDriver.binary.process.process.executeWatchdog.getPID()}\".execute()";
+    private String getFirefoxPidScript = "\"echo ${webDriver.binary.process.process.executeWatchdog.getPID()}\".execute().text";
     /**
      * Timeout in seconds for UI to appear
      */
@@ -326,5 +327,9 @@ public class CommonConfiguration {
 
     public void deleteCustomProperty(String property) {
         customProperties.remove(property);
+    }
+
+    public String getGetFirefoxPidScript() {
+        return getFirefoxPidScript;
     }
 }

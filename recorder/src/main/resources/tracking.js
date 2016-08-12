@@ -9,7 +9,7 @@ var jsflight = jsflight || {};
  * Process mouse event
  */
 jsflight.TrackMouse = function(mouseEvent) {
-    if (mouseEvent.type == 'mousemove' && jsflight.options.trackMouse === false) {
+    if (mouseEvent.type == 'mousemove' && !jsflight.options.trackMouse) {
         return;
     }
 
@@ -61,7 +61,7 @@ jsflight.TrackKeyboard = function(keyboardEvent) {
 };
 
 jsflight.TrackHash = function(event) {
-    if (jsflight.options.trackHash !== true)
+    if (!jsflight.options.trackHash)
         return;
 
     try {

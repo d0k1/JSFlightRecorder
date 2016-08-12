@@ -4,6 +4,7 @@ import com.focusit.jsflight.player.config.CommonConfiguration;
 import com.focusit.jsflight.player.constants.EventConstants;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
+import com.focusit.jsflight.player.constants.ScriptBindingConstants;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 import org.json.JSONObject;
 import org.openqa.selenium.WebDriver;
@@ -14,6 +15,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Map;
 
 /**
  * Class that really replays an event in given scenario and given selenium driver
@@ -24,14 +26,14 @@ public class ScenarioProcessor {
 
     private static WebDriver getWebDriver(UserScenario scenario, SeleniumDriver seleniumDriver, JSONObject event) {
         boolean firefox = scenario.getConfiguration().getCommonConfiguration().isUseFirefox();
-        String path = firefox ? scenario.getConfiguration().getCommonConfiguration().getFfPath()
+        String path = firefox
+                ? scenario.getConfiguration().getCommonConfiguration().getFfPath()
                 : scenario.getConfiguration().getCommonConfiguration().getPjsPath();
         String proxyHost = scenario.getConfiguration().getCommonConfiguration().getProxyHost();
         String proxyPort = scenario.getConfiguration().getCommonConfiguration().getProxyPort();
         String display = scenario.getConfiguration().getCommonConfiguration().getFirefoxDisplay();
-        WebDriver theWebDriver = seleniumDriver.getDriverForEvent(event, firefox, path, display, proxyHost, proxyPort);
 
-        return theWebDriver;
+        return seleniumDriver.getDriverForEvent(event, firefox, path, display, proxyHost, proxyPort);
     }
 
     /**
@@ -44,19 +46,17 @@ public class ScenarioProcessor {
      * @throws Exception
      */
     protected void hasBrowserAnError(UserScenario scenario, WebDriver wd) throws Exception {
-        try {
-            Object result = new PlayerScriptProcessor(scenario).executeWebLookupScript(
-                    scenario.getConfiguration().getWebConfiguration().getFindBrowserErrorScript(), wd, null, null);
-            if (result != null) {
-                throw new IllegalStateException("Browser contains some error after step processing");
-            }
-        } catch (Exception e) {
-            LOG.debug("Tried to find an error dialog " + e.toString(), e);
+        String findBrowserErrorScript = scenario.getConfiguration().getWebConfiguration().getFindBrowserErrorScript();
+        Map<String, Object> binding = PlayerScriptProcessor.getEmptyBindingsMap();
+        binding.put(ScriptBindingConstants.WEB_DRIVER, wd);
+        Object result = new PlayerScriptProcessor(scenario).executeGroovyScript(findBrowserErrorScript, binding);
+        if (result != null) {
+            throw new IllegalStateException("Browser contains some error after step processing");
         }
     }
 
     /**
-     * This method will decide whether step processing should be terminatedd at current step or not.
+     * This method will decide whether step processing should be terminated at current step or not.
      * Or, in other words, should an exception be there or not.
      * Default implementation just logs
      *
@@ -80,14 +80,14 @@ public class ScenarioProcessor {
                              boolean isError) {
         if (scenario.getConfiguration().getCommonConfiguration().getMakeShots()) {
             String screenDir = scenario.getConfiguration().getCommonConfiguration().getScreenDir();
-            File dir = new File(
-                    screenDir + File.separator + Paths.get(scenario.getScenarioFilename()).getFileName().toString());
+            File dir = new File(screenDir, Paths.get(scenario.getScenarioFilename()).getFileName().toString());
 
             if (!dir.exists() && !dir.mkdirs()) {
                 return;
             }
             String errorPart = isError ? "_error_" : "";
-            try (FileOutputStream fos = new FileOutputStream(dir.getAbsolutePath() + File.separator + errorPart + String.format("%05d", position) + ".png")) {
+            File file = Paths.get(dir.getAbsolutePath(), errorPart + String.format("%05d", position) + ".png").toFile();
+            try (FileOutputStream fos = new FileOutputStream(file)) {
                 seleniumDriver.makeAShot(theWebDriver, fos);
             } catch (IOException e) {
                 LOG.error(e.toString(), e);
@@ -98,6 +98,8 @@ public class ScenarioProcessor {
     public void applyStep(UserScenario scenario, SeleniumDriver seleniumDriver, int position) {
         JSONObject event = scenario.getStepAt(position);
         scenario.getContext().setCurrentScenarioStep(event);
+
+        LOG.info("Current step URL: {}", event.getString(EventConstants.URL));
 
         new PlayerScriptProcessor(scenario).runStepPrePostScript(event, position, true);
         event = new PlayerScriptProcessor(scenario).runStepTemplating(scenario, event);
@@ -116,7 +118,7 @@ public class ScenarioProcessor {
         try {
             if (scenario.isStepDuplicates(scenario.getConfiguration().getWebConfiguration().getDuplicationScript(),
                     event)) {
-                LOG.warn("Event duplicates moveToPreviousStep");
+                LOG.warn("Event duplicates previous");
                 return;
             }
 
@@ -149,6 +151,7 @@ public class ScenarioProcessor {
                     .setSelectDeterminerScript(
                             scenario.getConfiguration().getWebConfiguration().getSelectDeterminerScript())
                     .setDriverSignalScript(commonConfiguration.getDriverSignalScript())
+                    .setGetFirefoxPidScript(commonConfiguration.getGetFirefoxPidScript())
                     .setFormDialogXpath(commonConfiguration.getFormOrDialogXpath());
 
             theWebDriver = getWebDriver(scenario, seleniumDriver, event);
@@ -242,5 +245,4 @@ public class ScenarioProcessor {
         LOG.info(String.format("Done(%d):playing", System.currentTimeMillis() - begin));
         seleniumDriver.closeWebDrivers();
     }
-
 }

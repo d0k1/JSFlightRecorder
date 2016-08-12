@@ -76,7 +76,7 @@ public class BackgroundWebPlayer {
 
         experimentRepository.save(experiment);
 
-        if (!Boolean.TRUE.equals(paused)) {
+        if (!paused) {
             resume(experiment.getId());
         }
 

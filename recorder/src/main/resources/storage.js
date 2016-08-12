@@ -27,51 +27,77 @@ jsflight.getDetachElement = function(event){
     }
 }
 
-jsflight.getEventInfo = function(mouseEvent) {
-    if (mouseEvent === undefined)
-        mouseEvent = window.event;
+jsflight.getEventInfo = function(event) {
+    getCaretPosition = function (node) {
+        //node.focus();
+        /* without node.focus() IE will returns -1 when focus is not on node */
+        if(node.selectionStart)
+            return node.selectionStart;
+        else if(!document.selection)
+            return 0;
+        var dummyCharacter = "\001";
+        var selection = document.selection.createRange();
+        if (selection === null)
+            return 0;
+        var selectionDuplicate = selection.duplicate();
+        var caretPosition = 0;
+        selectionDuplicate.moveToElementText(node);
+        selection.text = dummyCharacter;
+        caretPosition = (selectionDuplicate.text.indexOf(dummyCharacter));
+        selection.moveStart('character',-1);
+        selection.text = "";
+        return caretPosition;
+    }
+    if (event === undefined)
+        event = window.event;
 
-    mouseEvent.target = 'target' in mouseEvent ? mouseEvent.target
-        : mouseEvent.srcElement;
+    event.target = 'target' in event ? event.target
+        : event.srcElement;
 
     var result = {};
 
+    result.caretPosition = getCaretPosition(event.target);
+
     result.tabuuid = jsflight.tabUuid;
-    result.type = mouseEvent.type;
+    result.type = event.type;
     result.url = window.location.href;
-    result.which = mouseEvent.which;
-    result.key = mouseEvent.key;
-    result.keyCode = mouseEvent.keyCode;
-    result.charCode = mouseEvent.charCode;
-    
-    if (mouseEvent.type === 'keyup') {
+    result.which = event.which;
+    result.key = event.key;
+    result.keyCode = event.keyCode;
+    result.charCode = event.charCode;
+
+    if (event.type === 'paste') {
+        result.clipboardData = event.clipboardData;
+    }
+
+    if (event.type === 'keyup') {
         if (!event.shiftKey) {
             result.charCode = String.fromCharCode(result.charCode)
                     .toLowerCase().charCodeAt(0);
         }
     }
-    result.altKey = mouseEvent.altKey;
-    result.ctrlKey = mouseEvent.ctrlKey;
-    result.shiftKey = mouseEvent.shiftKey;
-    result.metaKey = mouseEvent.metaKey;
-    result.button = mouseEvent.button;
+    result.altKey = event.altKey;
+    result.ctrlKey = event.ctrlKey;
+    result.shiftKey = event.shiftKey;
+    result.metaKey = event.metaKey;
+    result.button = event.button;
     result.hash = window.location.hash;
 
-    result.target = jsflight.getElementXPath(mouseEvent.target);
-    result.target1 = jsflight.getTargetId(mouseEvent);
-    result.target2 = jsflight.getElementXpathId(mouseEvent.target);
+    result.target = jsflight.getElementXPath(event.target);
+    result.target1 = jsflight.getTargetId(event);
+    result.target2 = jsflight.getElementXpathId(event.target);
 
-    if(!result.target2 && jsflight.checkTargetDetach(mouseEvent.target)){
-        result.target2 = jsflight.getDetachedElementXpathId(mouseEvent.target, jsflight.getDetachElement(mouseEvent));
+    if(!result.target2 && jsflight.checkTargetDetach(event.target)){
+        result.target2 = jsflight.getDetachedElementXpathId(event.target, jsflight.getDetachElement(event));
     }
 
     result.timestamp = Date.now();
 
-    result.screenX = mouseEvent.screenX;
-    result.screenY = mouseEvent.screenY;
+    result.screenX = event.screenX;
+    result.screenY = event.screenY;
 
-    result.pageX = mouseEvent.pageX;
-    result.pageY = mouseEvent.pageY;
+    result.pageX = event.pageX;
+    result.pageY = event.pageY;
 
     result.screen = {
     		width : screen.width,
@@ -87,20 +113,20 @@ jsflight.getEventInfo = function(mouseEvent) {
     			width : window.innerWidth,
     			height : window.innerHeight
     		};
-    
+
     result.agent = navigator.userAgent;
-    result.image = mouseEvent.image;
-    result.dom = mouseEvent.dom;
-    result.eventId = mouseEvent.eventId;
-    
-    result.newUrl = mouseEvent.newURL;
-    result.oldUrl = mouseEvent.oldURL;
-    
-    result.deltaX = mouseEvent.deltaX;
-    result.deltaY = mouseEvent.deltaY;
-    result.deltaZ = mouseEvent.deltaZ;
-    
-    result.wheelDelta = mouseEvent.wheelDelta;
+    result.image = event.image;
+    result.dom = event.dom;
+    result.eventId = event.eventId;
+
+    result.newUrl = event.newURL;
+    result.oldUrl = event.oldURL;
+
+    result.deltaX = event.deltaX;
+    result.deltaY = event.deltaY;
+    result.deltaZ = event.deltaZ;
+
+    result.wheelDelta = event.wheelDelta;
 
     if (jsflight.options.propertyProvider) {
         jsflight.options.propertyProvider(result);

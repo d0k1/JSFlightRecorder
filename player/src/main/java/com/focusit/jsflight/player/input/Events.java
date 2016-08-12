@@ -1,5 +1,6 @@
 package com.focusit.jsflight.player.input;
 
+import com.focusit.jsflight.player.constants.EventConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -11,7 +12,6 @@ import java.util.*;
  * @author Denis V. Kirpichenkov
  */
 public class Events {
-    private static final String TIMESTAMP = "timestamp";
     private List<JSONObject> events = new ArrayList<>();
 
     public List<JSONObject> getEvents() {
@@ -19,13 +19,13 @@ public class Events {
     }
 
     public List<JSONObject> parse(List<String> content) {
-        JSONArray rawevents;
+        JSONArray rawEvents;
         Set<JSONObject> temp = new HashSet<>();
         for (String line : content) {
-            rawevents = new JSONArray(line);
-            for (int i = 0; i < rawevents.length(); i++) {
-                String event = rawevents.get(i).toString();
-                if (!event.contains("flight-cp")) {
+            rawEvents = new JSONArray(line);
+            for (int i = 0; i < rawEvents.length(); i++) {
+                String event = rawEvents.get(i).toString();
+                if (!event.contains(EventConstants.FLIGHT_CP)) {
                     temp.add(new JSONObject(event));
                 }
             }
@@ -48,7 +48,7 @@ public class Events {
 
         for (int i = 0; i < rawevents.length(); i++) {
             String event = rawevents.get(i).toString();
-            if (!event.contains("flight-cp")) {
+            if (!event.contains(EventConstants.FLIGHT_CP)) {
                 temp.add(new JSONObject(event));
             }
         }
@@ -58,11 +58,7 @@ public class Events {
     }
 
     private void sortEvents() {
-        Collections.sort(events, new Comparator<JSONObject>() {
-            @Override
-            public int compare(JSONObject o1, JSONObject o2) {
-                return ((Long) o1.getLong(TIMESTAMP)).compareTo(o2.getLong(TIMESTAMP));
-            }
-        });
+        Collections.sort(events, (o1, o2) ->
+                ((Long) o1.getLong(EventConstants.TIMESTAMP)).compareTo(o2.getLong(EventConstants.TIMESTAMP)));
     }
 }
