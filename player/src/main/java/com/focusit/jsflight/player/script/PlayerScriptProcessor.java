@@ -55,7 +55,7 @@ public class PlayerScriptProcessor {
         binding.put(ScriptBindingConstants.PREVIOUS, prevEvent);
 
         try {
-            return executeGroovyScript(script, binding, boolean.class);
+            return executeGroovyScript(script, binding, Boolean.class);
         } catch (Throwable e) {
             LOG.warn("Failed to create duplicateHandler script. Default value is false");
             return false;
@@ -159,6 +159,7 @@ public class PlayerScriptProcessor {
     }
 
     public <T> T executeGroovyScript(String scriptBody, Map<String, Object> bindings, Class<T> clazz) {
+        LOG.debug("Executing script:\n", scriptBody);
         Binding binding = new Binding(bindings);
         addBasicBindings(binding);
 

@@ -14,7 +14,6 @@ import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.interactions.Actions;
-import org.openqa.selenium.internal.SocketLock;
 import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
@@ -28,9 +27,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -254,26 +250,26 @@ public class SeleniumDriver {
                 }
                 LOG.info("Firefox path is: {}", path);
 
-                try {
+//                try {
                     driver = new FirefoxDriver(binary, profile, cap);
-                } catch (WebDriverException ex) {
-                    try {
-                        Field socketLockLocalhostField = SocketLock.class.getDeclaredField("localhost");
-                        socketLockLocalhostField.setAccessible(true);
-                        Field modifiersField = Field.class.getDeclaredField("modifiers");
-                        modifiersField.setAccessible(true);
-                        modifiersField.setInt(socketLockLocalhostField,
-                                socketLockLocalhostField.getModifiers() & ~Modifier.FINAL);
-
-                        socketLockLocalhostField.set(null,
-                                new InetSocketAddress("localhost", SocketLock.DEFAULT_PORT + new Random().nextInt(20)));
-
-                        driver = new FirefoxDriver(binary, profile, cap);
-                    } catch (Exception e) {
-                        LOG.error(e.getMessage(), e);
-                        throw new RuntimeException(e);
-                    }
-                }
+//                } catch (WebDriverException ex) {
+//                    try {
+//                        Field socketLockLocalhostField = SocketLock.class.getDeclaredField("localhost");
+//                        socketLockLocalhostField.setAccessible(true);
+//                        Field modifiersField = Field.class.getDeclaredField("modifiers");
+//                        modifiersField.setAccessible(true);
+//                        modifiersField.setInt(socketLockLocalhostField,
+//                                socketLockLocalhostField.getModifiers() & ~Modifier.FINAL);
+//
+//                        socketLockLocalhostField.set(null,
+//                                new InetSocketAddress("localhost", SocketLock.DEFAULT_PORT + new Random().nextInt(20)));
+//
+//                        driver = new FirefoxDriver(binary, profile, cap);
+//                    } catch (Exception e) {
+//                        LOG.error(e.getMessage(), e);
+//                        throw new RuntimeException(e);
+//                    }
+//                }
             } else {
                 if (!isNullOrWhiteSpace(path)) {
                     cap.setCapability("phantomjs.binary.path", path);
@@ -718,6 +714,7 @@ public class SeleniumDriver {
         PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
         String firefoxPid = getFirefoxPid(wd);
         processor.executeProcessSignalScript(processSignalScript, PROCESS_SIGNAL_CONT, firefoxPid);
+        LOG.info("Prioritizing driver with pid: {}", firefoxPid);
         drivers.values()
                 .stream()
                 .filter(driver -> !driver.equals(wd))
