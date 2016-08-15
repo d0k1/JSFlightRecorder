@@ -1,7 +1,7 @@
 package com.focusit.jsflight.player.script;
 
 import com.focusit.jsflight.player.constants.EventConstants;
-import com.focusit.jsflight.player.constants.ScriptBindingConstants;
+import com.focusit.script.constants.ScriptBindingConstants;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.script.ScriptEngine;
 import groovy.lang.Binding;
@@ -40,7 +40,7 @@ public class PlayerScriptProcessor {
         binding.put(ScriptBindingConstants.WEB_DRIVER, wd);
         binding.put(ScriptBindingConstants.ELEMENT, element);
 
-        return executeGroovyScript(script, binding, boolean.class);
+        return executeGroovyScript(script, binding, Boolean.class);
     }
 
     /**
@@ -54,7 +54,12 @@ public class PlayerScriptProcessor {
         binding.put(ScriptBindingConstants.CURRENT, currentEvent);
         binding.put(ScriptBindingConstants.PREVIOUS, prevEvent);
 
-        return executeGroovyScript(script, binding, boolean.class);
+        try {
+            return executeGroovyScript(script, binding, boolean.class);
+        } catch (Throwable e) {
+            LOG.warn("Failed to create duplicateHandler script. Default value is false");
+            return false;
+        }
     }
 
     public void executeScriptEvent(String script, JSONObject event) {
@@ -74,7 +79,9 @@ public class PlayerScriptProcessor {
         Map<String, Object> binding = getEmptyBindingsMap();
         binding.put(ScriptBindingConstants.EVENTS, events);
 
-        executeGroovyScript(script, binding);
+        try {
+            executeGroovyScript(script, binding);
+        } catch (Throwable ignored) {}
     }
 
     public void runStepPrePostScript(JSONObject event, int step, boolean pre) {
@@ -95,7 +102,9 @@ public class PlayerScriptProcessor {
         binding.put(ScriptBindingConstants.PRE, pre);
         binding.put(ScriptBindingConstants.POST, !pre);
 
-        executeGroovyScript(script, binding);
+        try {
+            executeGroovyScript(script, binding);
+        } catch (Throwable ignored) {}
     }
 
     public JSONObject runStepTemplating(UserScenario scenario, JSONObject step) {
@@ -133,10 +142,10 @@ public class PlayerScriptProcessor {
         executeGroovyScript(script, binding);
     }
 
-    public void executeDriverSignalScript(String script, int signal, String firefoxPid) {
+    public void executeProcessSignalScript(String script, int signal, String pid) {
         Map<String, Object> binding = getEmptyBindingsMap();
         binding.put(ScriptBindingConstants.SIGNAL, signal);
-        binding.put(ScriptBindingConstants.FIREFOX_PID, firefoxPid);
+        binding.put(ScriptBindingConstants.PID, pid);
 
         executeGroovyScript(script, binding);
     }

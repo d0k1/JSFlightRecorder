@@ -12,7 +12,7 @@ import java.util.stream.Collectors
  * 		target - целевой XPath из события
  * 		webdriver - вебдрайвер
  * 		event - само событие
- * 		LOG - лог
+ * 		logger - лог
  */
 
 java.lang.Thread.currentThread().setContextClassLoader(classloader);

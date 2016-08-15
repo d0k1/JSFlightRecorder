@@ -2,6 +2,7 @@ package com.focusit.jmeter;
 
 import com.focusit.script.ScriptEngine;
 import com.focusit.script.ScriptsClassLoader;
+import com.focusit.script.constants.ScriptBindingConstants;
 import groovy.lang.Binding;
 import groovy.lang.Script;
 import org.apache.jmeter.config.Arguments;
@@ -57,12 +58,12 @@ public class JMeterScriptProcessor {
      */
     public boolean processSampleDuringRecord(HTTPSamplerBase sampler, SampleResult result) {
         Binding binding = new Binding();
-        binding.setVariable("logger", LOG);
-        binding.setVariable("request", sampler);
-        binding.setVariable("response", result);
-        binding.setVariable("ctx", recorder.getContext());
-        binding.setVariable("jsflight", recorder.getBridge());
-        binding.setVariable("classloader", classLoader);
+        binding.setVariable(ScriptBindingConstants.LOGGER, LOG);
+        binding.setVariable(ScriptBindingConstants.REQUEST, sampler);
+        binding.setVariable(ScriptBindingConstants.RESPONSE, result);
+        binding.setVariable(ScriptBindingConstants.CONTEXT, recorder.getContext());
+        binding.setVariable(ScriptBindingConstants.JSFLIGHT, recorder.getBridge());
+        binding.setVariable(ScriptBindingConstants.CLASSLOADER, classLoader);
 
         boolean isOk = true;
 
@@ -95,13 +96,13 @@ public class JMeterScriptProcessor {
      */
     public void processScenario(HTTPSamplerBase sample, HashTree tree, Arguments userVariables) {
         Binding binding = new Binding();
-        binding.setVariable("logger", LOG);
-        binding.setVariable("sample", sample);
-        binding.setVariable("tree", tree);
-        binding.setVariable("ctx", recorder.getContext());
-        binding.setVariable("jsflight", recorder.getBridge());
-        binding.setVariable("vars", userVariables);
-        binding.setVariable("classloader", classLoader);
+        binding.setVariable(ScriptBindingConstants.LOGGER, LOG);
+        binding.setVariable(ScriptBindingConstants.SAMPLE, sample);
+        binding.setVariable(ScriptBindingConstants.TREE, tree);
+        binding.setVariable(ScriptBindingConstants.CONTEXT, recorder.getContext());
+        binding.setVariable(ScriptBindingConstants.JSFLIGHT, recorder.getBridge());
+        binding.setVariable(ScriptBindingConstants.USER_VARIABLES, userVariables);
+        binding.setVariable(ScriptBindingConstants.CLASSLOADER, classLoader);
 
         Script compiledProcessScript = engine.getThreadBindedScript(processScript);
         if (compiledProcessScript == null) {

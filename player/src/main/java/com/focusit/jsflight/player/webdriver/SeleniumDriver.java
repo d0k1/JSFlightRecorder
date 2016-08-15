@@ -4,7 +4,7 @@ import com.focusit.jsflight.player.constants.EventConstants;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
-import com.focusit.jsflight.player.constants.ScriptBindingConstants;
+import com.focusit.script.constants.ScriptBindingConstants;
 import com.google.common.base.Predicate;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.json.JSONObject;
@@ -80,7 +80,7 @@ public class SeleniumDriver {
     private List<String> emptySelections;
     private String selectXpath;
     private String selectDeterminerScript;
-    private String driverSignalScript;
+    private String processSignalScript;
     private String getFirefoxPidScript;
     /**
      * Interval in seconds between awaiting UI attempts
@@ -132,8 +132,8 @@ public class SeleniumDriver {
         return this;
     }
 
-    public SeleniumDriver setDriverSignalScript(String driverSignalScript) {
-        this.driverSignalScript = driverSignalScript;
+    public SeleniumDriver setProcessSignalScript(String processSignalScript) {
+        this.processSignalScript = processSignalScript;
         return this;
     }
 
@@ -204,7 +204,7 @@ public class SeleniumDriver {
     public void closeWebDrivers() {
         PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
         drivers.values().forEach(driver -> {
-            processor.executeDriverSignalScript(driverSignalScript, PROCESS_SIGNAL_CONT, getFirefoxPid(driver));
+            processor.executeProcessSignalScript(processSignalScript, PROCESS_SIGNAL_CONT, getFirefoxPid(driver));
             driver.close();
         });
     }
@@ -563,7 +563,7 @@ public class SeleniumDriver {
             PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
             String firefoxPid = getFirefoxPid(driver);
             LOG.info("Trying to kill Firefox. PID: {}", firefoxPid);
-            processor.executeDriverSignalScript(driverSignalScript, PROCESS_SIGNAL_FORCE_KILL, firefoxPid);
+            processor.executeProcessSignalScript(processSignalScript, PROCESS_SIGNAL_FORCE_KILL, firefoxPid);
         } catch (Throwable ex) {
             LOG.error(ex.getMessage(), ex);
         }
@@ -617,6 +617,7 @@ public class SeleniumDriver {
         if (type.equalsIgnoreCase(EventType.XHR) || type.equalsIgnoreCase(EventType.SCRIPT)) {
             return;
         }
+        LOG.info("Waiting page readiness for {} seconds", pageTimeoutMs);
         try {
             new WebDriverWait(wd, pageTimeoutMs, 500).until(new Predicate<WebDriver>() {
                 @Override
@@ -630,7 +631,7 @@ public class SeleniumDriver {
                 }
             });
         } catch (TimeoutException e) {
-            throw new IllegalStateException(String.format("Page was not ready within specified timeout:\n%s",
+            throw new IllegalStateException(String.format("Page was not ready within specified timeout: %s",
                     event.getString(EventConstants.URL)));
         }
     }
@@ -715,12 +716,12 @@ public class SeleniumDriver {
     private void prioritize(WebDriver wd) {
         PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
         String firefoxPid = getFirefoxPid(wd);
-        processor.executeDriverSignalScript(driverSignalScript, PROCESS_SIGNAL_CONT, firefoxPid);
+        processor.executeProcessSignalScript(processSignalScript, PROCESS_SIGNAL_CONT, firefoxPid);
         drivers.values()
                 .stream()
                 .filter(driver -> !driver.equals(wd))
                 .forEach(driver ->
-                        processor.executeDriverSignalScript(driverSignalScript, PROCESS_SIGNAL_STOP, firefoxPid));
+                        processor.executeProcessSignalScript(processSignalScript, PROCESS_SIGNAL_STOP, firefoxPid));
     }
 
     private FirefoxProfile createProfile() {

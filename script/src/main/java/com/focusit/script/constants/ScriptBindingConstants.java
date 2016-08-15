@@ -1,4 +1,4 @@
-package com.focusit.jsflight.player.constants;
+package com.focusit.script.constants;
 
 /**
  * This class contains constants, that should be used in binding and in groovy scripts
@@ -21,5 +21,11 @@ public final class ScriptBindingConstants {
     public static final String CLASSLOADER = "classloader";
     public static final String PLAYER_CONTEXT = "playerContext";
     public static final String CONTEXT = "ctx";
-    public static final String FIREFOX_PID = "firefoxPid";
+    public static final String PID = "pid";
+    public static final String REQUEST = "request";
+    public static final String RESPONSE = "response";
+    public static final String JSFLIGHT = "jsflight";
+    public static final String SAMPLE = "sample";
+    public static final String TREE = "tree";
+    public static final String USER_VARIABLES = "vars";
 }

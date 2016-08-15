@@ -109,7 +109,7 @@ public class UserScenario {
     }
 
     private boolean isEventOfType(JSONObject event, String type) {
-        return event.getString(EventConstants.TYPE).equals(type);
+        return event.getString(EventConstants.TYPE).equalsIgnoreCase(type);
     }
 
     public boolean isEventIgnored(JSONObject event) {

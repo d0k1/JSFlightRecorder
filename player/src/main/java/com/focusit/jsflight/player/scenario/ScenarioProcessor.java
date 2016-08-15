@@ -4,7 +4,7 @@ import com.focusit.jsflight.player.config.CommonConfiguration;
 import com.focusit.jsflight.player.constants.EventConstants;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
-import com.focusit.jsflight.player.constants.ScriptBindingConstants;
+import com.focusit.script.constants.ScriptBindingConstants;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 import org.json.JSONObject;
 import org.openqa.selenium.WebDriver;
@@ -150,7 +150,7 @@ public class ScenarioProcessor {
                     .setSelectXpath(scenario.getConfiguration().getWebConfiguration().getSelectXpath())
                     .setSelectDeterminerScript(
                             scenario.getConfiguration().getWebConfiguration().getSelectDeterminerScript())
-                    .setDriverSignalScript(commonConfiguration.getDriverSignalScript())
+                    .setProcessSignalScript(commonConfiguration.getProcessSignalScript())
                     .setGetFirefoxPidScript(commonConfiguration.getGetFirefoxPidScript())
                     .setFormDialogXpath(commonConfiguration.getFormOrDialogXpath());
 

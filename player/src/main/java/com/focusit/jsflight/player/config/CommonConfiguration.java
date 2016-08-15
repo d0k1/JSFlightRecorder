@@ -1,7 +1,7 @@
 package com.focusit.jsflight.player.config;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.focusit.jsflight.player.constants.ScriptBindingConstants;
+import com.focusit.script.constants.ScriptBindingConstants;
 import com.focusit.script.ScriptsClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +27,7 @@ public class CommonConfiguration {
     private static final Logger LOG = LoggerFactory.getLogger(CommonConfiguration.class);
     private static final String CHECK_PAGE_JS_DEFAULT = "return (document.getElementById('state.dispatch')==null || document.getElementById('state.dispatch').getAttribute('value')==0) &&  (document.getElementById('state.context')==null ||  document.getElementById('state.context').getAttribute('value')=='ready');";
     @Transient
+    @JsonIgnore
     private ReentrantLock scriptClassloaderLock;
     private String proxyPort;
     private String proxyHost;
@@ -48,8 +49,8 @@ public class CommonConfiguration {
     private int pageShownTimeout;
     private Map<String, Object> customProperties = new ConcurrentHashMap<>();
     private String extraClasspath = null;
-    private String driverSignalScript = String.format("\"kill ${%s} ${%s}\".execute()",
-            ScriptBindingConstants.SIGNAL, ScriptBindingConstants.FIREFOX_PID);
+    private String processSignalScript = String.format("\"kill ${%s} ${%s}\".execute()",
+            ScriptBindingConstants.SIGNAL, ScriptBindingConstants.PID);
     private String getFirefoxPidScript =
             String.format("\"echo ${%s.binary.process.process.executeWatchdog.getPID()}\".execute().text",
                     ScriptBindingConstants.WEB_DRIVER);
@@ -82,12 +83,12 @@ public class CommonConfiguration {
         }
     }
 
-    public String getDriverSignalScript() {
-        return driverSignalScript;
+    public String getProcessSignalScript() {
+        return processSignalScript;
     }
 
-    public void setDriverSignalScript(String driverSignalScript) {
-        this.driverSignalScript = driverSignalScript;
+    public void setProcessSignalScript(String processSignalScript) {
+        this.processSignalScript = processSignalScript;
     }
 
     public long getIntervalBetweenUiChecksMs() {
