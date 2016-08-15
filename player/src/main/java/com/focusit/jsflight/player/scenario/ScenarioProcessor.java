@@ -49,8 +49,9 @@ public class ScenarioProcessor {
         String findBrowserErrorScript = scenario.getConfiguration().getWebConfiguration().getFindBrowserErrorScript();
         Map<String, Object> binding = PlayerScriptProcessor.getEmptyBindingsMap();
         binding.put(ScriptBindingConstants.WEB_DRIVER, wd);
-        Object result = new PlayerScriptProcessor(scenario).executeGroovyScript(findBrowserErrorScript, binding);
-        if (result != null) {
+        boolean pageContainsError = new PlayerScriptProcessor(scenario)
+                .executeGroovyScript(findBrowserErrorScript, binding, Boolean.class);
+        if (pageContainsError) {
             throw new IllegalStateException("Browser contains some error after step processing");
         }
     }

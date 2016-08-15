@@ -624,6 +624,7 @@ public class SeleniumDriver {
                 public boolean apply(WebDriver input) {
                     try {
                         Object result = ((JavascriptExecutor) wd).executeScript(checkPageJs);
+                        LOG.info("Page readiness checking: {}", result);
                         return result != null && Boolean.parseBoolean(result.toString().toLowerCase());
                     } catch (WebDriverException e) {
                         return false;
