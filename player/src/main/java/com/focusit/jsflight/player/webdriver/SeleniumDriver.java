@@ -251,7 +251,7 @@ public class SeleniumDriver {
                 LOG.info("Firefox path is: {}", path);
 
 //                try {
-                    driver = new FirefoxDriver(binary, profile, cap);
+                driver = createFirefoxDriver(cap, profile, binary);
 //                } catch (WebDriverException ex) {
 //                    try {
 //                        Field socketLockLocalhostField = SocketLock.class.getDeclaredField("localhost");
@@ -295,6 +295,16 @@ public class SeleniumDriver {
         }
     }
 
+    private FirefoxDriver createFirefoxDriver(DesiredCapabilities cap, FirefoxProfile profile, FirefoxBinary binary) {
+        try {
+            return new FirefoxDriver(binary, profile, cap);
+        } catch (WebDriverException ex) {
+            LOG.warn(ex.getMessage());
+            awakenAllDrivers();
+            return createFirefoxDriver(cap, profile, binary);
+        }
+    }
+
     public String getDriverDisplay(WebDriver webdriver) {
         return driverDisplay.getOrDefault(webdriver.toString(), "No display");
     }
@@ -317,14 +327,14 @@ public class SeleniumDriver {
     }
 
     public void openEventUrl(WebDriver wd, JSONObject event) {
-        String event_url = event.getString(EventConstants.URL);
+        String eventUrl = event.getString(EventConstants.URL);
 
         resizeForEvent(wd, event);
-        if (wd.getCurrentUrl().equals("about:blank") || !getLastUrl(event).equals(event_url)) {
-            wd.get(event_url);
+        if (wd.getCurrentUrl().equals("about:blank") || !getLastUrl(event).equals(eventUrl)) {
+            wd.get(eventUrl);
 
             waitUi(wd);
-            updateLastUrl(event, event_url);
+            updateLastUrl(event, eventUrl);
         }
     }
 
@@ -352,7 +362,7 @@ public class SeleniumDriver {
                     event.get(EventConstants.EVENT_ID), event.getString(EventConstants.SECOND_TARGET));
             return;
         }
-        ensureStringGeneratorInitialized(useRandomChars);
+        initializeStringGenerator(useRandomChars);
 
         //TODO remove this when recording of cursor in text box is implemented
         if (skipKeyboardForElement(element)) {
@@ -530,28 +540,6 @@ public class SeleniumDriver {
         LOG.info("Display {} is available again", display);
         availiableDisplays.add(display);
 
-//        Field binaryField = FirefoxDriver.class.getDeclaredField("binary");
-//        binaryField.setAccessible(true);
-//        FirefoxBinary binary = (FirefoxBinary) binaryField.get(driver);
-//
-//        Field commandLineProcessField = FirefoxBinary.class.getDeclaredField("process");
-//        commandLineProcessField.setAccessible(true);
-//        CommandLine commandLineProcess = commandLineProcessField.get(binary);
-//
-//        Field osProcessField = CommandLine.class.getField("process");
-//        osProcessField.setAccessible(true);
-//        Object osProcess = osProcessField.get(commandLineProcess);
-//
-//        Class<?> osProcessClass = Class.forName("org.openqa.selenium.os.UnixProcess");
-//        Field executeWatchdogField = osProcessClass.getField("executeWatchdog");
-//        executeWatchdogField.setAccessible(true);
-//        Object executeWatchdog = executeWatchdogField.get(osProcess);
-//
-//        Class<?> seleniumWatchDogClass = Class.forName("org.openqa.selenium.os.UnixProcess$SeleniumWatchDog");
-//        Method getPidMethhod = seleniumWatchDogClass.getDeclaredMethod("getPID");
-//        getPidMethhod.setAccessible(true);
-//        String pid = (String)getPidMethhod.invoke(executeWatchdog);
-
         String tabUuid = event.getString(EventConstants.TAB_UUID);
         drivers.remove(tabUuid);
         driver.quit();
@@ -567,15 +555,15 @@ public class SeleniumDriver {
 
     private String getFirefoxPid(WebDriver driver) {
         PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
-        Map<String , Object> binding = PlayerScriptProcessor.getEmptyBindingsMap();
+        Map<String, Object> binding = PlayerScriptProcessor.getEmptyBindingsMap();
         binding.put(ScriptBindingConstants.WEB_DRIVER, getSeleniumDriver(driver));
         return processor.executeGroovyScript(getFirefoxPidScript, binding, String.class);
     }
 
     private WebDriver getSeleniumDriver(WebDriver driver) {
         return driver instanceof WebDriverWrapper
-            ? ((WebDriverWrapper)driver).getWrappedDriver()
-            : driver;
+                ? ((WebDriverWrapper) driver).getWrappedDriver()
+                : driver;
     }
 
     public void resetLastUrls() {
@@ -653,7 +641,7 @@ public class SeleniumDriver {
         }
     }
 
-    private void ensureStringGeneratorInitialized(boolean useRandomChars) {
+    private void initializeStringGenerator(boolean useRandomChars) {
         if (stringGen == null) {
             if (useRandomChars) {
                 stringGen = new RandomStringGenerator();
@@ -684,6 +672,7 @@ public class SeleniumDriver {
         width = width > 0 ? width : 1000;
         height = height > 0 ? height : 1000;
 
+        LOG.info("Resizing to {}x{}", width, height);
         wd.manage().window().setSize(new Dimension(width, height));
     }
 
@@ -710,6 +699,14 @@ public class SeleniumDriver {
         }
     }
 
+    private void awakenAllDrivers() {
+        PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
+        drivers.values()
+                .forEach(driver ->
+                        processor.executeProcessSignalScript(processSignalScript, PROCESS_SIGNAL_CONT,
+                                getFirefoxPid(driver)));
+    }
+
     private void prioritize(WebDriver wd) {
         PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
         String firefoxPid = getFirefoxPid(wd);
@@ -719,7 +716,8 @@ public class SeleniumDriver {
                 .stream()
                 .filter(driver -> !driver.equals(wd))
                 .forEach(driver ->
-                        processor.executeProcessSignalScript(processSignalScript, PROCESS_SIGNAL_STOP, firefoxPid));
+                        processor.executeProcessSignalScript(processSignalScript, PROCESS_SIGNAL_STOP,
+                                getFirefoxPid(driver)));
     }
 
     private FirefoxProfile createProfile() {
