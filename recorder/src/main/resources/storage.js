@@ -57,7 +57,9 @@ jsflight.getEventInfo = function(event) {
     var result = {};
 
     result.caretPosition = getCaretPosition(event.target);
-
+    try {
+        result.clipboardData = (event.clipboardData || window.clipboardData).getData('Text');
+    } catch(e) {}
     result.tabuuid = jsflight.tabUuid;
     result.type = event.type;
     result.url = window.location.href;
@@ -65,10 +67,6 @@ jsflight.getEventInfo = function(event) {
     result.key = event.key;
     result.keyCode = event.keyCode;
     result.charCode = event.charCode;
-
-    if (event.type === 'paste') {
-        result.clipboardData = event.clipboardData;
-    }
 
     if (event.type === 'keyup') {
         if (!event.shiftKey) {

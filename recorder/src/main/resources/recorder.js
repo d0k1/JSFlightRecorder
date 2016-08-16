@@ -28,17 +28,19 @@ jsflight.startRecorder = function() {
         document.addEventListener('keypress', jsflight.TrackKeyboard);
         document.addEventListener('keyup', jsflight.TrackKeyboard);
         document.addEventListener('keydown', jsflight.TrackKeyboard);
+        document.addEventListener('paste', jsflight.TrackKeyboard);
         window.addEventListener('hashchange', jsflight.TrackHash);
     } else {
-        document.attachEvent('click', jsflight.TrackMouse);
-        document.attachEvent('mousedown', jsflight.TrackMouse);
-        document.attachEvent('mousemove', jsflight.TrackMouse);
-        document.attachEvent('mousewheel', jsflight.TrackMouse);
-        document.attachEvent('scroll', jsflight.TrackMouse);
-        document.attachEvent('keypress', jsflight.TrackKeyboard);
-        document.attachEvent('keyup', jsflight.TrackKeyboard);
-        document.attachEvent('keydown', jsflight.TrackKeyboard);
-        window.attachEvent('hashchange', jsflight.TrackHash);
+        document.attachEvent('onclick', jsflight.TrackMouse);
+        document.attachEvent('onmousedown', jsflight.TrackMouse);
+        document.attachEvent('onmousemove', jsflight.TrackMouse);
+        document.attachEvent('onmousewheel', jsflight.TrackMouse);
+        document.attachEvent('onscroll', jsflight.TrackMouse);
+        document.attachEvent('onkeypress', jsflight.TrackKeyboard);
+        document.attachEvent('onkeyup', jsflight.TrackKeyboard);
+        document.attachEvent('onkeydown', jsflight.TrackKeyboard);
+        document.attachEvent('onpaste', jsflight.TrackKeyboard);
+        window.attachEvent('onhashchange', jsflight.TrackHash);
     }
     if (typeof (window.sessionStorage) == "undefined") {
         console.log('No support of window.sessionStorage');
