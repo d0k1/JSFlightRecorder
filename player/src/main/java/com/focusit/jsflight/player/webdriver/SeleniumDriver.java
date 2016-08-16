@@ -871,6 +871,10 @@ public class SeleniumDriver
 
     private void prioritize(WebDriver wd)
     {
+        if (drivers.size() == 1)
+        {
+            return;
+        }
         PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
         String firefoxPid = getFirefoxPid(wd);
         processor.executeProcessSignalScript(processSignalScript, PROCESS_SIGNAL_CONT, firefoxPid);

@@ -135,7 +135,7 @@ public class MongoDbScenarioSpec extends Specification {
         experimentRepository.findOne(experiment.getId()).position == position + 1;
     }
 
-    def "next zeroes position in experiment and persists it when no more steps left in the experiment"() {
+    def "next doesn't set position in experiment than steps count in the experiment"() {
         given:
         String recordingId1 = new ObjectId();
         int position = 10;
@@ -149,6 +149,6 @@ public class MongoDbScenarioSpec extends Specification {
         when:
         scenario.moveToNextStep();
         then:
-        experimentRepository.findOne(experiment.getId()).position == 0;
+        experimentRepository.findOne(new ObjectId(experiment.getId())).position == position;
     }
 }

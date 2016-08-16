@@ -17,21 +17,21 @@ class MongoDbScenarioUnitSpec extends Specification {
     Experiment experiment = new Experiment();
     MongoDbScenario scenario = new MongoDbScenario(experiment, eventRepositoryCustom, experimentRepository);
 
-    def "next will zero position event when experiment's position is bigger than steps count"() {
+    def "next will set position of experiment to steps count when its' position is bigger than steps count"() {
         given:
         experiment.position = 1;
         experiment.steps = 2;
         when:
         scenario.moveToNextStep();
         then:
-        experiment.position == 0;
+        experiment.position == 2;
 
         when:
         experiment.position = 2;
         experiment.steps = 2;
         scenario.moveToNextStep();
         then:
-        experiment.position == 0;
+        experiment.position == 2;
     }
 
     def "setPosition persist position"() {
