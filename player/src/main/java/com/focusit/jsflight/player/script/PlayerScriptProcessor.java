@@ -1,26 +1,24 @@
 package com.focusit.jsflight.player.script;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
-
+import com.focusit.jsflight.player.constants.EventConstants;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.script.ScriptEngine;
+import com.focusit.script.constants.ScriptBindingConstants;
+import groovy.lang.Binding;
+import groovy.lang.Script;
+import groovy.text.SimpleTemplateEngine;
 import org.json.JSONObject;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.focusit.jsflight.player.constants.EventConstants;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.script.ScriptEngine;
-import com.focusit.script.constants.ScriptBindingConstants;
-
-import groovy.lang.Binding;
-import groovy.lang.Script;
-import groovy.text.SimpleTemplateEngine;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
 
 /**
  * PlayerScriptProcessor that runs groovy scripts or GString templates
@@ -71,7 +69,7 @@ public class PlayerScriptProcessor
         }
         catch (Throwable e)
         {
-            LOG.warn("Failed to create duplicateHandler script. Default value is false");
+            LOG.warn("Failed to create duplicateHandler script. Default value is false", e);
             return false;
         }
     }

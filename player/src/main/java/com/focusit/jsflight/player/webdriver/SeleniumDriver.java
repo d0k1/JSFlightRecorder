@@ -287,26 +287,7 @@ public class SeleniumDriver
                 }
                 LOG.info("Firefox path is: {}", path);
 
-                //                try {
                 driver = createFirefoxDriver(cap, profile, binary);
-                //                } catch (WebDriverException ex) {
-                //                    try {
-                //                        Field socketLockLocalhostField = SocketLock.class.getDeclaredField("localhost");
-                //                        socketLockLocalhostField.setAccessible(true);
-                //                        Field modifiersField = Field.class.getDeclaredField("modifiers");
-                //                        modifiersField.setAccessible(true);
-                //                        modifiersField.setInt(socketLockLocalhostField,
-                //                                socketLockLocalhostField.getModifiers() & ~Modifier.FINAL);
-                //
-                //                        socketLockLocalhostField.set(null,
-                //                                new InetSocketAddress("localhost", SocketLock.DEFAULT_PORT + new Random().nextInt(20)));
-                //
-                //                        driver = new FirefoxDriver(binary, profile, cap);
-                //                    } catch (Exception e) {
-                //                        LOG.error(e.getMessage(), e);
-                //                        throw new RuntimeException(e);
-                //                    }
-                //                }
             }
             else
             {

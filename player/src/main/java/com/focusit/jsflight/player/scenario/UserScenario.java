@@ -1,11 +1,5 @@
 package com.focusit.jsflight.player.scenario;
 
-import java.io.IOException;
-import java.util.*;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import com.focusit.jsflight.player.config.Configuration;
 import com.focusit.jsflight.player.constants.EventConstants;
 import com.focusit.jsflight.player.constants.EventType;
@@ -13,6 +7,11 @@ import com.focusit.jsflight.player.input.Events;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.script.player.PlayerContext;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Recorded scenario encapsulation: parses file, plays the scenario by step, modifies the scenario, saves to a disk.
@@ -149,19 +148,8 @@ public class UserScenario
 
     public void moveToNextStep()
     {
-        checks.set(position, true);
+        checks.set(getPosition(), true);
         setPosition(Math.min(getPosition() + 1, getStepsCount()));
-        //        if (isOver()) {
-        //            for (int i = 0; i < getPosition(); i++) {
-        //                checks.set(i, false);
-        //            }
-        //            position = 0;
-        //        }
-    }
-
-    public boolean isOver()
-    {
-        return getPosition() == getStepsCount();
     }
 
     public void parse(String filename) throws IOException
