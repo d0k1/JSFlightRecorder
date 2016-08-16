@@ -6,7 +6,8 @@ package com.focusit.jsflight.player.fileconfigholder;
  *
  * @author dkirpichenkov
  */
-public interface IFileConfigHolder {
+public interface IFileConfigHolder
+{
     final String defaultConfig = "params";
 
     /**

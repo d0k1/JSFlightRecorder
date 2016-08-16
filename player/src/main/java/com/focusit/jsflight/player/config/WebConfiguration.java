@@ -1,16 +1,17 @@
 package com.focusit.jsflight.player.config;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 /**
  * Created by dkirpichenkov on 06.05.16.
  */
-public class WebConfiguration {
+public class WebConfiguration
+{
     private static final Logger LOG = LoggerFactory.getLogger(WebConfiguration.class);
     private String lookupScriptFilename = "";
     private String lookupScript = "";
@@ -23,111 +24,141 @@ public class WebConfiguration {
     private String selectXpath = "";
     private String selectDeterminerScript = "element.getAttribute(\"class\").contains(\"select\")";
 
-    public String getSelectDeterminerScript() {
+    public String getSelectDeterminerScript()
+    {
         return selectDeterminerScript;
     }
 
-    public void setSelectDeterminerScript(String selectDeterminerScript) {
+    public void setSelectDeterminerScript(String selectDeterminerScript)
+    {
         this.selectDeterminerScript = selectDeterminerScript;
     }
 
-    public String getSelectXpath() {
+    public String getSelectXpath()
+    {
         return selectXpath;
     }
 
-    public void setSelectXpath(String selectXpath) {
+    public void setSelectXpath(String selectXpath)
+    {
         this.selectXpath = selectXpath;
     }
 
-    public String getEmptySelections() {
+    public String getEmptySelections()
+    {
         return emptySelections;
     }
 
-    public void setEmptySelections(String emptySelections) {
+    public void setEmptySelections(String emptySelections)
+    {
         this.emptySelections = emptySelections;
     }
 
-    public String getErrorTextToSkipStep() {
+    public String getErrorTextToSkipStep()
+    {
         return errorTextToSkipStep;
     }
 
-    public void setErrorTextToSkipStep(String errorTextToSkipStep) {
+    public void setErrorTextToSkipStep(String errorTextToSkipStep)
+    {
         this.errorTextToSkipStep = errorTextToSkipStep;
     }
 
-    public String getLookupScriptFilename() {
+    public String getLookupScriptFilename()
+    {
         return lookupScriptFilename;
     }
 
-    public void setLookupScriptFilename(String filename) {
+    public void setLookupScriptFilename(String filename)
+    {
         this.lookupScriptFilename = filename;
     }
 
-    public String getLookupScript() {
+    public String getLookupScript()
+    {
         return lookupScript;
     }
 
-    public void setLookupScript(String script) {
+    public void setLookupScript(String script)
+    {
         this.lookupScript = script;
     }
 
-    public String getDuplicationScriptFilename() {
+    public String getDuplicationScriptFilename()
+    {
         return duplicationScriptFilename;
     }
 
-    public void setDuplicationScriptFilename(String duplicationScriptFilename) {
+    public void setDuplicationScriptFilename(String duplicationScriptFilename)
+    {
         this.duplicationScriptFilename = duplicationScriptFilename;
     }
 
-    public String getDuplicationScript() {
+    public String getDuplicationScript()
+    {
         return duplicationScript;
     }
 
-    public void setDuplicationScript(String duplicationScript) {
+    public void setDuplicationScript(String duplicationScript)
+    {
         this.duplicationScript = duplicationScript;
     }
 
-    public void loadDefaults() {
+    public void loadDefaults()
+    {
         loadDefaultLookupScript();
         loadDefaultDuplicationScript();
         loadDefaultFindBrowserErrorScript();
     }
 
-    private void loadDefaultDuplicationScript() {
-        try {
+    private void loadDefaultDuplicationScript()
+    {
+        try
+        {
             InputStream script = this.getClass().getClassLoader()
                     .getResourceAsStream("example-scripts/duplicateHandler.groovy");
-            if (script != null) {
+            if (script != null)
+            {
                 duplicationScript = IOUtils.toString(script, "UTF-8");
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             LOG.error(e.toString(), e);
         }
     }
 
-    private void loadDefaultLookupScript() {
-        try {
+    private void loadDefaultLookupScript()
+    {
+        try
+        {
             InputStream script = this.getClass().getClassLoader()
                     .getResourceAsStream("example-scripts/weblookup.groovy");
-            if (script != null) {
+            if (script != null)
+            {
                 lookupScript = IOUtils.toString(script, "UTF-8");
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             LOG.error(e.toString(), e);
         }
     }
 
-    private void loadDefaultFindBrowserErrorScript() {
+    private void loadDefaultFindBrowserErrorScript()
+    {
         setFindBrowserErrorScript("try {\n"
                 + "\treturn webdriver.findElement(org.openqa.selenium.By.xpath(\"//div[@id='gwt-debug-errorDialog']//div[@id='gwt-debug-dialogWidgetDescriptionElement']\"))!=null;\n"
                 + "} catch(org.openqa.selenium.NoSuchElementException ex) {\n" + "\treturn false;\n" + "}");
     }
 
-    public String getFindBrowserErrorScript() {
+    public String getFindBrowserErrorScript()
+    {
         return findBrowserErrorScript;
     }
 
-    public void setFindBrowserErrorScript(String findBrowserErrorScript) {
+    public void setFindBrowserErrorScript(String findBrowserErrorScript)
+    {
         this.findBrowserErrorScript = findBrowserErrorScript;
     }
 }

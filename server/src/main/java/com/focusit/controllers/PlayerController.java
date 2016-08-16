@@ -1,9 +1,14 @@
 package com.focusit.controllers;
 
-import com.focusit.model.Experiment;
-import com.focusit.model.Recording;
-import com.focusit.player.BackgroundWebPlayer;
-import com.focusit.service.RecordingsService;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Optional;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.poi.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,26 +18,25 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.Optional;
+import com.focusit.model.Experiment;
+import com.focusit.model.Recording;
+import com.focusit.player.BackgroundWebPlayer;
+import com.focusit.service.RecordingsService;
 
 /**
  * Created by dkirpichenkov on 29.04.16.
  */
 @RestController
 @RequestMapping(value = "/player")
-public class PlayerController {
+public class PlayerController
+{
     private final static Logger LOG = LoggerFactory.getLogger(PlayerController.class);
     private RecordingsService recordingsService;
     private BackgroundWebPlayer player;
 
     @Inject
-    public PlayerController(RecordingsService recordingsService, BackgroundWebPlayer player) {
+    public PlayerController(RecordingsService recordingsService, BackgroundWebPlayer player)
+    {
         this.recordingsService = recordingsService;
         this.player = player;
     }
@@ -43,7 +47,8 @@ public class PlayerController {
      * @return
      */
     @RequestMapping(value = "/list", method = RequestMethod.GET)
-    public List<Recording> getRecordings() {
+    public List<Recording> getRecordings()
+    {
         return recordingsService.getAllRecordings();
     }
 
@@ -60,9 +65,11 @@ public class PlayerController {
      */
     @RequestMapping(method = RequestMethod.POST, value = "/upload")
     public void uploadScenario(@RequestParam("name") String name, @RequestParam("file") MultipartFile file,
-                               HttpServletRequest request, HttpServletResponse response) throws IOException {
+            HttpServletRequest request, HttpServletResponse response) throws IOException
+    {
         response.setStatus(HttpServletResponse.SC_OK);
-        if (!recordingsService.importRecording(name, file.getInputStream())) {
+        if (!recordingsService.importRecording(name, file.getInputStream()))
+        {
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
@@ -73,7 +80,8 @@ public class PlayerController {
      * $ curl 127.0.0.1:8080/player/experiments
      */
     @RequestMapping(value = "/experiments", method = RequestMethod.GET)
-    public List<Experiment> experiments() {
+    public List<Experiment> experiments()
+    {
         return player.getAllExperiments();
     }
 
@@ -89,8 +97,9 @@ public class PlayerController {
      */
     @RequestMapping(value = "/startById", method = RequestMethod.GET)
     public Experiment start(@RequestParam("recordingId") String recordingId,
-                            @RequestParam(value = "withScreenshots", defaultValue = "false") Boolean withScreenshots,
-                            @RequestParam(value = "paused", defaultValue = "true") Boolean paused) throws Exception {
+            @RequestParam(value = "withScreenshots", defaultValue = "false") Boolean withScreenshots,
+            @RequestParam(value = "paused", defaultValue = "true") Boolean paused) throws Exception
+    {
         return player.start(recordingId, withScreenshots, paused);
     }
 
@@ -106,20 +115,21 @@ public class PlayerController {
      */
     @RequestMapping(value = "/startByName", method = RequestMethod.GET)
     public Experiment start(@RequestParam("recordingName") String recordingName,
-                            @RequestParam(value = "withScreenshots", defaultValue = "false") Boolean withScreenshots,
-                            @RequestParam(value = "paused", defaultValue = "true") Boolean paused,
-                            HttpServletRequest request, HttpServletResponse response) throws Exception {
-        Optional<Recording> maybeRecording = recordingsService.getAllRecordings()
-                .stream()
-                .filter(r -> r.getName().equals(recordingName))
-                .findAny();
-        for (Recording r : recordingsService.getAllRecordings()) {
+            @RequestParam(value = "withScreenshots", defaultValue = "false") Boolean withScreenshots,
+            @RequestParam(value = "paused", defaultValue = "true") Boolean paused, HttpServletRequest request,
+            HttpServletResponse response) throws Exception
+    {
+        Optional<Recording> maybeRecording = recordingsService.getAllRecordings().stream()
+                .filter(r -> r.getName().equals(recordingName)).findAny();
+        for (Recording r : recordingsService.getAllRecordings())
+        {
             LOG.debug(r.getName());
         }
         Recording recording = null;
         if (maybeRecording.isPresent())
             recording = maybeRecording.get();
-        if (recording == null) {
+        if (recording == null)
+        {
             response.sendError(HttpServletResponse.SC_NOT_FOUND,
                     String.format("Recording with name '%s' was not found", recordingName));
             return null;
@@ -133,7 +143,8 @@ public class PlayerController {
      * @param experimentId
      */
     @RequestMapping(value = "/status", method = RequestMethod.GET)
-    public Experiment status(@RequestParam("experimentId") String experimentId) {
+    public Experiment status(@RequestParam("experimentId") String experimentId)
+    {
         return player.status(experimentId);
     }
 
@@ -147,9 +158,11 @@ public class PlayerController {
      */
     @RequestMapping(value = "/screenshot", method = RequestMethod.GET)
     public void screenshot(@RequestParam("experimentId") String experimentId, @RequestParam("step") Integer step,
-                           HttpServletRequest request, HttpServletResponse response) throws IOException {
+            HttpServletRequest request, HttpServletResponse response) throws IOException
+    {
         InputStream stream = player.getScreenshot(experimentId, step);
-        if (stream == null) {
+        if (stream == null)
+        {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
@@ -170,16 +183,20 @@ public class PlayerController {
      */
     @RequestMapping(value = "/errorScreenShot", method = RequestMethod.GET)
     public void errorScreenshot(@RequestParam("experimentId") String experimentId, @RequestParam("step") Integer step,
-                                HttpServletRequest request, HttpServletResponse response) throws IOException {
+            HttpServletRequest request, HttpServletResponse response) throws IOException
+    {
         InputStream stream = player.getErrorScreenshot(experimentId, step);
-        if (stream == null) {
+        if (stream == null)
+        {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
         response.setContentType("image/png");
-        response.setHeader("Content-Disposition", String.format("attachment; filename=\"%s\"",
-                experimentId + "_error_" + String.format("_%05d.png", step)));
+        response.setHeader(
+                "Content-Disposition",
+                String.format("attachment; filename=\"%s\"",
+                        experimentId + "_error_" + String.format("_%05d.png", step)));
         IOUtils.copy(stream, response.getOutputStream());
         response.flushBuffer();
     }
@@ -196,9 +213,11 @@ public class PlayerController {
      */
     @RequestMapping(value = "/jmx", method = RequestMethod.GET)
     public void jmeter(@RequestParam("experimentId") String experimentId, HttpServletRequest request,
-                       HttpServletResponse response) throws IOException {
+            HttpServletResponse response) throws IOException
+    {
         InputStream stream = player.getJMX(experimentId);
-        if (stream == null) {
+        if (stream == null)
+        {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
@@ -218,7 +237,8 @@ public class PlayerController {
      * @param step
      */
     @RequestMapping(value = "/move", method = RequestMethod.GET)
-    public void move(@RequestParam("experimentId") String experimentId, @RequestParam("step") Integer step) {
+    public void move(@RequestParam("experimentId") String experimentId, @RequestParam("step") Integer step)
+    {
         player.move(experimentId, step);
     }
 
@@ -228,7 +248,8 @@ public class PlayerController {
      * @param experimentId
      */
     @RequestMapping(value = "/pause", method = RequestMethod.GET)
-    public void pause(@RequestParam("experimentId") String experimentId) {
+    public void pause(@RequestParam("experimentId") String experimentId)
+    {
         player.pause(experimentId);
     }
 
@@ -238,7 +259,8 @@ public class PlayerController {
      * @param experimentId
      */
     @RequestMapping(value = "/resume", method = RequestMethod.GET)
-    public void resume(@RequestParam("experimentId") String experimentId) throws Exception {
+    public void resume(@RequestParam("experimentId") String experimentId) throws Exception
+    {
         player.resume(experimentId);
     }
 
@@ -248,7 +270,8 @@ public class PlayerController {
      * @param experimentId
      */
     @RequestMapping(value = "/cancel", method = RequestMethod.GET)
-    public void cancel(@RequestParam("experimentId") String experimentId) {
+    public void cancel(@RequestParam("experimentId") String experimentId)
+    {
         player.cancel(experimentId);
     }
 
@@ -259,12 +282,14 @@ public class PlayerController {
      * @param experimentId
      */
     @RequestMapping(value = "/terminable", method = RequestMethod.GET)
-    public void terminable(@RequestParam("experimentId") String experimentId) {
+    public void terminable(@RequestParam("experimentId") String experimentId)
+    {
 
     }
 
     @RequestMapping(method = RequestMethod.POST, value = "/configure")
-    public void configure(@RequestParam("experimentId") String experimentId, HttpServletRequest request) {
+    public void configure(@RequestParam("experimentId") String experimentId, HttpServletRequest request)
+    {
 
     }
 }

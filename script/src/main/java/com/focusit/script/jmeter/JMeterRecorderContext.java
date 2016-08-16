@@ -8,7 +8,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * Helps to modify requests with JMeter's context variables
  * Created by doki on 25.03.16.
  */
-public class JMeterRecorderContext {
+public class JMeterRecorderContext
+{
     private final ConcurrentHashMap<String, Object> templateReplacemnts = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Object> properties = new ConcurrentHashMap<>();
 
@@ -18,7 +19,8 @@ public class JMeterRecorderContext {
      * @param source   pattern to be used in a jmeter scenario. e.g. ${userObject.123}
      * @param template value to be default fo source variable in jmeter scenario. e.g. userObject$123
      */
-    public void addTemplate(String source, Object template) {
+    public void addTemplate(String source, Object template)
+    {
         templateReplacemnts.put(source, template);
     }
 
@@ -28,14 +30,16 @@ public class JMeterRecorderContext {
      * @param source
      * @return default value for udf or null if no template available at the moment
      */
-    public Object getTemplate(String source) {
+    public Object getTemplate(String source)
+    {
         return templateReplacemnts.get(source);
     }
 
     /**
      * cleanup everything
      */
-    public void reset() {
+    public void reset()
+    {
         templateReplacemnts.clear();
     }
 
@@ -44,15 +48,18 @@ public class JMeterRecorderContext {
      *
      * @return
      */
-    public Collection<String> getSources() {
+    public Collection<String> getSources()
+    {
         return templateReplacemnts.keySet();
     }
 
-    public void addProperty(String key, Object value) {
+    public void addProperty(String key, Object value)
+    {
         properties.put(key, value);
     }
 
-    public Object getProperty(String key) {
+    public Object getProperty(String key)
+    {
         return properties.get(key);
     }
 }

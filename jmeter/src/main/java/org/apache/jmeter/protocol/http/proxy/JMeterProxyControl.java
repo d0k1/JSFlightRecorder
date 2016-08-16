@@ -18,7 +18,15 @@ package org.apache.jmeter.protocol.http.proxy;
  *
  */
 
-import com.focusit.jmeter.JMeterRecorder;
+import java.io.*;
+import java.net.MalformedURLException;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.X509Certificate;
+import java.util.*;
+import java.util.prefs.Preferences;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
@@ -57,26 +65,19 @@ import org.apache.oro.text.MalformedCachePatternException;
 import org.apache.oro.text.regex.Pattern;
 import org.apache.oro.text.regex.Perl5Compiler;
 
-import java.io.*;
-import java.net.MalformedURLException;
-import java.security.GeneralSecurityException;
-import java.security.KeyStore;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.X509Certificate;
-import java.util.*;
-import java.util.prefs.Preferences;
+import com.focusit.jmeter.JMeterRecorder;
 
 //For unit tests, @see TestProxyControl
 
 /**
  * Copy paste of org.apache.jmeter.protocol.http.proxy.ProxyControl
  */
-public class JMeterProxyControl extends GenericController {
+public class JMeterProxyControl extends GenericController
+{
 
     public static final int DEFAULT_PORT = 8080;
     // and as a string
-    public static final String DEFAULT_PORT_S =
-            Integer.toString(DEFAULT_PORT);// Used by GUI
+    public static final String DEFAULT_PORT_S = Integer.toString(DEFAULT_PORT);// Used by GUI
     private static final Logger log = LoggingManager.getLoggerForClass();
     private static final long serialVersionUID = 240L;
     private static final String ASSERTION_GUI = AssertionGui.class.getName();
@@ -137,22 +138,19 @@ public class JMeterProxyControl extends GenericController {
     private static final String SAMPLER_TYPE_HTTP_SAMPLER_HC3_1 = "1";
     private static final String SAMPLER_TYPE_HTTP_SAMPLER_HC4 = "2";
 
-    private static final long sampleGap =
-            JMeterUtils.getPropDefault("proxy.pause", 5000); // $NON-NLS-1$
+    private static final long sampleGap = JMeterUtils.getPropDefault("proxy.pause", 5000); // $NON-NLS-1$
     // Detect if user has pressed a new link
 
     // for ssl connection
-    private static final String KEYSTORE_TYPE =
-            JMeterUtils.getPropDefault("proxy.cert.type", "JKS"); // $NON-NLS-1$ $NON-NLS-2$
+    private static final String KEYSTORE_TYPE = JMeterUtils.getPropDefault("proxy.cert.type", "JKS"); // $NON-NLS-1$ $NON-NLS-2$
 
     // Proxy configuration SSL
-    private static final String CERT_DIRECTORY =
-            JMeterUtils.getPropDefault("proxy.cert.directory", JMeterUtils.getJMeterBinDir()); // $NON-NLS-1$
+    private static final String CERT_DIRECTORY = JMeterUtils.getPropDefault("proxy.cert.directory",
+            JMeterUtils.getJMeterBinDir()); // $NON-NLS-1$
 
     private static final String CERT_FILE_DEFAULT = "proxyserver.jks";// $NON-NLS-1$
 
-    private static final String CERT_FILE =
-            JMeterUtils.getPropDefault("proxy.cert.file", CERT_FILE_DEFAULT); // $NON-NLS-1$
+    private static final String CERT_FILE = JMeterUtils.getPropDefault("proxy.cert.file", CERT_FILE_DEFAULT); // $NON-NLS-1$
 
     private static final File CERT_PATH = new File(CERT_DIRECTORY, CERT_FILE);
 
@@ -178,24 +176,36 @@ public class JMeterProxyControl extends GenericController {
     private static final String CERT_ALIAS = JMeterUtils.getProperty("proxy.cert.alias"); // $NON-NLS-1$
     private static final KeystoreMode KEYSTORE_MODE;
     // Whether to use the redirect disabling feature (can be switched off if it does not work)
-    private static final boolean ATTEMPT_REDIRECT_DISABLING =
-            JMeterUtils.getPropDefault("proxy.redirect.disabling", true); // $NON-NLS-1$
+    private static final boolean ATTEMPT_REDIRECT_DISABLING = JMeterUtils.getPropDefault("proxy.redirect.disabling",
+            true); // $NON-NLS-1$
     // Although this field is mutable, it is only accessed within the synchronized method deliverSampler()
     private static String LAST_REDIRECT = null;
 
-    static {
-        if (CERT_ALIAS != null) {
+    static
+    {
+        if (CERT_ALIAS != null)
+        {
             KEYSTORE_MODE = KeystoreMode.USER_KEYSTORE;
-            log.info("HTTP(S) Test Script Recorder will use the keystore '" + CERT_PATH_ABS + "' with the alias: '" + CERT_ALIAS + "'");
-        } else {
-            if (!KeyToolUtils.haveKeytool()) {
+            log.info("HTTP(S) Test Script Recorder will use the keystore '" + CERT_PATH_ABS + "' with the alias: '"
+                    + CERT_ALIAS + "'");
+        }
+        else
+        {
+            if (!KeyToolUtils.haveKeytool())
+            {
                 KEYSTORE_MODE = KeystoreMode.NONE;
-            } else if (USE_DYNAMIC_KEYS) {
+            }
+            else if (USE_DYNAMIC_KEYS)
+            {
                 KEYSTORE_MODE = KeystoreMode.DYNAMIC_KEYSTORE;
-                log.info("HTTP(S) Test Script Recorder SSL Proxy will use keys that support embedded 3rd party resources in file " + CERT_PATH_ABS);
-            } else {
+                log.info("HTTP(S) Test Script Recorder SSL Proxy will use keys that support embedded 3rd party resources in file "
+                        + CERT_PATH_ABS);
+            }
+            else
+            {
                 KEYSTORE_MODE = KeystoreMode.JMETER_KEYSTORE;
-                log.warn("HTTP(S) Test Script Recorder SSL Proxy will use keys that may not work for embedded resources in file " + CERT_PATH_ABS);
+                log.warn("HTTP(S) Test Script Recorder SSL Proxy will use keys that may not work for embedded resources in file "
+                        + CERT_PATH_ABS);
             }
         }
     }
@@ -226,7 +236,8 @@ public class JMeterProxyControl extends GenericController {
     private String storePassword;
     private String keyPassword;
 
-    public JMeterProxyControl(JMeterRecorder jMeterRecorder) {
+    public JMeterProxyControl(JMeterRecorder jMeterRecorder)
+    {
         setPort(DEFAULT_PORT);
         setExcludeList(new HashSet<String>());
         setIncludeList(new HashSet<String>());
@@ -234,227 +245,285 @@ public class JMeterProxyControl extends GenericController {
         this.recorder = jMeterRecorder;
     }
 
-    public static boolean isDynamicMode() {
+    public static boolean isDynamicMode()
+    {
         return KEYSTORE_MODE == KeystoreMode.DYNAMIC_KEYSTORE;
     }
 
-    public JMeterRecorder getRecorder() {
+    public JMeterRecorder getRecorder()
+    {
         return recorder;
     }
 
-    public void setPort(int port) {
+    public void setPort(int port)
+    {
         this.setProperty(new IntegerProperty(PORT, port));
     }
 
-    public String getSslDomains() {
+    public String getSslDomains()
+    {
         return getPropertyAsString(DOMAINS, "");
     }
 
-    public void setSslDomains(String domains) {
+    public void setSslDomains(String domains)
+    {
         setProperty(DOMAINS, domains, "");
     }
 
     @Deprecated
-    public void setSamplerTypeName(int samplerTypeName) {
+    public void setSamplerTypeName(int samplerTypeName)
+    {
         setProperty(new IntegerProperty(SAMPLER_TYPE_NAME, samplerTypeName));
     }
 
     /**
      * @param b flag whether keep alive should be used
      */
-    public void setUseKeepAlive(boolean b) {
+    public void setUseKeepAlive(boolean b)
+    {
         useKeepAlive = b;
         setProperty(new BooleanProperty(USE_KEEPALIVE, b));
     }
 
-    public void setIncludeList(Collection<String> list) {
+    public void setIncludeList(Collection<String> list)
+    {
         setProperty(new CollectionProperty(INCLUDE_LIST, new HashSet<>(list)));
     }
 
-    public void setExcludeList(Collection<String> list) {
+    public void setExcludeList(Collection<String> list)
+    {
         setProperty(new CollectionProperty(EXCLUDE_LIST, new HashSet<>(list)));
     }
 
-    public boolean getAssertions() {
+    public boolean getAssertions()
+    {
         return getPropertyAsBoolean(ADD_ASSERTIONS);
     }
 
-    public void setAssertions(boolean b) {
+    public void setAssertions(boolean b)
+    {
         addAssertions = b;
         setProperty(new BooleanProperty(ADD_ASSERTIONS, b));
     }
 
-    public int getGroupingMode() {
+    public int getGroupingMode()
+    {
         return getPropertyAsInt(GROUPING_MODE);
     }
 
-    public void setGroupingMode(int grouping) {
+    public void setGroupingMode(int grouping)
+    {
         this.groupingMode = grouping;
         setProperty(new IntegerProperty(GROUPING_MODE, grouping));
     }
 
-    public int getPort() {
+    public int getPort()
+    {
         return getPropertyAsInt(PORT);
     }
 
-    public void setPort(String port) {
+    public void setPort(String port)
+    {
         setProperty(PORT, port);
     }
 
-    public String getPortString() {
+    public String getPortString()
+    {
         return getPropertyAsString(PORT);
     }
 
-    public int getDefaultPort() {
+    public int getDefaultPort()
+    {
         return DEFAULT_PORT;
     }
 
-    public boolean getCaptureHttpHeaders() {
+    public boolean getCaptureHttpHeaders()
+    {
         return getPropertyAsBoolean(CAPTURE_HTTP_HEADERS);
     }
 
-    public void setCaptureHttpHeaders(boolean capture) {
+    public void setCaptureHttpHeaders(boolean capture)
+    {
         setProperty(new BooleanProperty(CAPTURE_HTTP_HEADERS, capture));
     }
 
-    public String getSamplerTypeName() {
+    public String getSamplerTypeName()
+    {
         // Convert the old numeric types - just in case someone wants to reload the workbench
         String type = getPropertyAsString(SAMPLER_TYPE_NAME);
-        if (SAMPLER_TYPE_HTTP_SAMPLER_JAVA.equals(type)) {
+        if (SAMPLER_TYPE_HTTP_SAMPLER_JAVA.equals(type))
+        {
             type = HTTPSamplerFactory.IMPL_JAVA;
-        } else if (SAMPLER_TYPE_HTTP_SAMPLER_HC3_1.equals(type)) {
+        }
+        else if (SAMPLER_TYPE_HTTP_SAMPLER_HC3_1.equals(type))
+        {
             type = HTTPSamplerFactory.IMPL_HTTP_CLIENT3_1;
-        } else if (SAMPLER_TYPE_HTTP_SAMPLER_HC4.equals(type)) {
+        }
+        else if (SAMPLER_TYPE_HTTP_SAMPLER_HC4.equals(type))
+        {
             type = HTTPSamplerFactory.IMPL_HTTP_CLIENT4;
         }
         return type;
     }
 
-    public void setSamplerTypeName(String samplerTypeName) {
+    public void setSamplerTypeName(String samplerTypeName)
+    {
         setProperty(new StringProperty(SAMPLER_TYPE_NAME, samplerTypeName));
     }
 
-    public boolean getSamplerRedirectAutomatically() {
+    public boolean getSamplerRedirectAutomatically()
+    {
         return getPropertyAsBoolean(SAMPLER_REDIRECT_AUTOMATICALLY, false);
     }
 
-    public void setSamplerRedirectAutomatically(boolean b) {
+    public void setSamplerRedirectAutomatically(boolean b)
+    {
         samplerRedirectAutomatically = b;
         setProperty(new BooleanProperty(SAMPLER_REDIRECT_AUTOMATICALLY, b));
     }
 
-    public boolean getSamplerFollowRedirects() {
+    public boolean getSamplerFollowRedirects()
+    {
         return getPropertyAsBoolean(SAMPLER_FOLLOW_REDIRECTS, true);
     }
 
-    public void setSamplerFollowRedirects(boolean b) {
+    public void setSamplerFollowRedirects(boolean b)
+    {
         samplerFollowRedirects = b;
         setProperty(new BooleanProperty(SAMPLER_FOLLOW_REDIRECTS, b));
     }
 
-    public boolean getUseKeepalive() {
+    public boolean getUseKeepalive()
+    {
         return getPropertyAsBoolean(USE_KEEPALIVE, true);
     }
 
-    public boolean getSamplerDownloadImages() {
+    public boolean getSamplerDownloadImages()
+    {
         return getPropertyAsBoolean(SAMPLER_DOWNLOAD_IMAGES, false);
     }
 
-    public void setSamplerDownloadImages(boolean b) {
+    public void setSamplerDownloadImages(boolean b)
+    {
         samplerDownloadImages = b;
         setProperty(new BooleanProperty(SAMPLER_DOWNLOAD_IMAGES, b));
     }
 
-    public boolean getNotifyChildSamplerListenerOfFilteredSamplers() {
+    public boolean getNotifyChildSamplerListenerOfFilteredSamplers()
+    {
         return getPropertyAsBoolean(NOTIFY_CHILD_SAMPLER_LISTENERS_FILTERED, true);
     }
 
-    public void setNotifyChildSamplerListenerOfFilteredSamplers(boolean b) {
+    public void setNotifyChildSamplerListenerOfFilteredSamplers(boolean b)
+    {
         notifyChildSamplerListenersOfFilteredSamples = b;
         setProperty(new BooleanProperty(NOTIFY_CHILD_SAMPLER_LISTENERS_FILTERED, b));
     }
 
-    public boolean getRegexMatch() {
+    public boolean getRegexMatch()
+    {
         return getPropertyAsBoolean(REGEX_MATCH, false);
     }
 
     /**
      * @param b flag whether regex matching should be used
      */
-    public void setRegexMatch(boolean b) {
+    public void setRegexMatch(boolean b)
+    {
         regexMatch = b;
         setProperty(new BooleanProperty(REGEX_MATCH, b));
     }
 
-    public String getContentTypeExclude() {
+    public String getContentTypeExclude()
+    {
         return getPropertyAsString(CONTENT_TYPE_EXCLUDE);
     }
 
-    public void setContentTypeExclude(String contentTypeExclude) {
+    public void setContentTypeExclude(String contentTypeExclude)
+    {
         setProperty(new StringProperty(CONTENT_TYPE_EXCLUDE, contentTypeExclude));
     }
 
-    public String getContentTypeInclude() {
+    public String getContentTypeInclude()
+    {
         return getPropertyAsString(CONTENT_TYPE_INCLUDE);
     }
 
-    public void setContentTypeInclude(String contentTypeInclude) {
+    public void setContentTypeInclude(String contentTypeInclude)
+    {
         setProperty(new StringProperty(CONTENT_TYPE_INCLUDE, contentTypeInclude));
     }
 
-    public void addConfigElement(ConfigElement config) {
+    public void addConfigElement(ConfigElement config)
+    {
         // NOOP
     }
 
-    public void startProxy() throws IOException {
-        try {
+    public void startProxy() throws IOException
+    {
+        try
+        {
             initKeyStore(); // TODO display warning dialog as this can take some time
-        } catch (GeneralSecurityException e) {
+        }
+        catch (GeneralSecurityException e)
+        {
             log.error("Could not initialise key store", e);
             throw new IOException("Could not create keystore", e);
-        } catch (IOException e) { // make sure we log the error
+        }
+        catch (IOException e)
+        { // make sure we log the error
             log.error("Could not initialise key store", e);
             throw e;
         }
-//        notifyTestListenersOfStart();
-        try {
+        //        notifyTestListenersOfStart();
+        try
+        {
             server = new JMeterDaemon(getPort(), this);
             server.start();
-//            GuiPackage.getInstance().register(server);
-        } catch (IOException e) {
+            //            GuiPackage.getInstance().register(server);
+        }
+        catch (IOException e)
+        {
             log.error("Could not create Proxy daemon", e);
             throw e;
         }
     }
 
-    public void addExcludedPattern(String pattern) {
+    public void addExcludedPattern(String pattern)
+    {
         getExcludePatterns().addItem(pattern);
     }
 
-    public CollectionProperty getExcludePatterns() {
-        return (CollectionProperty) getProperty(EXCLUDE_LIST);
+    public CollectionProperty getExcludePatterns()
+    {
+        return (CollectionProperty)getProperty(EXCLUDE_LIST);
     }
 
-    public void addIncludedPattern(String pattern) {
+    public void addIncludedPattern(String pattern)
+    {
         getIncludePatterns().addItem(pattern);
     }
 
-    public CollectionProperty getIncludePatterns() {
-        return (CollectionProperty) getProperty(INCLUDE_LIST);
+    public CollectionProperty getIncludePatterns()
+    {
+        return (CollectionProperty)getProperty(INCLUDE_LIST);
     }
 
-    public void clearExcludedPatterns() {
+    public void clearExcludedPatterns()
+    {
         getExcludePatterns().clear();
     }
 
-    public void clearIncludedPatterns() {
+    public void clearIncludedPatterns()
+    {
         getIncludePatterns().clear();
     }
 
     /**
      * @return the target fileconfigholder node
      */
-    public JMeterTreeNode getTarget() {
+    public JMeterTreeNode getTarget()
+    {
         return null;
     }
 
@@ -464,10 +533,12 @@ public class JMeterProxyControl extends GenericController {
      *
      * @param target target node to store generated samples
      */
-    public void setTarget(JMeterTreeNode target) {
+    public void setTarget(JMeterTreeNode target)
+    {
     }
 
-    public void setTargetTestElement(TestElement target) {
+    public void setTargetTestElement(TestElement target)
+    {
         this.target = target;
     }
 
@@ -482,30 +553,43 @@ public class JMeterProxyControl extends GenericController {
      *                   TODO param serverResponse to be added to allow saving of the
      *                   server's response while recording.
      */
-    public synchronized void deliverSampler(final HTTPSamplerBase sampler, final TestElement[] subConfigs, final SampleResult result) {
+    public synchronized void deliverSampler(final HTTPSamplerBase sampler, final TestElement[] subConfigs,
+            final SampleResult result)
+    {
         boolean notifySampleListeners = true;
-        if (sampler != null) {
-            if (ATTEMPT_REDIRECT_DISABLING && (samplerRedirectAutomatically || samplerFollowRedirects)) {
-                if (result instanceof HTTPSampleResult) {
-                    final HTTPSampleResult httpSampleResult = (HTTPSampleResult) result;
+        if (sampler != null)
+        {
+            if (ATTEMPT_REDIRECT_DISABLING && (samplerRedirectAutomatically || samplerFollowRedirects))
+            {
+                if (result instanceof HTTPSampleResult)
+                {
+                    final HTTPSampleResult httpSampleResult = (HTTPSampleResult)result;
                     final String urlAsString = httpSampleResult.getUrlAsString();
-                    if (urlAsString.equals(LAST_REDIRECT)) { // the url matches the last redirect
+                    if (urlAsString.equals(LAST_REDIRECT))
+                    { // the url matches the last redirect
                         sampler.setEnabled(false);
                         sampler.setComment("Detected a redirect from the previous sample");
-                    } else { // this is not the result of a redirect
+                    }
+                    else
+                    { // this is not the result of a redirect
                         LAST_REDIRECT = null; // so break the chain
                     }
-                    if (httpSampleResult.isRedirect()) { // Save Location so resulting sample can be disabled
-                        if (LAST_REDIRECT == null) {
+                    if (httpSampleResult.isRedirect())
+                    { // Save Location so resulting sample can be disabled
+                        if (LAST_REDIRECT == null)
+                        {
                             sampler.setComment("Detected the start of a redirect chain");
                         }
                         LAST_REDIRECT = httpSampleResult.getRedirectLocation();
-                    } else {
+                    }
+                    else
+                    {
                         LAST_REDIRECT = null;
                     }
                 }
             }
-            if (filterContentType(result) && filterUrl(sampler)) {
+            if (filterContentType(result) && filterUrl(sampler))
+            {
                 TestElement myTarget = target;
                 sampler.setAutoRedirects(samplerRedirectAutomatically);
                 sampler.setFollowRedirects(samplerFollowRedirects);
@@ -513,13 +597,18 @@ public class JMeterProxyControl extends GenericController {
                 sampler.setImageParser(samplerDownloadImages);
 
                 Authorization authorization = createAuthorization(subConfigs, sampler);
-                if (authorization != null) {
-//                    setAuthorization(authorization, myTarget);
+                if (authorization != null)
+                {
+                    //                    setAuthorization(authorization, myTarget);
                 }
                 placeSampler(sampler, subConfigs, myTarget);
-            } else {
-                if (log.isDebugEnabled()) {
-                    log.debug("Sample excluded based on url or content-type: " + result.getUrlAsString() + " - " + result.getContentType());
+            }
+            else
+            {
+                if (log.isDebugEnabled())
+                {
+                    log.debug("Sample excluded based on url or content-type: " + result.getUrlAsString() + " - "
+                            + result.getContentType());
                 }
                 notifySampleListeners = notifyChildSamplerListenersOfFilteredSamples;
                 result.setSampleLabel("[" + result.getSampleLabel() + "]");
@@ -537,44 +626,55 @@ public class JMeterProxyControl extends GenericController {
      * @param sampler    {@link HTTPSamplerBase}
      * @return {@link Authorization}
      */
-    private Authorization createAuthorization(final TestElement[] subConfigs, HTTPSamplerBase sampler) {
+    private Authorization createAuthorization(final TestElement[] subConfigs, HTTPSamplerBase sampler)
+    {
         Header authHeader = null;
         Authorization authorization = null;
         // Iterate over subconfig elements searching for HeaderManager
-        for (TestElement te : subConfigs) {
-            if (te instanceof HeaderManager) {
-                List<TestElementProperty> headers = (ArrayList<TestElementProperty>) ((HeaderManager) te).getHeaders().getObjectValue();
-                for (Iterator<?> iterator = headers.iterator(); iterator.hasNext(); ) {
-                    TestElementProperty tep = (TestElementProperty) iterator
-                            .next();
-                    if (tep.getName().equals(HTTPConstants.HEADER_AUTHORIZATION)) {
+        for (TestElement te : subConfigs)
+        {
+            if (te instanceof HeaderManager)
+            {
+                List<TestElementProperty> headers = (ArrayList<TestElementProperty>)((HeaderManager)te).getHeaders()
+                        .getObjectValue();
+                for (Iterator<?> iterator = headers.iterator(); iterator.hasNext();)
+                {
+                    TestElementProperty tep = (TestElementProperty)iterator.next();
+                    if (tep.getName().equals(HTTPConstants.HEADER_AUTHORIZATION))
+                    {
                         //Construct Authorization object from HEADER_AUTHORIZATION
-                        authHeader = (Header) tep.getObjectValue();
+                        authHeader = (Header)tep.getObjectValue();
                         String[] authHeaderContent = authHeader.getValue().split(" ");//$NON-NLS-1$
                         String authType = null;
                         String authCredentialsBase64 = null;
-                        if (authHeaderContent.length >= 2) {
+                        if (authHeaderContent.length >= 2)
+                        {
                             authType = authHeaderContent[0];
                             authCredentialsBase64 = authHeaderContent[1];
                             authorization = new Authorization();
-                            try {
+                            try
+                            {
                                 authorization.setURL(sampler.getUrl().toExternalForm());
-                            } catch (MalformedURLException e) {
+                            }
+                            catch (MalformedURLException e)
+                            {
                                 log.error("Error filling url on authorization, message:" + e.getMessage(), e);
                                 authorization.setURL("${AUTH_BASE_URL}");//$NON-NLS-1$
                             }
                             // if HEADER_AUTHORIZATION contains "Basic"
                             // then set Mechanism.BASIC_DIGEST, otherwise Mechanism.KERBEROS
-                            authorization.setMechanism(
-                                    authType.equals(BASIC_AUTH) || authType.equals(DIGEST_AUTH) ?
-                                            AuthManager.Mechanism.BASIC_DIGEST :
-                                            AuthManager.Mechanism.KERBEROS);
-                            if (BASIC_AUTH.equals(authType)) {
+                            authorization
+                                    .setMechanism(authType.equals(BASIC_AUTH) || authType.equals(DIGEST_AUTH) ? AuthManager.Mechanism.BASIC_DIGEST
+                                            : AuthManager.Mechanism.KERBEROS);
+                            if (BASIC_AUTH.equals(authType))
+                            {
                                 String authCred = new String(Base64.decodeBase64(authCredentialsBase64));
                                 String[] loginPassword = authCred.split(":"); //$NON-NLS-1$
                                 authorization.setUser(loginPassword[0]);
                                 authorization.setPass(loginPassword[1]);
-                            } else {
+                            }
+                            else
+                            {
                                 // Digest or Kerberos
                                 authorization.setUser("${AUTH_LOGIN}");//$NON-NLS-1$
                                 authorization.setPass("${AUTH_PASSWORD}");//$NON-NLS-1$
@@ -591,59 +691,73 @@ public class JMeterProxyControl extends GenericController {
         return authorization;
     }
 
-    public void stopProxy() {
-        if (server != null) {
+    public void stopProxy()
+    {
+        if (server != null)
+        {
             server.stopServer();
-//            GuiPackage.getInstance().unregister(server);
-            try {
+            //            GuiPackage.getInstance().unregister(server);
+            try
+            {
                 server.join(1000); // wait for server to stop
-            } catch (InterruptedException e) {
+            }
+            catch (InterruptedException e)
+            {
                 //NOOP
             }
-//            notifyTestListenersOfEnd();
+            //            notifyTestListenersOfEnd();
             server = null;
         }
     }
 
-    public String[] getCertificateDetails() {
-        if (isDynamicMode()) {
-            try {
-                X509Certificate caCert = (X509Certificate) sslKeyStore.getCertificate(KeyToolUtils.getRootCAalias());
-                if (caCert == null) {
-                    return new String[]{"Could not find certificate"};
+    public String[] getCertificateDetails()
+    {
+        if (isDynamicMode())
+        {
+            try
+            {
+                X509Certificate caCert = (X509Certificate)sslKeyStore.getCertificate(KeyToolUtils.getRootCAalias());
+                if (caCert == null)
+                {
+                    return new String[] { "Could not find certificate" };
                 }
-                return new String[]
-                        {
-                                caCert.getSubjectX500Principal().toString(),
-                                "Fingerprint(SHA1): " + JOrphanUtils.baToHexString(DigestUtils.sha1(caCert.getEncoded()), ' '),
-                                "Created: " + caCert.getNotBefore().toString()
-                        };
-            } catch (GeneralSecurityException e) {
+                return new String[] { caCert.getSubjectX500Principal().toString(),
+                        "Fingerprint(SHA1): " + JOrphanUtils.baToHexString(DigestUtils.sha1(caCert.getEncoded()), ' '),
+                        "Created: " + caCert.getNotBefore().toString() };
+            }
+            catch (GeneralSecurityException e)
+            {
                 log.error("Problem reading root CA from keystore", e);
-                return new String[]{"Problem with root certificate", e.getMessage()};
+                return new String[] { "Problem with root certificate", e.getMessage() };
             }
         }
         return null; // should not happen
     }
 
     // Package protected to allow test case access
-    private boolean filterUrl(HTTPSamplerBase sampler) {
+    private boolean filterUrl(HTTPSamplerBase sampler)
+    {
         String domain = sampler.getDomain();
-        if (domain == null || domain.length() == 0) {
+        if (domain == null || domain.length() == 0)
+        {
             return false;
         }
 
         String url = generateMatchUrl(sampler);
         CollectionProperty includePatterns = getIncludePatterns();
-        if (includePatterns.size() > 0) {
-            if (!matchesPatterns(url, includePatterns)) {
+        if (includePatterns.size() > 0)
+        {
+            if (!matchesPatterns(url, includePatterns))
+            {
                 return false;
             }
         }
 
         CollectionProperty excludePatterns = getExcludePatterns();
-        if (excludePatterns.size() > 0) {
-            if (matchesPatterns(url, excludePatterns)) {
+        if (excludePatterns.size() > 0)
+        {
+            if (matchesPatterns(url, excludePatterns))
+            {
                 return false;
             }
         }
@@ -660,33 +774,37 @@ public class JMeterProxyControl extends GenericController {
      * @param result the sample result to check
      * @return <code>true</code> means result will be kept
      */
-    private boolean filterContentType(SampleResult result) {
+    private boolean filterContentType(SampleResult result)
+    {
         String includeExp = getContentTypeInclude();
         String excludeExp = getContentTypeExclude();
         // If no expressions are specified, we let the sample pass
-        if ((includeExp == null || includeExp.length() == 0) &&
-                (excludeExp == null || excludeExp.length() == 0)
-                ) {
+        if ((includeExp == null || includeExp.length() == 0) && (excludeExp == null || excludeExp.length() == 0))
+        {
             return true;
         }
 
         // Check that we have a content type
         String sampleContentType = result.getContentType();
-        if (sampleContentType == null || sampleContentType.length() == 0) {
-            if (log.isDebugEnabled()) {
+        if (sampleContentType == null || sampleContentType.length() == 0)
+        {
+            if (log.isDebugEnabled())
+            {
                 log.debug("No Content-type found for : " + result.getUrlAsString());
             }
 
             return true;
         }
 
-        if (log.isDebugEnabled()) {
+        if (log.isDebugEnabled())
+        {
             log.debug("Content-type to filter : " + sampleContentType);
         }
 
         // Check if the include pattern is matched
         boolean matched = testPattern(includeExp, sampleContentType, true);
-        if (!matched) {
+        if (!matched)
+        {
             return false;
         }
 
@@ -702,36 +820,49 @@ public class JMeterProxyControl extends GenericController {
      * @param sampleContentType
      * @return boolean true if Matching expression
      */
-    private final boolean testPattern(String expression, String sampleContentType, boolean expectedToMatch) {
-        if (expression != null && expression.length() > 0) {
-            if (log.isDebugEnabled()) {
-                log.debug("Testing Expression : " + expression + " on sampleContentType:" + sampleContentType + ", expected to match:" + expectedToMatch);
+    private final boolean testPattern(String expression, String sampleContentType, boolean expectedToMatch)
+    {
+        if (expression != null && expression.length() > 0)
+        {
+            if (log.isDebugEnabled())
+            {
+                log.debug("Testing Expression : " + expression + " on sampleContentType:" + sampleContentType
+                        + ", expected to match:" + expectedToMatch);
             }
 
             Pattern pattern = null;
-            try {
-                pattern = JMeterUtils.getPatternCache().getPattern(expression, Perl5Compiler.READ_ONLY_MASK | Perl5Compiler.SINGLELINE_MASK);
-                if (JMeterUtils.getMatcher().contains(sampleContentType, pattern) != expectedToMatch) {
+            try
+            {
+                pattern = JMeterUtils.getPatternCache().getPattern(expression,
+                        Perl5Compiler.READ_ONLY_MASK | Perl5Compiler.SINGLELINE_MASK);
+                if (JMeterUtils.getMatcher().contains(sampleContentType, pattern) != expectedToMatch)
+                {
                     return false;
                 }
-            } catch (MalformedCachePatternException e) {
+            }
+            catch (MalformedCachePatternException e)
+            {
                 log.warn("Skipped invalid content pattern: " + expression, e);
             }
         }
         return true;
     }
 
-
-    private void placeSampler(final HTTPSamplerBase sampler, final TestElement[] subConfigs,
-                              final TestElement myTarget) {
-        try {
-            JMeterUtils.runSafe(new Runnable() {
+    private void placeSampler(final HTTPSamplerBase sampler, final TestElement[] subConfigs, final TestElement myTarget)
+    {
+        try
+        {
+            JMeterUtils.runSafe(new Runnable()
+            {
                 @Override
-                public void run() {
+                public void run()
+                {
                     myTarget.addTestElement(sampler);
                 }
             });
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             JMeterUtils.reportErrorToUser(e.getMessage());
         }
     }
@@ -744,23 +875,29 @@ public class JMeterProxyControl extends GenericController {
      * @param sampler        Sampler to remove values from.
      * @param configurations ConfigTestElements in descending priority.
      */
-    private void removeValuesFromSampler(HTTPSamplerBase sampler, Collection<ConfigTestElement> configurations) {
-        for (PropertyIterator props = sampler.propertyIterator(); props.hasNext(); ) {
+    private void removeValuesFromSampler(HTTPSamplerBase sampler, Collection<ConfigTestElement> configurations)
+    {
+        for (PropertyIterator props = sampler.propertyIterator(); props.hasNext();)
+        {
             JMeterProperty prop = props.next();
             String name = prop.getName();
             String value = prop.getStringValue();
 
             // There's a few properties which are excluded from this processing:
             if (name.equals(TestElement.ENABLED) || name.equals(TestElement.GUI_CLASS) || name.equals(TestElement.NAME)
-                    || name.equals(TestElement.TEST_CLASS)) {
+                    || name.equals(TestElement.TEST_CLASS))
+            {
                 continue; // go on with next property.
             }
 
-            for (ConfigTestElement config : configurations) {
+            for (ConfigTestElement config : configurations)
+            {
                 String configValue = config.getPropertyAsString(name);
 
-                if (configValue != null && configValue.length() > 0) {
-                    if (configValue.equals(value)) {
+                if (configValue != null && configValue.length() > 0)
+                {
+                    if (configValue.equals(value))
+                    {
                         sampler.setProperty(name, ""); // $NON-NLS-1$
                     }
                     // Property was found in a config element. Whether or not
@@ -772,28 +909,37 @@ public class JMeterProxyControl extends GenericController {
         }
     }
 
-    private String generateMatchUrl(HTTPSamplerBase sampler) {
+    private String generateMatchUrl(HTTPSamplerBase sampler)
+    {
         StringBuilder buf = new StringBuilder(sampler.getDomain());
         buf.append(':'); // $NON-NLS-1$
         buf.append(sampler.getPort());
         buf.append(sampler.getPath());
-        if (sampler.getQueryString().length() > 0) {
+        if (sampler.getQueryString().length() > 0)
+        {
             buf.append('?'); // $NON-NLS-1$
             buf.append(sampler.getQueryString());
         }
         return buf.toString();
     }
 
-    private boolean matchesPatterns(String url, CollectionProperty patterns) {
-        for (JMeterProperty jMeterProperty : (java.lang.Iterable<JMeterProperty>) patterns) {
+    private boolean matchesPatterns(String url, CollectionProperty patterns)
+    {
+        for (JMeterProperty jMeterProperty : (java.lang.Iterable<JMeterProperty>)patterns)
+        {
             String item = jMeterProperty.getStringValue();
             Pattern pattern = null;
-            try {
-                pattern = JMeterUtils.getPatternCache().getPattern(item, Perl5Compiler.READ_ONLY_MASK | Perl5Compiler.SINGLELINE_MASK);
-                if (JMeterUtils.getMatcher().matches(url, pattern)) {
+            try
+            {
+                pattern = JMeterUtils.getPatternCache().getPattern(item,
+                        Perl5Compiler.READ_ONLY_MASK | Perl5Compiler.SINGLELINE_MASK);
+                if (JMeterUtils.getMatcher().matches(url, pattern))
+                {
                     return true;
                 }
-            } catch (MalformedCachePatternException e) {
+            }
+            catch (MalformedCachePatternException e)
+            {
                 log.warn("Skipped invalid pattern: " + item, e);
             }
         }
@@ -809,77 +955,97 @@ public class JMeterProxyControl extends GenericController {
      * @param variables Collection of Arguments to use to do the replacement, ordered
      *                  by ascending priority.
      */
-    private void replaceValues(TestElement sampler, TestElement[] configs, Collection<Arguments> variables) {
+    private void replaceValues(TestElement sampler, TestElement[] configs, Collection<Arguments> variables)
+    {
         // Build the replacer from all the variables in the collection:
         ValueReplacer replacer = new ValueReplacer();
-        for (Arguments variable : variables) {
+        for (Arguments variable : variables)
+        {
             final Map<String, String> map = variable.getArgumentsAsMap();
-            for (Iterator<String> vals = map.values().iterator(); vals.hasNext(); ) {
+            for (Iterator<String> vals = map.values().iterator(); vals.hasNext();)
+            {
                 final Object next = vals.next();
-                if ("".equals(next)) {// Drop any empty values (Bug 45199)
+                if ("".equals(next))
+                {// Drop any empty values (Bug 45199)
                     vals.remove();
                 }
             }
             replacer.addVariables(map);
         }
 
-        try {
+        try
+        {
             boolean cachedRegexpMatch = regexMatch;
             replacer.reverseReplace(sampler, cachedRegexpMatch);
-            for (TestElement config : configs) {
-                if (config != null) {
+            for (TestElement config : configs)
+            {
+                if (config != null)
+                {
                     replacer.reverseReplace(config, cachedRegexpMatch);
                 }
             }
-        } catch (InvalidVariableException e) {
+        }
+        catch (InvalidVariableException e)
+        {
             log.warn("Invalid variables included for replacement into recorded " + "sample", e);
         }
     }
 
     @Override
-    public boolean canRemove() {
+    public boolean canRemove()
+    {
         return null == server;
     }
 
-    private void initKeyStore() throws IOException, GeneralSecurityException {
-        switch (KEYSTORE_MODE) {
-            case DYNAMIC_KEYSTORE:
-                storePassword = getPassword();
-                keyPassword = getPassword();
-                initDynamicKeyStore();
-                break;
-            case JMETER_KEYSTORE:
-                storePassword = getPassword();
-                keyPassword = getPassword();
-                initJMeterKeyStore();
-                break;
-            case USER_KEYSTORE:
-                storePassword = JMeterUtils.getPropDefault("proxy.cert.keystorepass", DEFAULT_PASSWORD); // $NON-NLS-1$;
-                keyPassword = JMeterUtils.getPropDefault("proxy.cert.keypassword", DEFAULT_PASSWORD); // $NON-NLS-1$;
-                log.info("HTTP(S) Test Script Recorder will use the keystore '" + CERT_PATH_ABS + "' with the alias: '" + CERT_ALIAS + "'");
-                initUserKeyStore();
-                break;
-            case NONE:
-                throw new IOException("Cannot find keytool application and no keystore was provided");
-            default:
-                throw new IllegalStateException("Impossible case: " + KEYSTORE_MODE);
+    private void initKeyStore() throws IOException, GeneralSecurityException
+    {
+        switch (KEYSTORE_MODE)
+        {
+        case DYNAMIC_KEYSTORE:
+            storePassword = getPassword();
+            keyPassword = getPassword();
+            initDynamicKeyStore();
+            break;
+        case JMETER_KEYSTORE:
+            storePassword = getPassword();
+            keyPassword = getPassword();
+            initJMeterKeyStore();
+            break;
+        case USER_KEYSTORE:
+            storePassword = JMeterUtils.getPropDefault("proxy.cert.keystorepass", DEFAULT_PASSWORD); // $NON-NLS-1$;
+            keyPassword = JMeterUtils.getPropDefault("proxy.cert.keypassword", DEFAULT_PASSWORD); // $NON-NLS-1$;
+            log.info("HTTP(S) Test Script Recorder will use the keystore '" + CERT_PATH_ABS + "' with the alias: '"
+                    + CERT_ALIAS + "'");
+            initUserKeyStore();
+            break;
+        case NONE:
+            throw new IOException("Cannot find keytool application and no keystore was provided");
+        default:
+            throw new IllegalStateException("Impossible case: " + KEYSTORE_MODE);
         }
     }
 
     /**
      * Initialise the user-provided keystore
      */
-    private void initUserKeyStore() {
-        try {
+    private void initUserKeyStore()
+    {
+        try
+        {
             sslKeyStore = getKeyStore(storePassword.toCharArray());
-            X509Certificate caCert = (X509Certificate) sslKeyStore.getCertificate(CERT_ALIAS);
-            if (caCert == null) {
+            X509Certificate caCert = (X509Certificate)sslKeyStore.getCertificate(CERT_ALIAS);
+            if (caCert == null)
+            {
                 log.error("Could not find key with alias " + CERT_ALIAS);
                 sslKeyStore = null;
-            } else {
+            }
+            else
+            {
                 caCert.checkValidity(new Date(System.currentTimeMillis() + DateUtils.MILLIS_PER_DAY));
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             sslKeyStore = null;
             log.error("Could not open keystore or certificate is not valid " + CERT_PATH_ABS + " " + e.getMessage());
         }
@@ -888,33 +1054,48 @@ public class JMeterProxyControl extends GenericController {
     /**
      * Initialise the dynamic domain keystore
      */
-    private void initDynamicKeyStore() throws IOException, GeneralSecurityException {
-        if (storePassword != null) { // Assume we have already created the store
-            try {
+    private void initDynamicKeyStore() throws IOException, GeneralSecurityException
+    {
+        if (storePassword != null)
+        { // Assume we have already created the store
+            try
+            {
                 sslKeyStore = getKeyStore(storePassword.toCharArray());
-                for (String alias : KeyToolUtils.getCAaliases()) {
-                    X509Certificate caCert = (X509Certificate) sslKeyStore.getCertificate(alias);
-                    if (caCert == null) {
+                for (String alias : KeyToolUtils.getCAaliases())
+                {
+                    X509Certificate caCert = (X509Certificate)sslKeyStore.getCertificate(alias);
+                    if (caCert == null)
+                    {
                         sslKeyStore = null; // no CA key - probably the wrong store type.
                         break; // cannot continue
-                    } else {
+                    }
+                    else
+                    {
                         caCert.checkValidity(new Date(System.currentTimeMillis() + DateUtils.MILLIS_PER_DAY));
                         log.info("Valid alias found for " + alias);
                     }
                 }
-            } catch (IOException e) { // store is faulty, we need to recreate it
+            }
+            catch (IOException e)
+            { // store is faulty, we need to recreate it
                 sslKeyStore = null; // if cert is not valid, flag up to recreate it
-                if (e.getCause() instanceof UnrecoverableKeyException) {
+                if (e.getCause() instanceof UnrecoverableKeyException)
+                {
                     log.warn("Could not read key store " + e.getMessage() + "; cause: " + e.getCause().getMessage());
-                } else {
+                }
+                else
+                {
                     log.warn("Could not open/read key store " + e.getMessage()); // message includes the file name
                 }
-            } catch (GeneralSecurityException e) {
+            }
+            catch (GeneralSecurityException e)
+            {
                 sslKeyStore = null; // if cert is not valid, flag up to recreate it
                 log.warn("Problem reading key store: " + e.getMessage());
             }
         }
-        if (sslKeyStore == null) { // no existing file or not valid
+        if (sslKeyStore == null)
+        { // no existing file or not valid
             storePassword = RandomStringUtils.randomAlphanumeric(20); // Alphanum to avoid issues with command-line quoting
             keyPassword = storePassword; // we use same password for both
             setPassword(storePassword);
@@ -924,36 +1105,47 @@ public class JMeterProxyControl extends GenericController {
             sslKeyStore = getKeyStore(storePassword.toCharArray()); // This should now work
         }
         final String sslDomains = getSslDomains().trim();
-        if (sslDomains.length() > 0) {
+        if (sslDomains.length() > 0)
+        {
             final String[] domains = sslDomains.split(",");
             // The subject may be either a host or a domain
-            for (String subject : domains) {
-                if (isValid(subject)) {
-                    if (!sslKeyStore.containsAlias(subject)) {
+            for (String subject : domains)
+            {
+                if (isValid(subject))
+                {
+                    if (!sslKeyStore.containsAlias(subject))
+                    {
                         log.info("Creating entry " + subject + " in " + CERT_PATH_ABS);
                         KeyToolUtils.generateHostCert(CERT_PATH, storePassword, subject, CERT_VALIDITY);
                         sslKeyStore = getKeyStore(storePassword.toCharArray()); // reload to pick up new aliases
                         // reloading is very quick compared with creating an entry currently
                     }
-                } else {
+                }
+                else
+                {
                     log.warn("Attempt to create an invalid domain certificate: " + subject);
                 }
             }
         }
     }
 
-    private boolean isValid(String subject) {
+    private boolean isValid(String subject)
+    {
         String parts[] = subject.split("\\.");
-        if (!parts[0].endsWith("*")) { // not a wildcard
+        if (!parts[0].endsWith("*"))
+        { // not a wildcard
             return true;
         }
         return parts.length >= 3 && AbstractVerifier.acceptableCountryWildcard(subject);
     }
 
     // This should only be called for a specific host
-    public KeyStore updateKeyStore(String port, String host) throws IOException, GeneralSecurityException {
-        synchronized (CERT_PATH) { // ensure Proxy threads cannot interfere with each other
-            if (!sslKeyStore.containsAlias(host)) {
+    public KeyStore updateKeyStore(String port, String host) throws IOException, GeneralSecurityException
+    {
+        synchronized (CERT_PATH)
+        { // ensure Proxy threads cannot interfere with each other
+            if (!sslKeyStore.containsAlias(host))
+            {
                 log.info(port + "Creating entry " + host + " in " + CERT_PATH_ABS);
                 KeyToolUtils.generateHostCert(CERT_PATH, storePassword, host, CERT_VALIDITY);
             }
@@ -965,66 +1157,84 @@ public class JMeterProxyControl extends GenericController {
     /**
      * Initialise the single key JMeter keystore (original behaviour)
      */
-    private void initJMeterKeyStore() throws IOException, GeneralSecurityException {
-        if (storePassword != null) { // Assume we have already created the store
-            try {
+    private void initJMeterKeyStore() throws IOException, GeneralSecurityException
+    {
+        if (storePassword != null)
+        { // Assume we have already created the store
+            try
+            {
                 sslKeyStore = getKeyStore(storePassword.toCharArray());
-                X509Certificate caCert = (X509Certificate) sslKeyStore.getCertificate(JMETER_SERVER_ALIAS);
+                X509Certificate caCert = (X509Certificate)sslKeyStore.getCertificate(JMETER_SERVER_ALIAS);
                 caCert.checkValidity(new Date(System.currentTimeMillis() + DateUtils.MILLIS_PER_DAY));
-            } catch (Exception e) { // store is faulty, we need to recreate it
+            }
+            catch (Exception e)
+            { // store is faulty, we need to recreate it
                 sslKeyStore = null; // if cert is not valid, flag up to recreate it
-                log.warn("Could not open expected file or certificate is not valid " + CERT_PATH_ABS + " " + e.getMessage());
+                log.warn("Could not open expected file or certificate is not valid " + CERT_PATH_ABS + " "
+                        + e.getMessage());
             }
         }
-        if (sslKeyStore == null) { // no existing file or not valid
+        if (sslKeyStore == null)
+        { // no existing file or not valid
             storePassword = RandomStringUtils.randomAlphanumeric(20); // Alphanum to avoid issues with command-line quoting
             keyPassword = storePassword; // we use same password for both
             setPassword(storePassword);
             log.info("Generating standard keypair in " + CERT_PATH_ABS);
-            if (!CERT_PATH.delete()) { // safer to start afresh
-                log.warn("Could not delete " + CERT_PATH.getAbsolutePath() + ", this could create issues, stop jmeter, ensure file is deleted and restart again");
+            if (!CERT_PATH.delete())
+            { // safer to start afresh
+                log.warn("Could not delete " + CERT_PATH.getAbsolutePath()
+                        + ", this could create issues, stop jmeter, ensure file is deleted and restart again");
             }
             KeyToolUtils.genkeypair(CERT_PATH, JMETER_SERVER_ALIAS, storePassword, CERT_VALIDITY, null, null);
             sslKeyStore = getKeyStore(storePassword.toCharArray()); // This should now work
         }
     }
 
-    private KeyStore getKeyStore(char[] password) throws GeneralSecurityException, IOException {
+    private KeyStore getKeyStore(char[] password) throws GeneralSecurityException, IOException
+    {
         InputStream in = null;
-        try {
+        try
+        {
             in = new BufferedInputStream(new FileInputStream(CERT_PATH));
             log.debug("Opened Keystore file: " + CERT_PATH_ABS);
             KeyStore ks = KeyStore.getInstance(KEYSTORE_TYPE);
             ks.load(in, password);
             log.debug("Loaded Keystore file: " + CERT_PATH_ABS);
             return ks;
-        } finally {
+        }
+        finally
+        {
             IOUtils.closeQuietly(in);
         }
     }
 
-    private String getPassword() {
+    private String getPassword()
+    {
         return PREFERENCES.get(USER_PASSWORD_KEY, null);
     }
 
-    private void setPassword(String password) {
+    private void setPassword(String password)
+    {
         PREFERENCES.put(USER_PASSWORD_KEY, password);
     }
 
     // the keystore for use by the Proxy  
-    public KeyStore getKeyStore() {
+    public KeyStore getKeyStore()
+    {
         return sslKeyStore;
     }
 
-    public String getKeyPassword() {
+    public String getKeyPassword()
+    {
         return keyPassword;
     }
 
-    public enum KeystoreMode {
-        USER_KEYSTORE,   // user-provided keystore
+    public enum KeystoreMode
+    {
+        USER_KEYSTORE, // user-provided keystore
         JMETER_KEYSTORE, // keystore generated by JMeter; single entry
         DYNAMIC_KEYSTORE, // keystore generated by JMeter; dynamic entries
-        NONE             // cannot use keystore
+        NONE // cannot use keystore
     }
 
 }

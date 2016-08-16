@@ -54,6 +54,11 @@ import com.esotericsoftware.kryo.io.FastInput
         @Grab(group = 'com.esotericsoftware', module = 'kryo', version = '4.0.0')
 ])
 import com.esotericsoftware.kryo.io.FastInput
+@Grapes([
+        @Grab(group = 'org.apache.httpcomponents', module = 'httpclient', version = '4.5.2'),
+        @Grab(group = 'com.esotericsoftware', module = 'kryo', version = '4.0.0')
+])
+import com.esotericsoftware.kryo.io.FastInput
 import com.esotericsoftware.kryo.serializers.MapSerializer
 import com.focusit.jsflight.recorder.internalevent.InternalEventRecorder
 import com.focusit.jsflight.recorder.internalevent.httprequest.HttpRecordInformation

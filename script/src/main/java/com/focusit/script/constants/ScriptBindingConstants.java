@@ -4,7 +4,8 @@ package com.focusit.script.constants;
  * This class contains constants, that should be used in binding and in groovy scripts
  * Created by Gallyam Biktashev on 12.08.16.
  */
-public final class ScriptBindingConstants {
+public final class ScriptBindingConstants
+{
     public static final String WEB_DRIVER = "webdriver";
     public static final String TARGET = "target";
     public static final String EVENT = "event";

@@ -1,15 +1,18 @@
 package com.focusit.jsflight.player.ui;
 
-import com.focusit.jmeter.JMeterRecorder;
-import com.focusit.jsflight.player.fileconfigholder.*;
-import com.focusit.jsflight.player.input.FileInput;
-import com.focusit.jsflight.player.scenario.ScenarioProcessor;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.jsflight.player.webdriver.SeleniumDriver;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.FormSpecs;
-import com.jgoodies.forms.layout.RowSpec;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
+
+import javax.swing.*;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.AbstractTableModel;
+
 import org.apache.commons.io.FileUtils;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
@@ -20,19 +23,19 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import javax.swing.event.CellEditorListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.AbstractTableModel;
-import java.awt.*;
-import java.awt.event.*;
-import java.io.File;
-import java.io.IOException;
-import java.util.Date;
+import com.focusit.jmeter.JMeterRecorder;
+import com.focusit.jsflight.player.fileconfigholder.*;
+import com.focusit.jsflight.player.input.FileInput;
+import com.focusit.jsflight.player.scenario.ScenarioProcessor;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.player.webdriver.SeleniumDriver;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.FormSpecs;
+import com.jgoodies.forms.layout.RowSpec;
 
-public class MainFrame {
+public class MainFrame
+{
 
     private static final Logger log = LoggerFactory.getLogger(MainFrame.class);
     private final ButtonGroup buttonGroup = new ButtonGroup();
@@ -82,7 +85,8 @@ public class MainFrame {
      *
      * @throws IOException
      */
-    public MainFrame() throws Exception {
+    public MainFrame() throws Exception
+    {
         initialize();
 
         jmeter = new JMeterRecorder(scenario.getConfiguration().getCommonConfiguration().getScriptClassloader());
@@ -90,88 +94,104 @@ public class MainFrame {
         scenario.getContext().setJMeterBridge(jmeter.getBridge());
     }
 
-    public AbstractTableModel createEventTableModel() {
-        return new AbstractTableModel() {
+    public AbstractTableModel createEventTableModel()
+    {
+        return new AbstractTableModel()
+        {
 
             private static final long serialVersionUID = 1L;
 
-            private String[] columns = {"*", "#", "eventId", "url", "type", "key", "target", "timestamp", "tag", "Pre",
-                    "Post", "comment"};
+            private String[] columns = { "*", "#", "eventId", "url", "type", "key", "target", "timestamp", "tag",
+                    "Pre", "Post", "comment" };
 
             @Override
-            public int getColumnCount() {
+            public int getColumnCount()
+            {
                 return 11;
             }
 
             @Override
-            public String getColumnName(int column) {
+            public String getColumnName(int column)
+            {
                 return columns[column];
             }
 
             @Override
-            public int getRowCount() {
+            public int getRowCount()
+            {
                 return scenario.getStepsCount();
             }
 
             @Override
-            public Object getValueAt(int rowIndex, int columnIndex) {
-                if (rowIndex == scenario.getPosition() && columnIndex == 0) {
+            public Object getValueAt(int rowIndex, int columnIndex)
+            {
+                if (rowIndex == scenario.getPosition() && columnIndex == 0)
+                {
                     return "*";
                 }
 
                 JSONObject event = scenario.getStepAt(rowIndex);
 
-                switch (columnIndex) {
-                    case 1:
-                        return rowIndex;
-                    case 2:
-                        return event.get("eventId");
-                    case 3:
-                        return event.has("hash") ? event.get("hash") : "";
-                    case 4:
-                        String type = event.getString("type");
-                        if ("mousedown".equals(type)) {
-                            return "md";
-                        }
-                        if ("keypress".equals(type)) {
-                            return "kp";
-                        }
-                        if ("keyup".equals(type)) {
-                            return "ku";
-                        }
-                        if ("hashchange".equals(type)) {
-                            return "hc";
-                        }
-
-                        return type;
-                    case 5: {
-                        if (!event.has("charCode")) {
-                            return null;
-                        }
-                        int code = event.getInt("charCode");
-                        char[] key = new char[1];
-                        key[0] = (char) code;
-                        return String.format("%d(%s)/%s", code, new String(key),
-                                event.has("button") ? event.get("button") : "null");
+                switch (columnIndex)
+                {
+                case 1:
+                    return rowIndex;
+                case 2:
+                    return event.get("eventId");
+                case 3:
+                    return event.has("hash") ? event.get("hash") : "";
+                case 4:
+                    String type = event.getString("type");
+                    if ("mousedown".equals(type))
+                    {
+                        return "md";
                     }
-                    case 6:
-                        return scenario.getTargetForEvent(event);
-                    case 7:
-                        return new Date(event.getBigDecimal("timestamp").longValue());
-                    case 8:
-                        return getTagForEvent(event);
-                    case 9:
-                        return event.has("pre") ? event.getString("pre") : "no";
-                    case 10:
-                        return event.has("post") ? event.getString("post") : "no";
-                    default:
+                    if ("keypress".equals(type))
+                    {
+                        return "kp";
+                    }
+                    if ("keyup".equals(type))
+                    {
+                        return "ku";
+                    }
+                    if ("hashchange".equals(type))
+                    {
+                        return "hc";
+                    }
+
+                    return type;
+                case 5:
+                {
+                    if (!event.has("charCode"))
+                    {
                         return null;
+                    }
+                    int code = event.getInt("charCode");
+                    char[] key = new char[1];
+                    key[0] = (char)code;
+                    return String.format("%d(%s)/%s", code, new String(key), event.has("button") ? event.get("button")
+                            : "null");
+                }
+                case 6:
+                    return scenario.getTargetForEvent(event);
+                case 7:
+                    return new Date(event.getBigDecimal("timestamp").longValue());
+                case 8:
+                    return getTagForEvent(event);
+                case 9:
+                    return event.has("pre") ? event.getString("pre") : "no";
+                case 10:
+                    return event.has("post") ? event.getString("post") : "no";
+                default:
+                    return null;
                 }
             }
 
             @Override
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                if (columnIndex == 6 || columnIndex == 9 || columnIndex == 10) {
+            public boolean isCellEditable(int rowIndex, int columnIndex)
+            {
+                if (columnIndex == 6 || columnIndex == 9 || columnIndex == 10)
+                {
                     return true;
                 }
                 return false;
@@ -179,20 +199,24 @@ public class MainFrame {
         };
     }
 
-    public JFrame getFrame() {
+    public JFrame getFrame()
+    {
         return frmJsflightrecorderPlayer;
     }
 
-    public String getTagForEvent(JSONObject event) {
+    public String getTagForEvent(JSONObject event)
+    {
         String tag = "null";
-        if (event.has(webDriverTag.getText())) {
+        if (event.has(webDriverTag.getText()))
+        {
             tag = event.getString(webDriverTag.getText());
         }
 
         return tag;
     }
 
-    public void setColumnWidths() {
+    public void setColumnWidths()
+    {
         table.getColumnModel().getColumn(0).setMaxWidth(10);
         table.getColumnModel().getColumn(1).setMaxWidth(100);
         table.getColumnModel().getColumn(2).setMaxWidth(100);
@@ -205,21 +229,26 @@ public class MainFrame {
         table.getColumnModel().getColumn(8).setMaxWidth(140);
     }
 
-    protected void copyCurrentStep() {
+    protected void copyCurrentStep()
+    {
         scenario.copyStep(table.getSelectedRow());
         model.fireTableRowsInserted(table.getSelectedRow(), table.getSelectedRow());
     }
 
-    protected void createTableEditor() {
+    protected void createTableEditor()
+    {
         final DefaultCellEditor editor = new DefaultCellEditor(new JTextField());
-        editor.addCellEditorListener(new CellEditorListener() {
+        editor.addCellEditorListener(new CellEditorListener()
+        {
             @Override
-            public void editingCanceled(ChangeEvent e) {
-                ((JTextField) editor.getComponent()).getText();
+            public void editingCanceled(ChangeEvent e)
+            {
+                ((JTextField)editor.getComponent()).getText();
             }
 
             @Override
-            public void editingStopped(ChangeEvent e) {
+            public void editingStopped(ChangeEvent e)
+            {
             }
         });
         table.getColumnModel().getColumn(6).setCellEditor(editor);
@@ -228,22 +257,27 @@ public class MainFrame {
         table.getColumnModel().getColumn(10).setCellEditor(new StepScriptEditorDialog(scenario, false));
     }
 
-    protected void playTheScenario() {
+    protected void playTheScenario()
+    {
         saveControlersOptions();
         new ScenarioProcessor().play(scenario, seleniumDriver);
         model.fireTableDataChanged();
     }
 
-    protected void resetCurrentEvent() {
+    protected void resetCurrentEvent()
+    {
         int index = table.getSelectedRow();
-        if (index >= 0) {
+        if (index >= 0)
+        {
             eventContent.setText(scenario.getStepAt(index).toString(3));
             eventContent.setCaretPosition(0);
         }
     }
 
-    protected void saveControlersOptions() {
-        try {
+    protected void saveControlersOptions()
+    {
+        try
+        {
             updateInputController();
             updatePostProcessController();
             updateWebLookupController();
@@ -259,22 +293,27 @@ public class MainFrame {
             WebLookupFileConfigHolder.getInstance().store(IFileConfigHolder.defaultConfig);
             DuplicationFileConfigHolder.getInstance().store(IFileConfigHolder.defaultConfig);
             ScriptEventExectutionController.getInstance().store(IFileConfigHolder.defaultConfig);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             log.error(e.toString(), e);
         }
     }
 
-    protected void updateCurrentEvent() {
+    protected void updateCurrentEvent()
+    {
         scenario.updateStep(table.getSelectedRow(), new JSONObject(eventContent.getText()));
         model.fireTableRowsUpdated(table.getSelectedRow(), table.getSelectedRow());
     }
 
-    private void checkElement(int position) {
+    private void checkElement(int position)
+    {
         scenario.checkStep(position);
         model.fireTableDataChanged();
     }
 
-    private void configureScriptTextArea(RSyntaxTextArea eventContent, RTextScrollPane scrollPane_2, String syntaxStyle) {
+    private void configureScriptTextArea(RSyntaxTextArea eventContent, RTextScrollPane scrollPane_2, String syntaxStyle)
+    {
         eventContent.setSyntaxEditingStyle(syntaxStyle);
         eventContent.getFoldManager().setCodeFoldingEnabled(true);
         eventContent.setFont(new Font("Hack", Font.PLAIN, 16));
@@ -290,16 +329,20 @@ public class MainFrame {
     /**
      * Initialize the contents of the frame.
      */
-    private void initialize() {
+    private void initialize()
+    {
         frmJsflightrecorderPlayer = new JFrame();
-        frmJsflightrecorderPlayer.addWindowListener(new WindowAdapter() {
+        frmJsflightrecorderPlayer.addWindowListener(new WindowAdapter()
+        {
             @Override
-            public void windowClosing(WindowEvent e) {
+            public void windowClosing(WindowEvent e)
+            {
                 saveControlersOptions();
             }
 
             @Override
-            public void windowDeactivated(WindowEvent e) {
+            public void windowDeactivated(WindowEvent e)
+            {
                 saveControlersOptions();
             }
         });
@@ -313,10 +356,10 @@ public class MainFrame {
         JPanel inputPanel = new JPanel();
         tabbedPane.addTab("Input", null, inputPanel, null);
         GridBagLayout gbl_inputPanel = new GridBagLayout();
-        gbl_inputPanel.columnWidths = new int[]{0, 0, 0};
-        gbl_inputPanel.rowHeights = new int[]{0, 0, 0, 0};
-        gbl_inputPanel.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
-        gbl_inputPanel.rowWeights = new double[]{0.0, 0.0, 1.0, Double.MIN_VALUE};
+        gbl_inputPanel.columnWidths = new int[] { 0, 0, 0 };
+        gbl_inputPanel.rowHeights = new int[] { 0, 0, 0, 0 };
+        gbl_inputPanel.columnWeights = new double[] { 0.0, 1.0, Double.MIN_VALUE };
+        gbl_inputPanel.rowWeights = new double[] { 0.0, 0.0, 1.0, Double.MIN_VALUE };
         inputPanel.setLayout(gbl_inputPanel);
 
         JLabel lblFilename = new JLabel("Filename");
@@ -337,12 +380,17 @@ public class MainFrame {
         filenameField.setColumns(10);
 
         JButton btnLoad = new JButton("Load");
-        btnLoad.addMouseListener(new MouseAdapter() {
+        btnLoad.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                try {
+            public void mouseClicked(MouseEvent e)
+            {
+                try
+                {
                     loadScenario();
-                } catch (IOException e1) {
+                }
+                catch (IOException e1)
+                {
                     throw new IllegalArgumentException(e1);
                 }
             }
@@ -354,12 +402,15 @@ public class MainFrame {
         inputPanel.add(btnLoad, gbc_btnLoad);
 
         JButton btnBrowse = new JButton("Browse");
-        btnBrowse.addMouseListener(new MouseAdapter() {
+        btnBrowse.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mouseClicked(MouseEvent e)
+            {
                 JFileChooser fileChooser = new JFileChooser();
                 int returnValue = fileChooser.showOpenDialog(null);
-                if (returnValue == JFileChooser.APPROVE_OPTION) {
+                if (returnValue == JFileChooser.APPROVE_OPTION)
+                {
                     String selectedFile = fileChooser.getSelectedFile().getAbsolutePath();
                     filenameField.setText(selectedFile);
                 }
@@ -400,10 +451,10 @@ public class MainFrame {
         JPanel panel_5 = new JPanel();
         panel_4.add(panel_5, BorderLayout.NORTH);
         GridBagLayout gbl_panel_5 = new GridBagLayout();
-        gbl_panel_5.columnWidths = new int[]{149, 122, 136, 86, 65, 66, 64, 93, 144, 0};
-        gbl_panel_5.rowHeights = new int[]{25, 0};
-        gbl_panel_5.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
-        gbl_panel_5.rowWeights = new double[]{0.0, Double.MIN_VALUE};
+        gbl_panel_5.columnWidths = new int[] { 149, 122, 136, 86, 65, 66, 64, 93, 144, 0 };
+        gbl_panel_5.rowHeights = new int[] { 25, 0 };
+        gbl_panel_5.columnWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
+        gbl_panel_5.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
         panel_5.setLayout(gbl_panel_5);
 
         JPanel panel_2 = new JPanel();
@@ -419,12 +470,17 @@ public class MainFrame {
         panel_2.add(btnParse);
 
         JButton btnSave_1 = new JButton("Save");
-        btnSave_1.addActionListener(new ActionListener() {
+        btnSave_1.addActionListener(new ActionListener()
+        {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
+            public void actionPerformed(ActionEvent e)
+            {
+                try
+                {
                     scenario.saveScenario("test.json");
-                } catch (IOException e1) {
+                }
+                catch (IOException e1)
+                {
                     log.error(e1.toString(), e1);
                 }
             }
@@ -494,78 +550,98 @@ public class MainFrame {
 
         JButton btnCheck = new JButton("Check");
         panel.add(btnCheck);
-        btnCheck.addMouseListener(new MouseAdapter() {
+        btnCheck.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mouseClicked(MouseEvent e)
+            {
                 checkElement(table.getSelectedRow());
             }
         });
 
         JButton btnPlay = new JButton("Play");
-        btnPlay.addMouseListener(new MouseAdapter() {
+        btnPlay.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mouseClicked(MouseEvent e)
+            {
                 playTheScenario();
             }
         });
         panel.add(btnPlay);
         btnDel.addActionListener(e -> {
-            for (int row : table.getSelectedRows()) {
+            for (int row : table.getSelectedRows())
+            {
                 scenario.deleteStep(row);
             }
             model.fireTableDataChanged();
         });
-        btnSkip.addMouseListener(new MouseAdapter() {
+        btnSkip.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mouseClicked(MouseEvent e)
+            {
                 scenario.skip();
                 model.fireTableDataChanged();
             }
         });
-        btnNext.addMouseListener(new MouseAdapter() {
+        btnNext.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mouseClicked(MouseEvent e)
+            {
                 new ScenarioProcessor().applyStep(scenario, seleniumDriver, scenario.getPosition());
                 scenario.moveToNextStep();
                 model.fireTableDataChanged();
             }
         });
         btnPrev.addActionListener(e -> scenario.moveToPreviousStep());
-        btnRewind.addMouseListener(new MouseAdapter() {
+        btnRewind.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mouseClicked(MouseEvent e)
+            {
                 scenario.rewind();
                 seleniumDriver.resetLastUrls();
                 model.fireTableDataChanged();
             }
         });
-        btnCloseBrowser.addMouseListener(new MouseAdapter() {
+        btnCloseBrowser.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mouseClicked(MouseEvent e)
+            {
                 seleniumDriver.closeWebDrivers();
             }
         });
-        btnOpenBrowser.addMouseListener(new MouseAdapter() {
+        btnOpenBrowser.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mouseClicked(MouseEvent e)
+            {
                 new ScenarioProcessor().applyStep(scenario, seleniumDriver, table.getSelectedRow());
             }
         });
-        btnParse.addMouseListener(new MouseAdapter() {
+        btnParse.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                try {
+            public void mouseClicked(MouseEvent e)
+            {
+                try
+                {
                     scenario.parseNextLine(InputFileConfigHolder.getInstance().getFilename());
                     scenario.setPostProcessScenarioScript(scriptArea.getText());
                     long secs = scenario.postProcessScenario();
-                    statisticsLabel.setText(
-                            String.format("Events %d, duration %f sec", scenario.getStepsCount(), secs / 1000.0));
+                    statisticsLabel.setText(String.format("Events %d, duration %f sec", scenario.getStepsCount(),
+                            secs / 1000.0));
                     model = createEventTableModel();
                     table.setModel(model);
                     model.fireTableDataChanged();
                     setColumnWidths();
                     createTableEditor();
-                } catch (IOException e1) {
+                }
+                catch (IOException e1)
+                {
                     log.error(e1.toString(), e1);
                 }
             }
@@ -579,10 +655,12 @@ public class MainFrame {
         table.setRowHeight(30);
         scrollPane.setViewportView(table);
 
-        table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+        table.getSelectionModel().addListSelectionListener(new ListSelectionListener()
+        {
 
             @Override
-            public void valueChanged(ListSelectionEvent e) {
+            public void valueChanged(ListSelectionEvent e)
+            {
                 resetCurrentEvent();
             }
         });
@@ -593,7 +671,7 @@ public class MainFrame {
         scenarioPanel.add(splitPane, BorderLayout.CENTER);
 
         eventContent = new RSyntaxTextArea();
-        RTextScrollPane scrollPane_2 = new RTextScrollPane((Component) eventContent);
+        RTextScrollPane scrollPane_2 = new RTextScrollPane((Component)eventContent);
         configureScriptTextArea(eventContent, scrollPane_2, SyntaxConstants.SYNTAX_STYLE_JSON);
 
         splitPane.setLeftComponent(panel_4);
@@ -605,10 +683,10 @@ public class MainFrame {
         panel_6.setBorder(null);
         scenarioPanel.add(panel_6, BorderLayout.SOUTH);
         GridBagLayout gbl_panel_6 = new GridBagLayout();
-        gbl_panel_6.columnWidths = new int[]{378, 0};
-        gbl_panel_6.rowHeights = new int[]{0, 0};
-        gbl_panel_6.columnWeights = new double[]{1.0, Double.MIN_VALUE};
-        gbl_panel_6.rowWeights = new double[]{0.0, Double.MIN_VALUE};
+        gbl_panel_6.columnWidths = new int[] { 378, 0 };
+        gbl_panel_6.rowHeights = new int[] { 0, 0 };
+        gbl_panel_6.columnWeights = new double[] { 1.0, Double.MIN_VALUE };
+        gbl_panel_6.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
         panel_6.setLayout(gbl_panel_6);
 
         JPanel panel_1 = new JPanel();
@@ -621,18 +699,22 @@ public class MainFrame {
         panel_1.setLayout(new BoxLayout(panel_1, BoxLayout.X_AXIS));
 
         JButton btnUpdate = new JButton("Update");
-        btnUpdate.addActionListener(new ActionListener() {
+        btnUpdate.addActionListener(new ActionListener()
+        {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(ActionEvent e)
+            {
                 updateCurrentEvent();
             }
         });
         panel_1.add(btnUpdate);
 
         JButton btnReset_1 = new JButton("Reset");
-        btnReset_1.addActionListener(new ActionListener() {
+        btnReset_1.addActionListener(new ActionListener()
+        {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(ActionEvent e)
+            {
                 resetCurrentEvent();
             }
         });
@@ -660,12 +742,15 @@ public class MainFrame {
         scriptFilename.setColumns(15);
 
         JButton btnBrowse_1 = new JButton("Browse");
-        btnBrowse_1.addMouseListener(new MouseAdapter() {
+        btnBrowse_1.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mouseClicked(MouseEvent e)
+            {
                 JFileChooser fileChooser = new JFileChooser();
                 int returnValue = fileChooser.showOpenDialog(null);
-                if (returnValue == JFileChooser.APPROVE_OPTION) {
+                if (returnValue == JFileChooser.APPROVE_OPTION)
+                {
                     String selectedFile = fileChooser.getSelectedFile().getAbsolutePath();
                     scriptFilename.setText(selectedFile);
                     loadSelectedFile();
@@ -675,21 +760,28 @@ public class MainFrame {
         toolBar.add(btnBrowse_1);
 
         JButton btnLoad_1 = new JButton("Load");
-        btnLoad_1.addMouseListener(new MouseAdapter() {
+        btnLoad_1.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mouseClicked(MouseEvent e)
+            {
                 loadSelectedFile();
             }
         });
         toolBar.add(btnLoad_1);
 
         JButton btnSave = new JButton("Save");
-        btnSave.addMouseListener(new MouseAdapter() {
+        btnSave.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                try {
+            public void mouseClicked(MouseEvent e)
+            {
+                try
+                {
                     FileUtils.writeStringToFile(new File("scripts/postprocess.groovy"), scriptArea.getText());
-                } catch (IOException e1) {
+                }
+                catch (IOException e1)
+                {
                     throw new RuntimeException(e1);
                 }
             }
@@ -700,9 +792,11 @@ public class MainFrame {
         toolBar.add(btnReset);
 
         JButton btnRun = new JButton("Run");
-        btnRun.addActionListener(new ActionListener() {
+        btnRun.addActionListener(new ActionListener()
+        {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(ActionEvent e)
+            {
                 scenario.runPostProcessor(scriptArea.getText());
             }
         });
@@ -732,12 +826,15 @@ public class MainFrame {
         JButton button = new JButton("Browse");
         toolBar_1.add(button);
 
-        button.addMouseListener(new MouseAdapter() {
+        button.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mouseClicked(MouseEvent e)
+            {
                 JFileChooser fileChooser = new JFileChooser();
                 int returnValue = fileChooser.showOpenDialog(null);
-                if (returnValue == JFileChooser.APPROVE_OPTION) {
+                if (returnValue == JFileChooser.APPROVE_OPTION)
+                {
                     String selectedFile = fileChooser.getSelectedFile().getAbsolutePath();
                     lookupFilename.setText(selectedFile);
                 }
@@ -747,12 +844,17 @@ public class MainFrame {
         JButton button_1 = new JButton("Load");
         toolBar_1.add(button_1);
 
-        button_1.addMouseListener(new MouseAdapter() {
+        button_1.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                try {
+            public void mouseClicked(MouseEvent e)
+            {
+                try
+                {
                     lookupScriptArea.setText(FileInput.getContentInString(lookupFilename.getText()));
-                } catch (IOException e1) {
+                }
+                catch (IOException e1)
+                {
                     throw new RuntimeException(e1);
                 }
             }
@@ -761,12 +863,17 @@ public class MainFrame {
         JButton button_2 = new JButton("Save");
         toolBar_1.add(button_2);
 
-        button_2.addMouseListener(new MouseAdapter() {
+        button_2.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                try {
+            public void mouseClicked(MouseEvent e)
+            {
+                try
+                {
                     FileUtils.writeStringToFile(new File("scripts/weblookup.groovy"), lookupScriptArea.getText());
-                } catch (IOException e1) {
+                }
+                catch (IOException e1)
+                {
                     throw new RuntimeException(e1);
                 }
             }
@@ -784,11 +891,9 @@ public class MainFrame {
 
         JPanel optionsPanel = new JPanel();
         tabbedPane.addTab("Options", null, optionsPanel, null);
-        optionsPanel.setLayout(new FormLayout(
-                new ColumnSpec[]{FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
-                new RowSpec[]{FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+        optionsPanel.setLayout(new FormLayout(new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC, FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), },
+                new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
@@ -796,7 +901,8 @@ public class MainFrame {
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
                         FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
+                        FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, }));
 
         JLabel lblFirefoxProxyHost = new JLabel("Proxy host");
         optionsPanel.add(lblFirefoxProxyHost, "2, 2, right, default");
@@ -903,15 +1009,14 @@ public class MainFrame {
         optionsPanel.add(formDialogXpathField, "4, 26, fill, default");
         jmeterPanel = new JPanel();
         tabbedPane.addTab("JMeter", null, jmeterPanel, null);
-        jmeterPanel.setLayout(new FormLayout(
-                new ColumnSpec[]{FormSpecs.RELATED_GAP_COLSPEC, FormSpecs.DEFAULT_COLSPEC,
-                        FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"),},
-                new RowSpec[]{FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, RowSpec.decode("default:grow"),
-                        FormSpecs.RELATED_GAP_ROWSPEC, RowSpec.decode("default:grow"), FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+        jmeterPanel.setLayout(new FormLayout(new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC,
+                FormSpecs.DEFAULT_COLSPEC, FormSpecs.RELATED_GAP_COLSPEC, ColumnSpec.decode("default:grow"), },
+                new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                         FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
-                        FormSpecs.DEFAULT_ROWSPEC,}));
+                        RowSpec.decode("default:grow"), FormSpecs.RELATED_GAP_ROWSPEC, RowSpec.decode("default:grow"),
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC,
+                        FormSpecs.DEFAULT_ROWSPEC, FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                        FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC, }));
 
         JLabel lblJmeterRecorder_1 = new JLabel("JMeter recorder");
         jmeterPanel.add(lblJmeterRecorder_1, "2, 2, right, default");
@@ -921,26 +1026,36 @@ public class MainFrame {
         label_5.setLayout(new BoxLayout(label_5, BoxLayout.X_AXIS));
 
         JButton startProxyButton = new JButton("Start proxy");
-        startProxyButton.addActionListener(new ActionListener() {
+        startProxyButton.addActionListener(new ActionListener()
+        {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
+            public void actionPerformed(ActionEvent e)
+            {
+                try
+                {
                     jmeter.startRecording();
-                } catch (IOException e1) {
+                }
+                catch (IOException e1)
+                {
                     log.error(e1.toString(), e1);
                 }
             }
         });
 
         resetButton = new JButton("Reset");
-        resetButton.addActionListener(new ActionListener() {
+        resetButton.addActionListener(new ActionListener()
+        {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
+            public void actionPerformed(ActionEvent e)
+            {
+                try
+                {
                     jmeter.getScriptProcessor().setProcessScript(stepProcessScript.getText());
                     jmeter.getScriptProcessor().setRecordingScript(scenarioProcessScript.getText());
                     jmeter.reset();
-                } catch (IOException e1) {
+                }
+                catch (IOException e1)
+                {
                     log.error(e1.toString(), e1);
                 }
             }
@@ -951,9 +1066,11 @@ public class MainFrame {
         label_5.add(startProxyButton);
 
         JButton stopProxyButton = new JButton("Stop proxy");
-        stopProxyButton.addActionListener(new ActionListener() {
+        stopProxyButton.addActionListener(new ActionListener()
+        {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(ActionEvent e)
+            {
                 jmeter.stopRecording();
             }
         });
@@ -961,12 +1078,17 @@ public class MainFrame {
         label_5.add(stopProxyButton);
 
         JButton saveRecordingButton = new JButton("Save recording");
-        saveRecordingButton.addActionListener(new ActionListener() {
+        saveRecordingButton.addActionListener(new ActionListener()
+        {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
+            public void actionPerformed(ActionEvent e)
+            {
+                try
+                {
                     jmeter.saveScenario(scenarioTextField.getText());
-                } catch (IOException e1) {
+                }
+                catch (IOException e1)
+                {
                     log.error(e1.toString(), e1);
                 }
             }
@@ -1030,12 +1152,15 @@ public class MainFrame {
         JButton dupsBrowseBtn = new JButton("Browse");
         duplicatesToolBar.add(dupsBrowseBtn);
 
-        dupsBrowseBtn.addMouseListener(new MouseAdapter() {
+        dupsBrowseBtn.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mouseClicked(MouseEvent e)
+            {
                 JFileChooser fileChooser = new JFileChooser();
                 int returnValue = fileChooser.showOpenDialog(null);
-                if (returnValue == JFileChooser.APPROVE_OPTION) {
+                if (returnValue == JFileChooser.APPROVE_OPTION)
+                {
                     String selectedFile = fileChooser.getSelectedFile().getAbsolutePath();
                     duplicatesFilePath.setText(selectedFile);
                 }
@@ -1045,12 +1170,17 @@ public class MainFrame {
         JButton dupsLoadBtn = new JButton("Load");
         duplicatesToolBar.add(dupsLoadBtn);
 
-        dupsLoadBtn.addMouseListener(new MouseAdapter() {
+        dupsLoadBtn.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                try {
+            public void mouseClicked(MouseEvent e)
+            {
+                try
+                {
                     duplicatesScriptArea.setText(FileInput.getContentInString(duplicatesFilePath.getText()));
-                } catch (IOException e1) {
+                }
+                catch (IOException e1)
+                {
                     throw new RuntimeException(e1);
                 }
             }
@@ -1059,13 +1189,18 @@ public class MainFrame {
         JButton dupsSaveBtn = new JButton("Save");
         duplicatesToolBar.add(dupsSaveBtn);
 
-        dupsSaveBtn.addMouseListener(new MouseAdapter() {
+        dupsSaveBtn.addMouseListener(new MouseAdapter()
+        {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                try {
+            public void mouseClicked(MouseEvent e)
+            {
+                try
+                {
                     FileUtils.writeStringToFile(new File("scripts/duplicateHandler.groovy"),
                             duplicatesScriptArea.getText());
-                } catch (IOException e1) {
+                }
+                catch (IOException e1)
+                {
                     throw new RuntimeException(e1);
                 }
             }
@@ -1095,13 +1230,16 @@ public class MainFrame {
         JButton scriptEventHandlerBrowse = new JButton("Browse");
         scriptEventToolBar.add(scriptEventHandlerBrowse);
 
-        scriptEventHandlerBrowse.addActionListener(new ActionListener() {
+        scriptEventHandlerBrowse.addActionListener(new ActionListener()
+        {
 
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(ActionEvent e)
+            {
                 JFileChooser fileChooser = new JFileChooser();
                 int returnValue = fileChooser.showOpenDialog(null);
-                if (returnValue == JFileChooser.APPROVE_OPTION) {
+                if (returnValue == JFileChooser.APPROVE_OPTION)
+                {
                     String selectedFile = fileChooser.getSelectedFile().getAbsolutePath();
                     scriptEventHandlerFilePath.setText(selectedFile);
                 }
@@ -1112,14 +1250,19 @@ public class MainFrame {
         JButton scriptEventHandlerLoad = new JButton("Load");
         scriptEventToolBar.add(scriptEventHandlerLoad);
 
-        scriptEventHandlerLoad.addActionListener(new ActionListener() {
+        scriptEventHandlerLoad.addActionListener(new ActionListener()
+        {
 
             @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    scriptEventHandlerScriptArea
-                            .setText(FileInput.getContentInString(scriptEventHandlerFilePath.getText()));
-                } catch (IOException e1) {
+            public void actionPerformed(ActionEvent e)
+            {
+                try
+                {
+                    scriptEventHandlerScriptArea.setText(FileInput.getContentInString(scriptEventHandlerFilePath
+                            .getText()));
+                }
+                catch (IOException e1)
+                {
                     throw new RuntimeException(e1);
                 }
             }
@@ -1128,14 +1271,19 @@ public class MainFrame {
         JButton scriptEventHandlerSave = new JButton("Save");
         scriptEventToolBar.add(scriptEventHandlerSave);
 
-        scriptEventHandlerSave.addActionListener(new ActionListener() {
+        scriptEventHandlerSave.addActionListener(new ActionListener()
+        {
 
             @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
+            public void actionPerformed(ActionEvent e)
+            {
+                try
+                {
                     FileUtils.writeStringToFile(new File("scripts/scriptEventHandler.groovy"),
                             scriptEventHandlerScriptArea.getText());
-                } catch (IOException e1) {
+                }
+                catch (IOException e1)
+                {
                     throw new RuntimeException(e1);
                 }
 
@@ -1153,7 +1301,8 @@ public class MainFrame {
         initUIFromControllers();
     }
 
-    private void initUIFromControllers() {
+    private void initUIFromControllers()
+    {
         initUIFromOptionsController();
         initUIFromJMeterController();
         initUIFromPostProcessorController();
@@ -1163,30 +1312,35 @@ public class MainFrame {
         initUIFromScriptEventHandlerController();
     }
 
-    private void initUIFromDuplicateHandlerController() {
+    private void initUIFromDuplicateHandlerController()
+    {
         duplicatesFilePath.setText(scenario.getConfiguration().getWebConfiguration().getDuplicationScriptFilename());
         duplicatesScriptArea.setText(scenario.getConfiguration().getWebConfiguration().getDuplicationScript());
     }
 
-    private void initUIFromInitController() {
+    private void initUIFromInitController()
+    {
         filenameField.setText(InputFileConfigHolder.getInstance().getFilename());
     }
 
-    private void initUIFromJMeterController() {
+    private void initUIFromJMeterController()
+    {
         scenario.getConfiguration().getjMeterConfiguration().syncScripts(jmeter);
         stepProcessScript.setText(scenario.getConfiguration().getjMeterConfiguration().getStepProcessorScript());
         scenarioProcessScript
                 .setText(scenario.getConfiguration().getjMeterConfiguration().getScenarioProcessorScript());
     }
 
-    private void initUIFromOptionsController() {
+    private void initUIFromOptionsController()
+    {
         CommonFileConfigHolder.getInstance().setConfiguration(scenario.getConfiguration().getCommonConfiguration());
         JMeterFileConfigHolder.getInstance().setConfiguration(scenario.getConfiguration().getjMeterConfiguration());
-        ScriptEventExectutionController.getInstance()
-                .setConfiguration(scenario.getConfiguration().getScriptEventConfiguration());
+        ScriptEventExectutionController.getInstance().setConfiguration(
+                scenario.getConfiguration().getScriptEventConfiguration());
         WebLookupFileConfigHolder.getInstance().setConfiguration(scenario.getConfiguration().getWebConfiguration());
         DuplicationFileConfigHolder.getInstance().setConfiguration(scenario.getConfiguration().getWebConfiguration());
-        try {
+        try
+        {
             InputFileConfigHolder.getInstance().load(IFileConfigHolder.defaultConfig);
             JMeterFileConfigHolder.getInstance().load(IFileConfigHolder.defaultConfig);
             CommonFileConfigHolder.getInstance().load(IFileConfigHolder.defaultConfig);
@@ -1194,7 +1348,9 @@ public class MainFrame {
             WebLookupFileConfigHolder.getInstance().load(IFileConfigHolder.defaultConfig);
             DuplicationFileConfigHolder.getInstance().load(IFileConfigHolder.defaultConfig);
             ScriptEventExectutionController.getInstance().load(IFileConfigHolder.defaultConfig);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             log.error(e.toString(), e);
         }
         proxyHost.setText(scenario.getConfiguration().getCommonConfiguration().getProxyHost());
@@ -1213,17 +1369,20 @@ public class MainFrame {
         formDialogXpathField.setText(scenario.getConfiguration().getCommonConfiguration().getFormOrDialogXpath());
     }
 
-    private void initUIFromPostProcessorController() {
+    private void initUIFromPostProcessorController()
+    {
         scriptFilename.setText(PostProcessFileConfigHolder.getInstance().getFilename());
         scriptArea.setText(PostProcessFileConfigHolder.getInstance().getScript());
     }
 
-    private void initUIFromScriptEventHandlerController() {
+    private void initUIFromScriptEventHandlerController()
+    {
         scriptEventHandlerFilePath.setText(scenario.getConfiguration().getScriptEventConfiguration().getFilename());
         scriptEventHandlerScriptArea.setText(scenario.getConfiguration().getScriptEventConfiguration().getScript());
     }
 
-    private void initUIFromWebLookupController() {
+    private void initUIFromWebLookupController()
+    {
         lookupFilename.setText(scenario.getConfiguration().getWebConfiguration().getLookupScriptFilename());
         lookupScriptArea.setText(scenario.getConfiguration().getWebConfiguration().getLookupScript());
     }
@@ -1231,49 +1390,63 @@ public class MainFrame {
     /**
      * @throws IOException
      */
-    private void loadScenario() throws IOException {
+    private void loadScenario() throws IOException
+    {
         String filename = filenameField.getText().trim();
-        if (filename.length() == 0) {
+        if (filename.length() == 0)
+        {
             return;
         }
-        try {
+        try
+        {
             scenario.parse(filename);
             contentPane.setText(FileInput.getContentInString(filename));
-        } catch (IOException e1) {
+        }
+        catch (IOException e1)
+        {
             log.error(e1.toString(), e1);
             throw e1;
         }
     }
 
-    private void loadSelectedFile() {
-        try {
+    private void loadSelectedFile()
+    {
+        try
+        {
             String content = FileInput.getContentInString(scriptFilename.getText());
-            if (content == null) {
+            if (content == null)
+            {
                 content = "File is too big to show it";
             }
             scriptArea.setText(content);
-        } catch (IOException e1) {
+        }
+        catch (IOException e1)
+        {
             throw new RuntimeException(e1);
         }
     }
 
-    private void updateDuplicateHandlerController() {
+    private void updateDuplicateHandlerController()
+    {
         scenario.getConfiguration().getWebConfiguration().setDuplicationScriptFilename(duplicatesFilePath.getText());
         scenario.getConfiguration().getWebConfiguration().setDuplicationScript(duplicatesScriptArea.getText());
     }
 
-    private void updateInputController() {
+    private void updateInputController()
+    {
         InputFileConfigHolder.getInstance().setFilename(filenameField.getText());
     }
 
-    private void updateJMeterController() {
-        scenario.getConfiguration().getjMeterConfiguration().setStepProcessorScript(jmeter,
-                stepProcessScript.getText());
-        scenario.getConfiguration().getjMeterConfiguration().setScenarioProcessorScript(jmeter,
-                scenarioProcessScript.getText());
+    private void updateJMeterController()
+    {
+        scenario.getConfiguration().getjMeterConfiguration()
+                .setStepProcessorScript(jmeter, stepProcessScript.getText());
+        scenario.getConfiguration().getjMeterConfiguration()
+                .setScenarioProcessorScript(jmeter, scenarioProcessScript.getText());
     }
 
-    private void updateOptionsController() {
+    private void updateOptionsController()
+    {
         scenario.getConfiguration().getCommonConfiguration().setProxyHost(proxyHost.getText());
         scenario.getConfiguration().getCommonConfiguration().setProxyPort(proxyPort.getText());
         scenario.getConfiguration().getCommonConfiguration().setFfPath(ffPath.getText());
@@ -1290,17 +1463,20 @@ public class MainFrame {
         scenario.getConfiguration().getCommonConfiguration().setFormOrDialogXpath(formDialogXpathField.getText());
     }
 
-    private void updatePostProcessController() {
+    private void updatePostProcessController()
+    {
         PostProcessFileConfigHolder.getInstance().setFilename(scriptFilename.getText());
         PostProcessFileConfigHolder.getInstance().setScript(scriptArea.getText());
     }
 
-    private void updateScriptEventHandlerController() {
+    private void updateScriptEventHandlerController()
+    {
         scenario.getConfiguration().getScriptEventConfiguration().setFilename(scriptFilename.getText());
         scenario.getConfiguration().getScriptEventConfiguration().setScript(scriptEventHandlerScriptArea.getText());
     }
 
-    private void updateWebLookupController() {
+    private void updateWebLookupController()
+    {
         scenario.getConfiguration().getWebConfiguration().setLookupScriptFilename(lookupFilename.getText());
         scenario.getConfiguration().getWebConfiguration().setLookupScript(lookupScriptArea.getText());
     }

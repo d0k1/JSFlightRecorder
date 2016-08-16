@@ -2,16 +2,19 @@ package com.focusit.jmeter;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class JMeterProxyCounter {
+public class JMeterProxyCounter
+{
     private final static JMeterProxyCounter instance = new JMeterProxyCounter();
 
     public final AtomicInteger counter = new AtomicInteger(0);
 
-    private JMeterProxyCounter() {
+    private JMeterProxyCounter()
+    {
 
     }
 
-    public static JMeterProxyCounter getInstance() {
+    public static JMeterProxyCounter getInstance()
+    {
         return instance;
     }
 }

@@ -1,14 +1,16 @@
 package com.focusit.jsflight.player.ui;
 
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-public class ExceptionDialog extends JDialog {
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+
+public class ExceptionDialog extends JDialog
+{
 
     private static final long serialVersionUID = 1L;
 
@@ -31,7 +33,8 @@ public class ExceptionDialog extends JDialog {
 
     private JPanel topPanel = new JPanel(new BorderLayout());
 
-    public ExceptionDialog(String errorLabelText, String errorDescription, Throwable e) {
+    public ExceptionDialog(String errorLabelText, String errorDescription, Throwable e)
+    {
 
         StringWriter errors = new StringWriter();
         e.printStackTrace(new PrintWriter(errors));
@@ -60,12 +63,14 @@ public class ExceptionDialog extends JDialog {
     /**
      * @wbp.parser.constructor
      */
-    public ExceptionDialog(String errorLabelText, Throwable e) {
+    public ExceptionDialog(String errorLabelText, Throwable e)
+    {
         this(errorLabelText, null, e);
         setModal(true);
     }
 
-    public void setupUI() {
+    public void setupUI()
+    {
 
         this.setTitle("Error");
 
@@ -101,22 +106,28 @@ public class ExceptionDialog extends JDialog {
         getContentPane().add(buttonPanel, BorderLayout.SOUTH);
     }
 
-    private void setUpListeners() {
+    private void setUpListeners()
+    {
 
-        okButton.addActionListener(new ActionListener() {
+        okButton.addActionListener(new ActionListener()
+        {
 
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(ActionEvent e)
+            {
                 ExceptionDialog.this.setVisible(false);
             }
         });
 
-        viewButton.addActionListener(new ActionListener() {
+        viewButton.addActionListener(new ActionListener()
+        {
 
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(ActionEvent e)
+            {
 
-                if (open) {
+                if (open)
+                {
                     viewButton.setText("View Error");
 
                     topPanel.remove(exceptionTextAreaSP);
@@ -127,7 +138,9 @@ public class ExceptionDialog extends JDialog {
 
                     open = false;
 
-                } else {
+                }
+                else
+                {
 
                     viewButton.setText("Hide Error");
 

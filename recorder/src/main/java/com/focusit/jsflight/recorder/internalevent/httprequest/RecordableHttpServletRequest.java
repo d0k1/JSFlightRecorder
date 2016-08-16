@@ -12,6 +12,42 @@ import javax.servlet.http.HttpServletRequestWrapper;
 
 public class RecordableHttpServletRequest extends HttpServletRequestWrapper
 {
+    private final ByteArrayOutputStream payload;
+    private ServletInputStream inputStream;
+    private BufferedReader reader;
+
+    public RecordableHttpServletRequest(HttpServletRequest request)
+    {
+        super(request);
+        int contentLength = request.getContentLength();
+        this.payload = new ByteArrayOutputStream(contentLength >= 0 ? contentLength : 1024);
+    }
+
+    @Override
+    public ServletInputStream getInputStream() throws IOException
+    {
+        if (this.inputStream == null)
+        {
+            this.inputStream = new RecordableRequestInputStream(getRequest().getInputStream());
+        }
+        return this.inputStream;
+    }
+
+    public byte[] getPayloadBytes()
+    {
+        return payload.toByteArray();
+    }
+
+    @Override
+    public BufferedReader getReader() throws IOException
+    {
+        if (this.reader == null)
+        {
+            this.reader = new BufferedReader(new InputStreamReader(getInputStream(), getCharacterEncoding()));
+        }
+        return this.reader;
+    }
+
     private class RecordableRequestInputStream extends ServletInputStream
     {
 
@@ -50,43 +86,5 @@ public class RecordableHttpServletRequest extends HttpServletRequestWrapper
         {
             is.setReadListener(readListener);
         }
-    }
-
-    private final ByteArrayOutputStream payload;
-
-    private ServletInputStream inputStream;
-
-    private BufferedReader reader;
-
-    public RecordableHttpServletRequest(HttpServletRequest request)
-    {
-        super(request);
-        int contentLength = request.getContentLength();
-        this.payload = new ByteArrayOutputStream(contentLength >= 0 ? contentLength : 1024);
-    }
-
-    @Override
-    public ServletInputStream getInputStream() throws IOException
-    {
-        if (this.inputStream == null)
-        {
-            this.inputStream = new RecordableRequestInputStream(getRequest().getInputStream());
-        }
-        return this.inputStream;
-    }
-
-    public byte[] getPayloadBytes()
-    {
-        return payload.toByteArray();
-    }
-
-    @Override
-    public BufferedReader getReader() throws IOException
-    {
-        if (this.reader == null)
-        {
-            this.reader = new BufferedReader(new InputStreamReader(getInputStream(), getCharacterEncoding()));
-        }
-        return this.reader;
     }
 }

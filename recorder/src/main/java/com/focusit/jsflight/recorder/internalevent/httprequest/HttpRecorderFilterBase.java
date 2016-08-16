@@ -3,12 +3,7 @@ package com.focusit.jsflight.recorder.internalevent.httprequest;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -16,8 +11,8 @@ import com.focusit.jsflight.recorder.internalevent.InternalEventRecorder;
 
 public abstract class HttpRecorderFilterBase implements Filter
 {
-    private static final AtomicBoolean enabled = new AtomicBoolean(false);
     public static final String ALREADY_FILTERED_SUFFIX = ".FILTERED";
+    private static final AtomicBoolean enabled = new AtomicBoolean(false);
 
     public final static void setEnabled(boolean enabled)
     {

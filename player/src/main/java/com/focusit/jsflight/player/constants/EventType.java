@@ -5,7 +5,8 @@ package com.focusit.jsflight.player.constants;
  *
  * @author dkolmogortsev
  */
-public final class EventType {
+public final class EventType
+{
     public static final String SCROLL_EMULATION = "scroll-emulation";
     public static final String CLICK = "click";
     public static final String KEY_UP = "keyup";
