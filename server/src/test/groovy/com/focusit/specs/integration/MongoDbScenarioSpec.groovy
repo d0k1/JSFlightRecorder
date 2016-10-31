@@ -3,7 +3,7 @@ package com.focusit.specs.integration
 import com.focusit.jsflight.server.ServerApplication
 import com.focusit.jsflight.server.model.Event
 import com.focusit.jsflight.server.model.Experiment
-import com.focusit.jsflight.server.repository.EventRepositoryCustom
+import com.focusit.jsflight.server.repository.EventRepository
 import com.focusit.jsflight.server.repository.ExperimentRepository
 import com.focusit.jsflight.server.scenario.MongoDbScenario
 import org.bson.types.ObjectId
@@ -17,7 +17,6 @@ import org.springframework.test.context.TestPropertySource
 import spock.lang.Specification
 
 import javax.inject.Inject
-
 /**
  * Created by dkirpichenkov on 23.05.16.
  */
@@ -27,7 +26,7 @@ import javax.inject.Inject
 @TestPropertySource("classpath:app.integration.test.properties")
 public class MongoDbScenarioSpec extends Specification {
     @Inject
-    EventRepositoryCustom eventRepositoryCustom;
+    EventRepository eventRepositoryCustom;
     @Inject
     ExperimentRepository experimentRepository;
 

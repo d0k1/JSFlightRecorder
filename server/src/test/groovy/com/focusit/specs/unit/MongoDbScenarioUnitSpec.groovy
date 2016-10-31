@@ -1,18 +1,16 @@
 package com.focusit.specs.unit
 
 import com.focusit.jsflight.server.model.Experiment
-import com.focusit.jsflight.server.repository.EventRepositoryCustom
+import com.focusit.jsflight.server.repository.EventRepository
 import com.focusit.jsflight.server.repository.ExperimentRepository
 import com.focusit.jsflight.server.scenario.MongoDbScenario
 import spock.lang.Specification
-
-
 /**
  * Created by doki on 23.05.16.
  */
 class MongoDbScenarioUnitSpec extends Specification {
 
-    EventRepositoryCustom eventRepositoryCustom = Mock();
+    EventRepository eventRepositoryCustom = Mock();
     ExperimentRepository experimentRepository = Mock();
     Experiment experiment = new Experiment();
     MongoDbScenario scenario = new MongoDbScenario(experiment, eventRepositoryCustom, experimentRepository);

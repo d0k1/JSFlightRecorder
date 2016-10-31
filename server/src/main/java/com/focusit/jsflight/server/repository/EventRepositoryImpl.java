@@ -1,9 +1,5 @@
 package com.focusit.jsflight.server.repository;
 
-import java.util.List;
-
-import javax.inject.Inject;
-
 import com.focusit.jsflight.server.model.Event;
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.Sort;
@@ -12,16 +8,19 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
+import javax.inject.Inject;
+import java.util.List;
+
 /**
  * Created by dkirpichenkov on 20.05.16.
  */
 @Repository
-public class EventRepositoryCustomImpl implements EventRepositoryCustom
+public class EventRepositoryImpl implements EventRepository
 {
     private MongoTemplate mongoTemplate;
 
     @Inject
-    public EventRepositoryCustomImpl(MongoTemplate mongoTemplate)
+    public EventRepositoryImpl(MongoTemplate mongoTemplate)
     {
         this.mongoTemplate = mongoTemplate;
     }

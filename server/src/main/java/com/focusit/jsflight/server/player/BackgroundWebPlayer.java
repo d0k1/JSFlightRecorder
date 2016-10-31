@@ -1,18 +1,24 @@
 package com.focusit.jsflight.server.player;
 
+import com.focusit.jsflight.player.Player;
+import com.focusit.jsflight.player.cli.config.IConfig;
+import com.focusit.jsflight.player.cli.config.PropertiesConfig;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
+import com.focusit.jsflight.script.ScriptEngine;
 import com.focusit.jsflight.server.model.Experiment;
-import com.focusit.jsflight.server.repository.EventRepositoryCustom;
+import com.focusit.jsflight.server.model.Recording;
+import com.focusit.jsflight.server.player.exceptions.ErrorInBrowserPlaybackException;
+import com.focusit.jsflight.server.player.exceptions.PausePlaybackException;
+import com.focusit.jsflight.server.player.exceptions.TerminatePlaybackException;
+import com.focusit.jsflight.server.repository.EventRepository;
+import com.focusit.jsflight.server.repository.ExperimentRepository;
 import com.focusit.jsflight.server.repository.RecordingRepository;
+import com.focusit.jsflight.server.scenario.MongoDbScenario;
 import com.focusit.jsflight.server.scenario.MongoDbScenarioProcessor;
 import com.focusit.jsflight.server.service.EmailNotificationService;
 import com.focusit.jsflight.server.service.ExperimentFactory;
-import com.focusit.jsflight.server.service.MongoDbStorageService;
-import com.focusit.jsflight.server.model.Recording;
-import com.focusit.jsflight.server.repository.ExperimentRepository;
-import com.focusit.jsflight.server.scenario.MongoDbScenario;
-import com.focusit.jsflight.script.ScriptEngine;
 import com.focusit.jsflight.server.service.JMeterRecorderService;
+import com.focusit.jsflight.server.service.MongoDbStorageService;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Component that plays a scenario in background
- * <p>
+ * 
  * Created by dkirpichenkov on 05.05.16.
  */
 @Service
@@ -38,19 +44,22 @@ public class BackgroundWebPlayer
     private static final Logger LOG = LoggerFactory.getLogger(BackgroundWebPlayer.class);
 
     private MongoDbStorageService storageService;
-    private RecordingRepository recordingRepository;
-    private EventRepositoryCustom eventRepository;
-    private ExperimentRepository experimentRepository;
     private EmailNotificationService notificationService;
     private JMeterRecorderService recorderService;
+
+    private RecordingRepository recordingRepository;
+    private EventRepository eventRepository;
+    private ExperimentRepository experimentRepository;
 
     private Map<String, Map<String, String>> experimentLastUrls = new ConcurrentHashMap<>();
     private Map<String, CompletableFuture> playingFutures = new ConcurrentHashMap<>();
     private Map<String, SeleniumDriver> experimentDriver = new ConcurrentHashMap<>();
 
+    private IConfig config;
+
     @Inject
     public BackgroundWebPlayer(MongoDbStorageService screenshotsService, RecordingRepository recordingRepository,
-            EventRepositoryCustom eventRepository, ExperimentRepository experimentRepository,
+            EventRepository eventRepository, ExperimentRepository experimentRepository,
             EmailNotificationService notificationService, JMeterRecorderService recorderService)
     {
         this.storageService = screenshotsService;
@@ -59,6 +68,27 @@ public class BackgroundWebPlayer
         this.experimentRepository = experimentRepository;
         this.notificationService = notificationService;
         this.recorderService = recorderService;
+
+        config = getConfig();
+    }
+
+    private PropertiesConfig getConfig()
+    {
+        if (Player.class.getResource("application.properties") != null)
+        {
+            LOG.info("Loading properties from 'application.properties' file");
+            return new PropertiesConfig(Player.class.getResource("application.properties").getPath());
+        }
+        else if (System.getProperty("configFile") != null)
+        {
+            LOG.info("Loading properties from '{}' file", System.getProperty("configFile"));
+            return new PropertiesConfig(System.getProperty("configFile"));
+        }
+        else
+        {
+            LOG.error("Can't find any configuration file!");
+            return new PropertiesConfig("");
+        }
     }
 
     public Experiment start(String recordingId, boolean withScreenshots, boolean paused) throws Exception
@@ -113,6 +143,7 @@ public class BackgroundWebPlayer
         experimentRepository.save(experiment);
 
         MongoDbScenario scenario = new MongoDbScenario(experiment, eventRepository, experimentRepository);
+        scenario.initFromConfig(config);
         MongoDbScenarioProcessor processor = new MongoDbScenarioProcessor(storageService);
 
         ScriptEngine.init(scenario.getConfiguration().getCommonConfiguration().getScriptClassloader());
@@ -122,8 +153,9 @@ public class BackgroundWebPlayer
         Map<String, String> lastUrls = experimentLastUrls.getOrDefault(experimentId, new ConcurrentHashMap<>());
         experimentLastUrls.put(experimentId, lastUrls);
 
-        SeleniumDriver driver = experimentDriver.getOrDefault(experimentId, new SeleniumDriver(scenario)).setLastUrls(
-                lastUrls);
+        SeleniumDriver driver = experimentDriver.getOrDefault(experimentId,
+                new SeleniumDriver(scenario, config.getXvfbDisplayLowerBound(), config.getXvfbDisplayUpperBound()))
+                .setLastUrls(lastUrls);
         experimentDriver.put(experimentId, driver);
 
         playingFutures

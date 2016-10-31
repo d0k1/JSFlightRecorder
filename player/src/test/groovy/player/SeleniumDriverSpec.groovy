@@ -1,5 +1,6 @@
 package player
 
+import com.focusit.jsflight.player.constants.BrowserType
 import com.focusit.jsflight.player.scenario.UserScenario
 import com.focusit.jsflight.player.webdriver.SeleniumDriver
 import com.focusit.jsflight.player.webdriver.WebDriverWrapper
@@ -14,14 +15,14 @@ class SeleniumDriverSpec extends Specification {
             formXp = "//*[@id='errorPageContainer']";
 
 
-    def sd;
+    SeleniumDriver sd;
 
     def setup() {
         ScriptEngine.init(ClassLoader.getSystemClassLoader())
         sd = new SeleniumDriver(new UserScenario())
-        sd.setFormDialogXpath(formXp)
-        sd.setGetFirefoxPidScript('"echo 1".execute().text');
-        sd.setProcessSignalScript("println()");
+        sd.setKeepBrowserXpath(formXp)
+        sd.setGetWebDriverPidScript('"echo 1".execute().text');
+        sd.setSendSignalToProcessScript("println()");
     }
 
     def "browser containing form is not closed"() {
@@ -37,7 +38,7 @@ class SeleniumDriverSpec extends Specification {
         sd.releaseBrowser(wd.getWrappedDriver(), testEvent)
 
         then:
-        !sd.drivers.isEmpty()
+        !sd.tabUuidDrivers.isEmpty()
     }
 
 
@@ -47,22 +48,24 @@ class SeleniumDriverSpec extends Specification {
 
         WebDriverWrapper wd = getWd(testEvent)
 
+
+
         when:
         sd.releaseBrowser(wd.getWrappedDriver(), testEvent)
 
         then:
-        sd.drivers.isEmpty()
+        sd.tabUuidDrivers.isEmpty()
     }
 
 
     def cleanup() {
-        sd.drivers.values().each { it ->
+        sd.tabUuidDrivers.values().each { it ->
             it.quit()
         }
-        sd.drivers.clear()
+        sd.tabUuidDrivers.clear()
     }
 
-    WebDriverWrapper getWd(def event) {
-        return sd.getDriverForEvent(event, true, '', '', '', '')
+    WebDriverWrapper getWd(JSONObject event) {
+        return sd.getDriverForEvent(event, BrowserType.FIREFOX, '', '', 0)
     }
 }

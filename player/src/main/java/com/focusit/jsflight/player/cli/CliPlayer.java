@@ -1,40 +1,24 @@
 package com.focusit.jsflight.player.cli;
 
+import com.focusit.jsflight.jmeter.JMeterRecorder;
+import com.focusit.jsflight.player.cli.config.IConfig;
+import com.focusit.jsflight.player.configurations.ScriptsConfiguration;
+import com.focusit.jsflight.player.scenario.ScenarioProcessor;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
-import com.focusit.jsflight.player.scenario.ScenarioProcessor;
-import com.focusit.jsflight.jmeter.JMeterRecorder;
 import com.focusit.jsflight.script.ScriptEngine;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 public class CliPlayer
 {
     private static final Logger LOG = LoggerFactory.getLogger(CliPlayer.class);
 
-    private CliConfig config;
-
-    private JMeterRecorder jmeter;
-
-    private SeleniumDriver seleniumDriver;
-
-    public CliPlayer(CliConfig config) throws Exception
+    private JMeterRecorder createJmeterInstance(ScriptsConfiguration scriptsConfiguration, String templatePath)
+            throws Exception
     {
-        this.config = config;
-    }
-
-    private void prepareJmeterIfNeeded(UserScenario scenario) throws Exception
-    {
-        ScriptEngine.init(scenario.getConfiguration().getCommonConfiguration().getScriptClassloader());
-        jmeter = new JMeterRecorder();
-        String templatePath = config.getJmxTemplatePath();
+        JMeterRecorder jmeter = new JMeterRecorder();
         if (StringUtils.isBlank(templatePath))
         {
             LOG.info("Initializing Jmeter with default jmx template: template.jmx");
@@ -46,87 +30,51 @@ public class CliPlayer
             jmeter.init(templatePath);
         }
 
+        scriptsConfiguration.syncScripts(jmeter);
+
+        return jmeter;
     }
 
-    public SeleniumDriver getSeleniumDriver()
-    {
-        return seleniumDriver;
-    }
-
-    public void play() throws Exception
+    public void play(IConfig config) throws Exception
     {
         UserScenario scenario = new UserScenario();
+        scenario.initFromConfig(config);
 
-        updateControllers(scenario);
-        prepareJmeterIfNeeded(scenario);
+        ScriptEngine.init(scenario.getConfiguration().getCommonConfiguration().getScriptClassloader());
 
-        LOG.info("Loading {}", config.getPathToRecording());
-        scenario.parse(config.getPathToRecording());
-        scenario.postProcessScenario();
-        seleniumDriver = new SeleniumDriver(scenario);
-        if (config.isEnableRecording())
+        LOG.info("Loading recording from {}", config.getPathToRecordingFile());
+        scenario.parse(config.getPathToRecordingFile());
+        scenario.preProcessScenario();
+        SeleniumDriver seleniumDriver = new SeleniumDriver(scenario, config.getXvfbDisplayLowerBound(),
+                config.getXvfbDisplayUpperBound());
+        try
         {
-            jmeter.setProxyPort(Integer.parseInt(config.getProxyPort()));
-            jmeter.startRecording();
-            try
+            if (config.shouldEnableRecording())
             {
-                new ScenarioProcessor().play(scenario, seleniumDriver, Integer.parseInt(config.getStartStep()),
-                        Integer.parseInt(config.getFinishStep()));
+                JMeterRecorder jmeter = createJmeterInstance(scenario.getConfiguration().getScriptsConfiguration(),
+                        config.getPathToJmxTemplateFile());
+                jmeter.setProxyPort(config.getProxyPort());
+                jmeter.startRecording();
+                try
+                {
+                    new ScenarioProcessor().play(scenario, seleniumDriver, config.getStartStep(),
+                            config.getFinishStep());
+                }
+                finally
+                {
+                    jmeter.stopRecording();
+                    LOG.info("Saving recorded scenario to {}", config.getGeneratedJmeterScenarioName());
+                    jmeter.saveScenario(config.getGeneratedJmeterScenarioName());
+                }
             }
-            finally
+            else
             {
-                jmeter.stopRecording();
-                LOG.info("Saving recorded scenario to {}", config.getJmeterRecordingName());
-                jmeter.saveScenario(config.getJmeterRecordingName());
+                new ScenarioProcessor().play(scenario, seleniumDriver, config.getStartStep(), config.getFinishStep());
             }
         }
-        else
+        finally
         {
-            new ScenarioProcessor().play(scenario, seleniumDriver, Integer.parseInt(config.getStartStep()),
-                    Integer.parseInt(config.getFinishStep()));
+            seleniumDriver.closeWebDrivers();
         }
-    }
-
-    private void updateControllers(UserScenario scenario) throws IOException
-    {
-        if (!StringUtils.isBlank(this.config.getJmeterStepPreprocess()))
-        {
-            jmeter.getScriptProcessor().setRecordingScript(
-                    new String(Files.readAllBytes(Paths.get(config.getJmeterStepPreprocess().trim())), "UTF-8"));
-        }
-
-        if (!StringUtils.isBlank(this.config.getJmeterScenarioPreprocess()))
-        {
-            jmeter.getScriptProcessor().setProcessScript(
-                    new String(Files.readAllBytes(Paths.get(config.getJmeterScenarioPreprocess().trim())), "UTF-8"));
-        }
-
-        //Init options, based on config
-
-        scenario.getConfiguration().getCommonConfiguration().setFfPath(config.getFfPath());
-        scenario.getConfiguration().getCommonConfiguration().setMakeShots(config.getMakeShots());
-        scenario.getConfiguration().getCommonConfiguration().setPageReadyTimeout(config.getPageReadyTimeout());
-        scenario.getConfiguration().getCommonConfiguration().setProxyHost(config.getProxyHost());
-        scenario.getConfiguration().getCommonConfiguration().setProxyPort(config.getProxyPort());
-        scenario.getConfiguration().getCommonConfiguration().setScreenDir(config.getScreenDir());
-        scenario.getConfiguration().getCommonConfiguration().setUseFirefox(config.isUseFirefox());
-        scenario.getConfiguration().getCommonConfiguration().setUsePhantomJs(config.isUsePhantomJs());
-        scenario.getConfiguration().getCommonConfiguration().setPjsPath(config.getPjsPath());
-        scenario.getConfiguration().getCommonConfiguration().setUseRandomChars(config.isUseRandomChars());
-        scenario.getConfiguration().getCommonConfiguration().setFormOrDialogXpath(config.getFormDialogXpath());
-
-        scenario.getConfiguration().getCommonConfiguration().loadDefaultValues();
-
-        //Init weblookup script
-        scenario.getConfiguration().getWebConfiguration()
-                .setLookupScript(FileUtils.readFileToString(new File(config.getWebLookupScriptPath())));
-
-        //Init duplicate handler script
-        scenario.getConfiguration().getWebConfiguration()
-                .setDuplicationScript(FileUtils.readFileToString(new File(config.getDuplicateHandlerScriptPath())));
-
-        //Init script events handler
-        scenario.getConfiguration().getScriptEventConfiguration()
-                .setScript(FileUtils.readFileToString(new File(config.getScriptEventHandlerScriptPath())));
     }
 }

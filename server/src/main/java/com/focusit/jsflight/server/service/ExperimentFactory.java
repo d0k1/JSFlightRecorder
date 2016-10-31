@@ -1,6 +1,6 @@
 package com.focusit.jsflight.server.service;
 
-import com.focusit.jsflight.player.config.Configuration;
+import com.focusit.jsflight.player.configurations.Configuration;
 import com.focusit.jsflight.server.model.Experiment;
 
 /**
@@ -16,15 +16,8 @@ public class ExperimentFactory
 
         Configuration cfg = new Configuration();
 
-        cfg.getCommonConfiguration().loadDefaultValues();
-        cfg.getCommonConfiguration().setUseFirefox(true);
-        cfg.getCommonConfiguration().setProxyPort("");
-        cfg.getCommonConfiguration().setProxyHost("127.0.0.1");
-        cfg.getCommonConfiguration().setFirefoxDisplay("");
-        cfg.getCommonConfiguration().setPageReadyTimeout("30");
+        cfg.loadDefaults();
 
-        cfg.getWebConfiguration().loadDefaults();
-        cfg.getjMeterConfiguration().loadDefaults();
         result.setConfiguration(cfg);
         return result;
     }

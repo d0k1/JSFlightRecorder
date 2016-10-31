@@ -1,7 +1,7 @@
 package com.focusit.jsflight.player.script;
 
-import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.constants.EventConstants;
+import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.script.ScriptEngine;
 import com.focusit.jsflight.script.constants.ScriptBindingConstants;
 import groovy.lang.Binding;
@@ -87,7 +87,7 @@ public class PlayerScriptProcessor
      *
      * @param events
      */
-    public void postProcessScenario(String script, List<JSONObject> events)
+    public void preProcessScenario(String script, List<JSONObject> events)
     {
         Map<String, Object> binding = getEmptyBindingsMap();
         binding.put(ScriptBindingConstants.EVENTS, events);
@@ -96,8 +96,9 @@ public class PlayerScriptProcessor
         {
             executeGroovyScript(script, binding);
         }
-        catch (Throwable ignored)
+        catch (Throwable e)
         {
+            LOG.error(e.getMessage(), e);
         }
     }
 

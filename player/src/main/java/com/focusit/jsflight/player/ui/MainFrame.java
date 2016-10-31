@@ -1,5 +1,6 @@
 package com.focusit.jsflight.player.ui;
 
+import com.focusit.jsflight.player.constants.BrowserType;
 import com.focusit.jsflight.player.fileconfigholder.*;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.input.FileInput;
@@ -60,7 +61,7 @@ public class MainFrame
     private JTextField pjsPath;
     private JMeterRecorder jmeter;
     private JTextField lookupFilename;
-    private JTextField checkPageJs;
+    private JTextField isAsyncRequestsCompleted;
 
     private JTextField webDriverTag;
     private RSyntaxTextArea lookupScriptArea;
@@ -283,13 +284,10 @@ public class MainFrame
             updateDuplicateHandlerController();
             updateScriptEventHandlerController();
 
+            //TODO Store all configurations and/or add necessary configHolders
             InputFileConfigHolder.getInstance().store(IFileConfigHolder.defaultConfig);
-            JMeterFileConfigHolder.getInstance().store(IFileConfigHolder.defaultConfig);
             CommonFileConfigHolder.getInstance().store(IFileConfigHolder.defaultConfig);
             PostProcessFileConfigHolder.getInstance().store(IFileConfigHolder.defaultConfig);
-            WebLookupFileConfigHolder.getInstance().store(IFileConfigHolder.defaultConfig);
-            DuplicationFileConfigHolder.getInstance().store(IFileConfigHolder.defaultConfig);
-            ScriptEventExectutionController.getInstance().store(IFileConfigHolder.defaultConfig);
         }
         catch (Exception e)
         {
@@ -627,8 +625,9 @@ public class MainFrame
                 try
                 {
                     scenario.parseNextLine(InputFileConfigHolder.getInstance().getFilename());
-                    scenario.setPostProcessScenarioScript(scriptArea.getText());
-                    long secs = scenario.postProcessScenario();
+                    scenario.setPreProcessScenarioScript(scriptArea.getText());
+                    scenario.preProcessScenario();
+                    long secs = scenario.getEventsDuration();
                     statisticsLabel.setText(String.format("Events %d, duration %f sec", scenario.getStepsCount(),
                             secs / 1000.0));
                     model = createEventTableModel();
@@ -973,10 +972,10 @@ public class MainFrame
         JLabel lblCheckPageReady = new JLabel("Check page ready");
         optionsPanel.add(lblCheckPageReady, "2, 18, right, default");
 
-        checkPageJs = new JTextField();
-        checkPageJs.setText("return document.getElementById('state.context').getAttribute('value');");
-        checkPageJs.setColumns(10);
-        optionsPanel.add(checkPageJs, "4, 18, fill, default");
+        isAsyncRequestsCompleted = new JTextField();
+        isAsyncRequestsCompleted.setText("return document.getElementById('state.context').getAttribute('value');");
+        isAsyncRequestsCompleted.setColumns(10);
+        optionsPanel.add(isAsyncRequestsCompleted, "4, 18, fill, default");
 
         JLabel lblWebdriverTag = new JLabel("WebDriver tag");
         optionsPanel.add(lblWebdriverTag, "2, 20, right, default");
@@ -1047,8 +1046,8 @@ public class MainFrame
             {
                 try
                 {
-                    jmeter.getScriptProcessor().setProcessScript(stepProcessScript.getText());
-                    jmeter.getScriptProcessor().setRecordingScript(scenarioProcessScript.getText());
+                    jmeter.getScriptProcessor().setScenarioProcessorScript(stepProcessScript.getText());
+                    jmeter.getScriptProcessor().setStepProcessorScript(scenarioProcessScript.getText());
                     jmeter.reset();
                 }
                 catch (IOException e1)
@@ -1311,8 +1310,7 @@ public class MainFrame
 
     private void initUIFromDuplicateHandlerController()
     {
-        duplicatesFilePath.setText(scenario.getConfiguration().getWebConfiguration().getDuplicationScriptFilename());
-        duplicatesScriptArea.setText(scenario.getConfiguration().getWebConfiguration().getDuplicationScript());
+        duplicatesScriptArea.setText(scenario.getConfiguration().getScriptsConfiguration().getDuplicationHandlerScript());
     }
 
     private void initUIFromInitController()
@@ -1322,47 +1320,38 @@ public class MainFrame
 
     private void initUIFromJMeterController()
     {
-        scenario.getConfiguration().getjMeterConfiguration().syncScripts(jmeter);
-        stepProcessScript.setText(scenario.getConfiguration().getjMeterConfiguration().getStepProcessorScript());
+//TODO        scenario.getConfiguration().getScriptsConfiguration().syncScripts(jmeter);
+        stepProcessScript.setText(scenario.getConfiguration().getScriptsConfiguration().getStepProcessorScript());
         scenarioProcessScript
-                .setText(scenario.getConfiguration().getjMeterConfiguration().getScenarioProcessorScript());
+                .setText(scenario.getConfiguration().getScriptsConfiguration().getScenarioProcessorScript());
     }
 
     private void initUIFromOptionsController()
     {
+        //TODO Init all configurations and/or add necessary configHolders
         CommonFileConfigHolder.getInstance().setConfiguration(scenario.getConfiguration().getCommonConfiguration());
-        JMeterFileConfigHolder.getInstance().setConfiguration(scenario.getConfiguration().getjMeterConfiguration());
-        ScriptEventExectutionController.getInstance().setConfiguration(
-                scenario.getConfiguration().getScriptEventConfiguration());
-        WebLookupFileConfigHolder.getInstance().setConfiguration(scenario.getConfiguration().getWebConfiguration());
-        DuplicationFileConfigHolder.getInstance().setConfiguration(scenario.getConfiguration().getWebConfiguration());
         try
         {
+            //TODO Load all configurations and/or add necessary configHolders
             InputFileConfigHolder.getInstance().load(IFileConfigHolder.defaultConfig);
-            JMeterFileConfigHolder.getInstance().load(IFileConfigHolder.defaultConfig);
             CommonFileConfigHolder.getInstance().load(IFileConfigHolder.defaultConfig);
             PostProcessFileConfigHolder.getInstance().load(IFileConfigHolder.defaultConfig);
-            WebLookupFileConfigHolder.getInstance().load(IFileConfigHolder.defaultConfig);
-            DuplicationFileConfigHolder.getInstance().load(IFileConfigHolder.defaultConfig);
-            ScriptEventExectutionController.getInstance().load(IFileConfigHolder.defaultConfig);
         }
         catch (Exception e)
         {
             LOG.error(e.toString(), e);
         }
         proxyHost.setText(scenario.getConfiguration().getCommonConfiguration().getProxyHost());
-        proxyPort.setText(scenario.getConfiguration().getCommonConfiguration().getProxyPort());
-        ffPath.setText(scenario.getConfiguration().getCommonConfiguration().getFfPath());
-        pjsPath.setText(scenario.getConfiguration().getCommonConfiguration().getPjsPath());
-        useFirefoxButton.setSelected(scenario.getConfiguration().getCommonConfiguration().isUseFirefox());
-        usePhantomButton.setSelected(scenario.getConfiguration().getCommonConfiguration().isUsePhantomJs());
-        pageReadyTimeoutField.setText(scenario.getConfiguration().getCommonConfiguration().getPageReadyTimeout());
+        proxyPort.setText(scenario.getConfiguration().getCommonConfiguration().getProxyPort().toString());
+        ffPath.setText(scenario.getConfiguration().getCommonConfiguration().getPathToBrowserExecutable());
+        pjsPath.setText(scenario.getConfiguration().getCommonConfiguration().getPathToBrowserExecutable());
+        useFirefoxButton.setSelected(scenario.getConfiguration().getCommonConfiguration().getBrowserType().equals(BrowserType.FIREFOX));
+        pageReadyTimeoutField.setText(scenario.getConfiguration().getCommonConfiguration().getAsyncRequestsCompletedTimeoutInSeconds().toString());
         makeShots.setSelected(scenario.getConfiguration().getCommonConfiguration().getMakeShots());
-        screenDirTextField.setText(scenario.getConfiguration().getCommonConfiguration().getScreenDir());
-        checkPageJs.setText(scenario.getConfiguration().getCommonConfiguration().getCheckPageJs());
+        screenDirTextField.setText(scenario.getConfiguration().getCommonConfiguration().getScreenshotsDirectory());
+        isAsyncRequestsCompleted.setText(scenario.getConfiguration().getScriptsConfiguration().getIsAsyncRequestsCompletedScript());
         webDriverTag.setText(scenario.getConfiguration().getCommonConfiguration().getWebDriverTag());
         useRandomCharsBox.setSelected(scenario.getConfiguration().getCommonConfiguration().isUseRandomChars());
-        firefoxDsiplay.setText(scenario.getConfiguration().getCommonConfiguration().getFirefoxDisplay());
         formDialogXpathField.setText(scenario.getConfiguration().getCommonConfiguration().getFormOrDialogXpath());
     }
 
@@ -1374,14 +1363,12 @@ public class MainFrame
 
     private void initUIFromScriptEventHandlerController()
     {
-        scriptEventHandlerFilePath.setText(scenario.getConfiguration().getScriptEventConfiguration().getFilename());
-        scriptEventHandlerScriptArea.setText(scenario.getConfiguration().getScriptEventConfiguration().getScript());
+        scriptEventHandlerScriptArea.setText(scenario.getConfiguration().getScriptsConfiguration().getScriptEventHandlerScript());
     }
 
     private void initUIFromWebLookupController()
     {
-        lookupFilename.setText(scenario.getConfiguration().getWebConfiguration().getLookupScriptFilename());
-        lookupScriptArea.setText(scenario.getConfiguration().getWebConfiguration().getLookupScript());
+        lookupScriptArea.setText(scenario.getConfiguration().getScriptsConfiguration().getElementLookupScript());
     }
 
     /**
@@ -1425,8 +1412,7 @@ public class MainFrame
 
     private void updateDuplicateHandlerController()
     {
-        scenario.getConfiguration().getWebConfiguration().setDuplicationScriptFilename(duplicatesFilePath.getText());
-        scenario.getConfiguration().getWebConfiguration().setDuplicationScript(duplicatesScriptArea.getText());
+        scenario.getConfiguration().getScriptsConfiguration().setDuplicationHandlerScript(duplicatesScriptArea.getText());
     }
 
     private void updateInputController()
@@ -1436,27 +1422,26 @@ public class MainFrame
 
     private void updateJMeterController()
     {
-        scenario.getConfiguration().getjMeterConfiguration()
-                .setStepProcessorScript(jmeter, stepProcessScript.getText());
-        scenario.getConfiguration().getjMeterConfiguration()
-                .setScenarioProcessorScript(jmeter, scenarioProcessScript.getText());
+        scenario.getConfiguration().getScriptsConfiguration()
+                .setStepProcessorScript(stepProcessScript.getText());
+        scenario.getConfiguration().getScriptsConfiguration()
+                .setScenarioProcessorScript(scenarioProcessScript.getText());
     }
 
     private void updateOptionsController()
     {
         scenario.getConfiguration().getCommonConfiguration().setProxyHost(proxyHost.getText());
-        scenario.getConfiguration().getCommonConfiguration().setProxyPort(proxyPort.getText());
-        scenario.getConfiguration().getCommonConfiguration().setFfPath(ffPath.getText());
-        scenario.getConfiguration().getCommonConfiguration().setPjsPath(pjsPath.getText());
-        scenario.getConfiguration().getCommonConfiguration().setPageReadyTimeout(pageReadyTimeoutField.getText());
+        scenario.getConfiguration().getCommonConfiguration().setProxyPort(Integer.valueOf(proxyPort.getText()));
+        scenario.getConfiguration().getCommonConfiguration().setPathToBrowserExecutable(ffPath.getText());
+        scenario.getConfiguration().getCommonConfiguration().setAsyncRequestsCompletedTimeoutInSeconds(Integer.parseInt(pageReadyTimeoutField.getText()));
         scenario.getConfiguration().getCommonConfiguration().setMakeShots(makeShots.isSelected());
-        scenario.getConfiguration().getCommonConfiguration().setScreenDir(screenDirTextField.getText());
-        scenario.getConfiguration().getCommonConfiguration().setCheckPageJs(checkPageJs.getText());
+        scenario.getConfiguration().getCommonConfiguration().setScreenshotsDirectory(screenDirTextField.getText());
+        scenario.getConfiguration().getScriptsConfiguration().setIsAsyncRequestsCompletedScript(isAsyncRequestsCompleted.getText());
         scenario.getConfiguration().getCommonConfiguration().setWebDriverTag(webDriverTag.getText());
-        scenario.getConfiguration().getCommonConfiguration().setUseFirefox(useFirefoxButton.isSelected());
-        scenario.getConfiguration().getCommonConfiguration().setUsePhantomJs(usePhantomButton.isSelected());
+        scenario.getConfiguration().getCommonConfiguration().setBrowserType(useFirefoxButton.isSelected()
+                ? BrowserType.FIREFOX
+                : BrowserType.CHROME);
         scenario.getConfiguration().getCommonConfiguration().setUseRandomChars(useRandomCharsBox.isSelected());
-        scenario.getConfiguration().getCommonConfiguration().setFirefoxDisplay(firefoxDsiplay.getText());
         scenario.getConfiguration().getCommonConfiguration().setFormOrDialogXpath(formDialogXpathField.getText());
     }
 
@@ -1468,13 +1453,11 @@ public class MainFrame
 
     private void updateScriptEventHandlerController()
     {
-        scenario.getConfiguration().getScriptEventConfiguration().setFilename(scriptFilename.getText());
-        scenario.getConfiguration().getScriptEventConfiguration().setScript(scriptEventHandlerScriptArea.getText());
+        scenario.getConfiguration().getScriptsConfiguration().setScriptEventHandlerScript(scriptEventHandlerScriptArea.getText());
     }
 
     private void updateWebLookupController()
     {
-        scenario.getConfiguration().getWebConfiguration().setLookupScriptFilename(lookupFilename.getText());
-        scenario.getConfiguration().getWebConfiguration().setLookupScript(lookupScriptArea.getText());
+        scenario.getConfiguration().getScriptsConfiguration().setElementLookupScript(lookupScriptArea.getText());
     }
 }

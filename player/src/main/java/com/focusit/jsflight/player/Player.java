@@ -1,48 +1,42 @@
 package com.focusit.jsflight.player;
 
 import com.beust.jcommander.JCommander;
-import com.focusit.jsflight.player.cli.CliConfig;
 import com.focusit.jsflight.player.cli.CliPlayer;
-import com.focusit.jsflight.player.ui.MainFrame;
+import com.focusit.jsflight.player.cli.config.CliConfig;
+import com.focusit.jsflight.player.cli.config.IConfig;
+import com.focusit.jsflight.player.cli.config.PropertiesConfig;
 import com.focusit.jsflight.player.ui.ExceptionDialog;
+import com.focusit.jsflight.player.ui.MainFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
-import java.lang.Thread.UncaughtExceptionHandler;
+import java.io.File;
 
 public class Player
 {
-    private static final Logger log = LoggerFactory.getLogger(Player.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Player.class);
 
     public static void main(String[] args) throws Exception
     {
-        CliConfig config = new CliConfig();
-        JCommander jc = new JCommander(config, args);
-        jc.setProgramName(Player.class.getSimpleName());
-        if (config.showHelp())
-        {
-            jc.usage();
-            System.exit(0);
-        }
+        LOG.info("Main entry to program");
+        IConfig config = getConfig(args);
 
-        if (config.isHeadLess())
+        if (config.isHeadlessModeEnabled())
         {
-            CliPlayer player = new CliPlayer(config);
+            LOG.info("Starting in headless mode");
+            CliPlayer player = new CliPlayer();
+            boolean errorOccurred = false;
             try
             {
-                player.play();
+                player.play(config);
             }
             catch (Exception e)
             {
-                log.error(e.toString(), e);
-                System.exit(1);
+                LOG.error(e.toString(), e);
+                errorOccurred = true;
             }
-            finally
-            {
-                player.getSeleniumDriver().closeWebDrivers();
-                System.exit(0);
-            }
+            System.exit(errorOccurred ? 1 : 0);
         }
         else
         {
@@ -50,33 +44,47 @@ public class Player
         }
     }
 
+    private static IConfig getConfig(String[] args) {
+        LOG.info("Configs parsing");
+        IConfig config;
+        if (Player.class.getResource("application.properties") != null)
+        {
+            config = new PropertiesConfig(Player.class.getResource("application.properties").getPath());
+        }
+        else if (new File(System.getProperty("configFile")).exists())
+        {
+            config = new PropertiesConfig(System.getProperty("configFile"));
+        }
+        else
+        {
+            config = new CliConfig();
+            JCommander jc = new JCommander(config, args);
+            jc.setProgramName(Player.class.getSimpleName());
+            if (((CliConfig)config).shouldShowUsage())
+            {
+                jc.usage();
+                System.exit(0);
+            }
+        }
+        return config;
+    }
+
     private static void startWithUI()
     {
-        Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler()
-        {
-
-            @Override
-            public void uncaughtException(Thread t, Throwable e)
-            {
-                log.error(e.toString(), e);
-                ExceptionDialog ld = new ExceptionDialog("Error", e.toString(), e);
-                ld.setVisible(true);
-            }
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+            LOG.error(e.toString(), e);
+            ExceptionDialog ld = new ExceptionDialog("Error", e.toString(), e);
+            ld.setVisible(true);
         });
-        EventQueue.invokeLater(new Runnable()
-        {
-            @Override
-            public void run()
+        EventQueue.invokeLater(() -> {
+            try
             {
-                try
-                {
-                    MainFrame window = new MainFrame();
-                    window.getFrame().setVisible(true);
-                }
-                catch (Exception e)
-                {
-                    e.printStackTrace();
-                }
+                MainFrame window = new MainFrame();
+                window.getFrame().setVisible(true);
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
             }
         });
     }

@@ -1,4 +1,4 @@
-package com.focusit.jsflight.server.player;
+package com.focusit.jsflight.server.player.exceptions;
 
 /**
  * Exception passed to CompletableFuture to pause playing a scenario

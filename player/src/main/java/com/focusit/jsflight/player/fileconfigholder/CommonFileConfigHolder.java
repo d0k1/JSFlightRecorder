@@ -1,9 +1,10 @@
 package com.focusit.jsflight.player.fileconfigholder;
 
+import com.focusit.jsflight.player.configurations.CommonConfiguration;
+import com.focusit.jsflight.player.constants.BrowserType;
+
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-
-import com.focusit.jsflight.player.config.CommonConfiguration;
 
 public class CommonFileConfigHolder extends UIFileConfigHolder
 {
@@ -25,25 +26,19 @@ public class CommonFileConfigHolder extends UIFileConfigHolder
     public void load(String file) throws Exception
     {
         ObjectInputStream stream = getInputStream(file);
-        configuration.setProxyHost((String)stream.readObject());
-        configuration.setProxyPort((String)stream.readObject());
-        configuration.setFfPath((String)stream.readObject());
-        configuration.setPjsPath((String)stream.readObject());
-        configuration.setPageReadyTimeout((String)stream.readObject());
-        configuration.setMakeShots(stream.readBoolean());
-        configuration.setUseFirefox(stream.readBoolean());
-        configuration.setUsePhantomJs(stream.readBoolean());
-        configuration.setUseRandomChars(stream.readBoolean());
-        configuration.setScreenDir((String)stream.readObject());
-        configuration.setCheckPageJs((String)stream.readObject());
-        configuration.setWebDriverTag((String)stream.readObject());
-        configuration.setFirefoxDisplay((String)stream.readObject());
-        configuration.setUiShownScript((String)stream.readObject());
-        configuration.setScrollTimeout((Integer)stream.readObject());
-        configuration.setPageShownTimeout((Integer)stream.readObject());
-        configuration.setFormOrDialogXpath((String)stream.readObject());
+        configuration.loadDefaultMaxElementScript();
 
-        configuration.loadDefaultValues();
+        configuration.setProxyHost((String)stream.readObject());
+        configuration.setProxyPort((Integer) stream.readObject());
+        configuration.setPathToBrowserExecutable((String)stream.readObject());
+        configuration.setAsyncRequestsCompletedTimeoutInSeconds((Integer) stream.readObject());
+        configuration.setMakeShots(stream.readBoolean());
+        configuration.setBrowserType((BrowserType) stream.readObject());
+        configuration.setUseRandomChars(stream.readBoolean());
+        configuration.setScreenshotsDirectory((String)stream.readObject());
+        configuration.setWebDriverTag((String)stream.readObject());
+        configuration.setAsyncRequestsCompletedTimeoutInSeconds((Integer)stream.readObject());
+        configuration.setFormOrDialogXpath((String)stream.readObject());
     }
 
     public void setConfiguration(CommonConfiguration configuration)
@@ -57,20 +52,14 @@ public class CommonFileConfigHolder extends UIFileConfigHolder
         ObjectOutputStream stream = getOutputStream(file);
         stream.writeObject(configuration.getProxyHost());
         stream.writeObject(configuration.getProxyPort());
-        stream.writeObject(configuration.getFfPath());
-        stream.writeObject(configuration.getPjsPath());
-        stream.writeObject(configuration.getPageReadyTimeout());
+        stream.writeObject(configuration.getPathToBrowserExecutable());
+        stream.writeObject(configuration.getAsyncRequestsCompletedTimeoutInSeconds());
         stream.writeBoolean(configuration.getMakeShots());
-        stream.writeBoolean(configuration.isUseFirefox());
-        stream.writeBoolean(configuration.isUsePhantomJs());
+        stream.writeObject(configuration.getBrowserType());
         stream.writeBoolean(configuration.isUseRandomChars());
-        stream.writeObject(configuration.getScreenDir());
-        stream.writeObject(configuration.getCheckPageJs());
+        stream.writeObject(configuration.getScreenshotsDirectory());
         stream.writeObject(configuration.getWebDriverTag());
-        stream.writeObject(configuration.getFirefoxDisplay());
-        stream.writeObject(configuration.getUiShownScript());
-        stream.writeObject(configuration.getScrollTimeout());
-        stream.writeObject(configuration.getPageShownTimeout());
+        stream.writeObject(configuration.getAsyncRequestsCompletedTimeoutInSeconds());
         stream.writeObject(configuration.getFormOrDialogXpath());
     }
 

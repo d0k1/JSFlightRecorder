@@ -7,7 +7,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.focusit.jsflight.player.config.Configuration;
+import com.focusit.jsflight.player.configurations.Configuration;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 

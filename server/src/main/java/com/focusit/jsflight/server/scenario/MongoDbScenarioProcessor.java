@@ -1,17 +1,17 @@
 package com.focusit.jsflight.server.scenario;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-
+import com.focusit.jsflight.player.scenario.ScenarioProcessor;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
-import com.focusit.jsflight.server.player.ErrorInBrowserPlaybackException;
+import com.focusit.jsflight.server.player.exceptions.ErrorInBrowserPlaybackException;
 import com.focusit.jsflight.server.service.MongoDbStorageService;
-import com.focusit.jsflight.player.scenario.ScenarioProcessor;
 import org.openqa.selenium.WebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 /**
  * This class user scenario process based on mongodb
@@ -46,13 +46,6 @@ public class MongoDbScenarioProcessor extends ScenarioProcessor
     }
 
     @Override
-    public void applyStep(UserScenario scenario, SeleniumDriver seleniumDriver, int position)
-    {
-        LOG.info("Applying event: " + scenario.getStepAt(position).get("eventId"));
-        super.applyStep(scenario, seleniumDriver, position);
-    }
-
-    @Override
     protected void processClickException(int position, Exception ex) throws Exception
     {
         super.processClickException(position, ex);
@@ -64,19 +57,16 @@ public class MongoDbScenarioProcessor extends ScenarioProcessor
             int position, boolean isError)
     {
         MongoDbScenario mongoDbScenario = (MongoDbScenario)scenario;
+        if (scenario.getConfiguration().getCommonConfiguration().getMakeShots()) {
+            try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                seleniumDriver.makeAShot(theWebDriver, baos);
 
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream())
-        {
-            seleniumDriver.makeAShot(theWebDriver, baos);
-
-            try (ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray()))
-            {
-                screenshotsService.storeScreenshot(mongoDbScenario, position, bais, isError);
+                try (ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray())) {
+                    screenshotsService.storeScreenshot(mongoDbScenario, position, bais, isError);
+                }
+            } catch (IOException e) {
+                LOG.error(e.getMessage(), e);
             }
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
         }
     }
 }

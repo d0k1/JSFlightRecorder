@@ -1,6 +1,8 @@
 package com.focusit.jsflight.player.scenario;
 
-import com.focusit.jsflight.player.config.CommonConfiguration;
+import com.focusit.jsflight.player.configurations.CommonConfiguration;
+import com.focusit.jsflight.player.configurations.ScriptsConfiguration;
+import com.focusit.jsflight.player.constants.BrowserType;
 import com.focusit.jsflight.player.constants.EventConstants;
 import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
@@ -27,14 +29,12 @@ public class ScenarioProcessor
 
     private static WebDriver getWebDriver(UserScenario scenario, SeleniumDriver seleniumDriver, JSONObject event)
     {
-        boolean firefox = scenario.getConfiguration().getCommonConfiguration().isUseFirefox();
-        String path = firefox ? scenario.getConfiguration().getCommonConfiguration().getFfPath() : scenario
-                .getConfiguration().getCommonConfiguration().getPjsPath();
+        BrowserType browserType = scenario.getConfiguration().getCommonConfiguration().getBrowserType();
+        String path = scenario.getConfiguration().getCommonConfiguration().getPathToBrowserExecutable();
         String proxyHost = scenario.getConfiguration().getCommonConfiguration().getProxyHost();
-        String proxyPort = scenario.getConfiguration().getCommonConfiguration().getProxyPort();
-        String display = scenario.getConfiguration().getCommonConfiguration().getFirefoxDisplay();
+        Integer proxyPort = scenario.getConfiguration().getCommonConfiguration().getProxyPort();
 
-        return seleniumDriver.getDriverForEvent(event, firefox, path, display, proxyHost, proxyPort);
+        return seleniumDriver.getDriverForEvent(event, browserType, path, proxyHost, proxyPort);
     }
 
     /**
@@ -48,7 +48,8 @@ public class ScenarioProcessor
      */
     protected void hasBrowserAnError(UserScenario scenario, WebDriver wd) throws Exception
     {
-        String findBrowserErrorScript = scenario.getConfiguration().getWebConfiguration().getFindBrowserErrorScript();
+        String findBrowserErrorScript = scenario.getConfiguration().getScriptsConfiguration()
+                .getIsBrowserHaveErrorScript();
         Map<String, Object> binding = PlayerScriptProcessor.getEmptyBindingsMap();
         binding.put(ScriptBindingConstants.WEB_DRIVER, wd);
         boolean pageContainsError = new PlayerScriptProcessor(scenario).executeGroovyScript(findBrowserErrorScript,
@@ -87,7 +88,7 @@ public class ScenarioProcessor
         if (scenario.getConfiguration().getCommonConfiguration().getMakeShots())
         {
             LOG.info("Making screenshot");
-            String screenDir = scenario.getConfiguration().getCommonConfiguration().getScreenDir();
+            String screenDir = scenario.getConfiguration().getCommonConfiguration().getScreenshotsDirectory();
             File dir = new File(screenDir, Paths.get(scenario.getScenarioFilename()).getFileName().toString());
 
             if (!dir.exists() && !dir.mkdirs())
@@ -131,8 +132,8 @@ public class ScenarioProcessor
         CommonConfiguration commonConfiguration = scenario.getConfiguration().getCommonConfiguration();
         try
         {
-            if (scenario.isStepDuplicates(scenario.getConfiguration().getWebConfiguration().getDuplicationScript(),
-                    event))
+            ScriptsConfiguration scriptsConfiguration = scenario.getConfiguration().getScriptsConfiguration();
+            if (scenario.isStepDuplicates(scriptsConfiguration.getDuplicationHandlerScript(), event))
             {
                 LOG.warn("Event duplicates previous");
                 return;
@@ -149,31 +150,30 @@ public class ScenarioProcessor
 
             if (type.equalsIgnoreCase(EventType.SCRIPT))
             {
-                new PlayerScriptProcessor(scenario).executeScriptEvent(scenario.getConfiguration()
-                        .getScriptEventConfiguration().getScript(), event);
+                new PlayerScriptProcessor(scenario).executeScriptEvent(
+                        scriptsConfiguration.getScriptEventHandlerScript(), event);
                 return;
             }
 
             //Configure webdriver for this event, setting params here so we can change parameters while playback is
             //paused
             seleniumDriver
-                    .setPageTimeoutMs(Integer.parseInt(commonConfiguration.getPageReadyTimeout()))
-                    .setCheckPageJs(commonConfiguration.getCheckPageJs())
-
+                    .setAsyncRequestsCompletedTimeoutInMs(
+                            commonConfiguration.getAsyncRequestsCompletedTimeoutInSeconds())
+                    .setIsAsyncRequestsCompletedScript(scriptsConfiguration.getIsAsyncRequestsCompletedScript())
                     .setMaxElementGroovy(commonConfiguration.getMaxElementGroovy())
-                    .setLookupScript(scenario.getConfiguration().getWebConfiguration().getLookupScript())
-                    .setUiShownScript(commonConfiguration.getUiShownScript())
-                    .setUseRandomChars(commonConfiguration.isUseRandomChars())
-                    .setIntervalBetweenUiChecksMs(commonConfiguration.getIntervalBetweenUiChecksMs())
-                    .setUiShowTimeoutSeconds(commonConfiguration.getUiShowTimeoutSeconds())
+                    .setElementLookupScript(scriptsConfiguration.getElementLookupScript())
+                    .setIsUiShownScript(scriptsConfiguration.getIsUiShownScript())
+                    .setUseRandomStringGenerator(commonConfiguration.isUseRandomChars())
+                    .setIntervalBetweenUiChecksInMs(commonConfiguration.getIntervalBetweenUiChecksMs())
+                    .setUiShownTimeoutInSeconds(commonConfiguration.getUiShownTimeoutSeconds())
                     .setPlaceholders(scenario.getConfiguration().getWebConfiguration().getPlaceholders())
                     .setSelectXpath(scenario.getConfiguration().getWebConfiguration().getSelectXpath())
-                    .setSelectDeterminerScript(
-                            scenario.getConfiguration().getWebConfiguration().getSelectDeterminerScript())
-                    .setProcessSignalScript(commonConfiguration.getProcessSignalScript())
-                    .setSkipKeyboardScript(commonConfiguration.getSkipKeyboardScript())
-                    .setGetFirefoxPidScript(commonConfiguration.getGetFirefoxPidScript())
-                    .setFormDialogXpath(commonConfiguration.getFormOrDialogXpath());
+                    .setIsSelectElementScript(scriptsConfiguration.getIsSelectElementScript())
+                    .setSendSignalToProcessScript(scriptsConfiguration.getSendSignalToProcessScript())
+                    .setSkipKeyboardScript(scriptsConfiguration.getShouldSkipKeyboardScript())
+                    .setGetWebDriverPidScript(scriptsConfiguration.getGetWebDriverPidScript())
+                    .setKeepBrowserXpath(commonConfiguration.getFormOrDialogXpath());
 
             theWebDriver = getWebDriver(scenario, seleniumDriver, event);
             if (theWebDriver == null)
@@ -182,33 +182,32 @@ public class ScenarioProcessor
             }
             seleniumDriver.openEventUrl(theWebDriver, event);
 
-            String target = scenario.getTargetForEvent(event);
+            String target = UserScenario.getTargetForEvent(event);
 
-            LOG.info("Event {}, Display {}", position, seleniumDriver.getDriverDisplay(theWebDriver));
+            LOG.info("Event {}. Display {}", position, seleniumDriver.getDriverDisplay(theWebDriver));
 
-            seleniumDriver.waitPageReadyWithRefresh(theWebDriver, event);
+            seleniumDriver.waitWhileAsyncRequestsWillCompletedWithRefresh(theWebDriver, event);
 
             try
             {
                 switch (type)
                 {
-                case EventType.MOUSEWHEEL:
+                case EventType.MOUSE_WHEEL:
                     seleniumDriver.processMouseWheel(theWebDriver, event, target);
                     break;
                 case EventType.SCROLL_EMULATION:
                     seleniumDriver.processScroll(theWebDriver, event, target);
                     break;
-
-                case EventType.MOUSEDOWN:
+                case EventType.MOUSE_DOWN:
                 case EventType.CLICK:
                     seleniumDriver.processMouseEvent(theWebDriver, event);
-                    seleniumDriver.waitPageReadyWithRefresh(theWebDriver, event);
+                    seleniumDriver.waitWhileAsyncRequestsWillCompletedWithRefresh(theWebDriver, event);
                     break;
                 case EventType.KEY_UP:
                 case EventType.KEY_DOWN:
                 case EventType.KEY_PRESS:
                     seleniumDriver.processKeyboardEvent(theWebDriver, event);
-                    seleniumDriver.waitPageReadyWithRefresh(theWebDriver, event);
+                    seleniumDriver.waitWhileAsyncRequestsWillCompletedWithRefresh(theWebDriver, event);
                     break;
                 default:
                     break;
@@ -257,22 +256,21 @@ public class ScenarioProcessor
     {
         long begin = System.currentTimeMillis();
 
-        LOG.info("playing the scenario");
         if (start > 0)
         {
-            LOG.info("skiping " + start + " events.");
+            LOG.info("Skipping first {} events.", start);
             scenario.setPosition(start);
         }
 
         int maxPosition = finish > 0 ? finish : scenario.getStepsCount();
-
-        do
+        LOG.info("Playing scenario. Start step: {}, finish step: {}. Steps count: {}", start, maxPosition,
+                maxPosition - start);
+        while (scenario.getPosition() != maxPosition)
         {
             LOG.info("Step " + scenario.getPosition());
             applyStep(scenario, seleniumDriver, scenario.getPosition());
             scenario.moveToNextStep();
         }
-        while (scenario.getPosition() != maxPosition);
         LOG.info(String.format("Done(%d):playing", System.currentTimeMillis() - begin));
         seleniumDriver.closeWebDrivers();
     }

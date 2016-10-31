@@ -21,9 +21,9 @@ public class JMeterScriptProcessor
     private static final Logger LOG = LoggerFactory.getLogger(JMeterScriptProcessor.class);
     public static final boolean SHOULD_BE_PROCESSED_DEFAULT = true;
     // script called at recording phase. Can skip sample
-    private String recordingScript;
+    private String stepProcessorScript;
     // script callled at storing phase. Can skip sample
-    private String processScript;
+    private String scenarioProcessorScript;
     private final ClassLoader classLoader;
 
     public JMeterScriptProcessor()
@@ -31,24 +31,24 @@ public class JMeterScriptProcessor
         this.classLoader = ScriptEngine.getClassLoader();
     }
 
-    public String getRecordingScript()
+    public String getStepProcessorScript()
     {
-        return recordingScript;
+        return stepProcessorScript;
     }
 
-    public void setRecordingScript(String recordingScript)
+    public void setStepProcessorScript(String stepProcessorScript)
     {
-        this.recordingScript = recordingScript;
+        this.stepProcessorScript = stepProcessorScript;
     }
 
-    public String getProcessScript()
+    public String getScenarioProcessorScript()
     {
-        return processScript;
+        return scenarioProcessorScript;
     }
 
-    public void setProcessScript(String processScript)
+    public void setScenarioProcessorScript(String scenarioProcessorScript)
     {
-        this.processScript = processScript;
+        this.scenarioProcessorScript = scenarioProcessorScript;
     }
 
     /**
@@ -69,7 +69,7 @@ public class JMeterScriptProcessor
         binding.setVariable(ScriptBindingConstants.JSFLIGHT, JMeterJSFlightBridge.getInstance());
         binding.setVariable(ScriptBindingConstants.CLASSLOADER, classLoader);
 
-        Script script = ScriptEngine.getScript(recordingScript);
+        Script script = ScriptEngine.getScript(getStepProcessorScript());
         if (script == null)
         {
             LOG.warn(sampler.getName() + ". No script found. Default result is " + SHOULD_BE_PROCESSED_DEFAULT);
@@ -97,21 +97,21 @@ public class JMeterScriptProcessor
     /**
      * Post process every stored request just before it get saved to disk
      *
-     * @param sample recorded http-request (sample)
-     * @param tree   HashTree (XML like data structure) that represents exact recorded sample
+     * @param sampler recorded http-request (sampler)
+     * @param tree   HashTree (XML like data structure) that represents exact recorded sampler
      */
-    public void processScenario(HTTPSamplerBase sample, HashTree tree, Arguments userVariables, JMeterRecorder recorder)
+    public void processScenario(HTTPSamplerBase sampler, HashTree tree, Arguments userVariables, JMeterRecorder recorder)
     {
         Binding binding = new Binding();
         binding.setVariable(ScriptBindingConstants.LOGGER, LOG);
-        binding.setVariable(ScriptBindingConstants.SAMPLER, sample);
+        binding.setVariable(ScriptBindingConstants.SAMPLER, sampler);
         binding.setVariable(ScriptBindingConstants.TREE, tree);
         binding.setVariable(ScriptBindingConstants.CONTEXT, recorder.getContext());
         binding.setVariable(ScriptBindingConstants.JSFLIGHT, JMeterJSFlightBridge.getInstance());
         binding.setVariable(ScriptBindingConstants.USER_VARIABLES, userVariables);
         binding.setVariable(ScriptBindingConstants.CLASSLOADER, classLoader);
 
-        Script compiledProcessScript = ScriptEngine.getScript(processScript);
+        Script compiledProcessScript = ScriptEngine.getScript(getScenarioProcessorScript());
         if (compiledProcessScript == null)
         {
             return;

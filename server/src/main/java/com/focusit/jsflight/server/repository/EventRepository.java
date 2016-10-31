@@ -9,7 +9,7 @@ import com.focusit.jsflight.server.model.Event;
 /**
  * Created by dkirpichenkov on 20.05.16.
  */
-public interface EventRepositoryCustom
+public interface EventRepository
 {
     Event getEventToReplay(ObjectId recordingId, int offset);
 

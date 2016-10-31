@@ -2,7 +2,7 @@ package com.focusit.jsflight.server.service;
 
 import com.focusit.jsflight.server.model.Event;
 import com.focusit.jsflight.server.model.Recording;
-import com.focusit.jsflight.server.repository.EventRepositoryCustom;
+import com.focusit.jsflight.server.repository.EventRepository;
 import com.focusit.jsflight.server.repository.RecordingRepository;
 import com.google.gson.Gson;
 import org.apache.commons.io.IOUtils;
@@ -30,10 +30,10 @@ public class RecordingsService
     private final static Logger LOG = LoggerFactory.getLogger(RecordingsService.class);
 
     private RecordingRepository recordingRepository;
-    private EventRepositoryCustom eventRepository;
+    private EventRepository eventRepository;
 
     @Inject
-    public RecordingsService(RecordingRepository recordingRepository, EventRepositoryCustom eventRepository)
+    public RecordingsService(RecordingRepository recordingRepository, EventRepository eventRepository)
     {
         this.recordingRepository = recordingRepository;
         this.eventRepository = eventRepository;

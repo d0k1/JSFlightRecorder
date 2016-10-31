@@ -1,4 +1,4 @@
-package com.focusit.jsflight.server.player;
+package com.focusit.jsflight.server.player.exceptions;
 
 /**
  * Created by dkirpichenkov on 16.05.16.
