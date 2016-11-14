@@ -1,12 +1,10 @@
 package com.focusit.jsflight.recorder.internalevent;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.zip.GZIPOutputStream;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.FastOutput;
@@ -22,6 +20,7 @@ public class InternalEventRecorder
 {
     private static final InternalEventRecorder instance = new InternalEventRecorder();
     private final int maxElementsBeforeFlush;
+    private final boolean storeInGzip;
     private ArrayBlockingQueue<InternalEventRecord> records;
     private AtomicLong lastId = new AtomicLong(-1);
     private AtomicLong timestampNs = new AtomicLong(0);
@@ -34,13 +33,15 @@ public class InternalEventRecorder
 
     private InternalEventRecorder()
     {
-        this(-1, 4096, "internal-event-storage");
+        this(-1, 4096, "internal-event-storage", false);
     }
 
-    private InternalEventRecorder(int maxElementsBeforeFlush, int maxQueueSize, String storagePrefix)
+    private InternalEventRecorder(int maxElementsBeforeFlush, int maxQueueSize, String storagePrefix,
+            boolean storeInGzip)
     {
         this.maxElementsBeforeFlush = maxElementsBeforeFlush;
         this.records = new ArrayBlockingQueue<>(maxQueueSize);
+        this.storeInGzip = storeInGzip;
         this.storageThread = new StorageThread(storagePrefix);
         wallClock.start();
         storageThread.start();
@@ -51,9 +52,10 @@ public class InternalEventRecorder
         return instance;
     }
 
-    public static InternalEventRecorder build(int maxElementsBeforeFlush, int maxQueueSize, String storagePrefix)
+    public static InternalEventRecorder build(int maxElementsBeforeFlush, int maxQueueSize, String storagePrefix,
+            boolean storeInGzip)
     {
-        return new InternalEventRecorder(maxElementsBeforeFlush, maxQueueSize, storagePrefix);
+        return new InternalEventRecorder(maxElementsBeforeFlush, maxQueueSize, storagePrefix, storeInGzip);
     }
 
     public long getWallTime()
@@ -159,7 +161,9 @@ public class InternalEventRecorder
             {
                 File destinationFile = new File(fileName);
                 System.out.println("Storing internal events to " + destinationFile.getAbsolutePath());
-                output = new FastOutput(new FileOutputStream(fileName));
+                FileOutputStream fos = new FileOutputStream(fileName);
+                OutputStream out = storeInGzip ? new GZIPOutputStream(fos) : fos;
+                output = new FastOutput(out);
             }
             catch (IOException e)
             {
