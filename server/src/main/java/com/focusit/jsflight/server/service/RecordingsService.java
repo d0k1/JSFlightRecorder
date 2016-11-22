@@ -20,6 +20,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by doki on 14.05.16.
@@ -28,6 +30,7 @@ import java.util.concurrent.CompletableFuture;
 public class RecordingsService
 {
     private final static Logger LOG = LoggerFactory.getLogger(RecordingsService.class);
+    public static final String URL_BASE_TEMPLATE = "0.0.0.0:0";
 
     private RecordingRepository recordingRepository;
     private EventRepository eventRepository;
@@ -67,26 +70,29 @@ public class RecordingsService
                     String finalArray = array;
 
                     operations.add(CompletableFuture.supplyAsync(() -> {
-                        List<Event> lineEvents = null;
                         JSONArray events = new JSONArray(finalArray);
-                        lineEvents = new ArrayList<>(events.length());
+                        List<Event> lineEvents = new ArrayList<>(events.length());
 
                         for (int i = 0; i < events.length(); i++)
                         {
-                            JSONObject event = new JSONObject(events.get(i).toString());
+                            JSONObject eventAsJson = new JSONObject(events.get(i).toString());
                             try
                             {
-                                Event e = gson.fromJson(event.toString(), Event.class);
-                                if (e == null)
+                                Event event = gson.fromJson(eventAsJson.toString(), Event.class);
+                                if (event == null)
                                 {
-                                    LOG.error("e==null.\n", event.toString(4));
+                                    LOG.error("Parsed event was null. Event as JSON: {}", eventAsJson.toString(4));
                                     continue;
                                 }
-                                lineEvents.add(e);
+                                LOG.info("Changing event's url base to template {}", URL_BASE_TEMPLATE);
+                                Pattern pattern = Pattern.compile("^https?://([^:/]+:?\\d*)?/.*$");
+                                Matcher matcher = pattern.matcher(event.getUrl());
+                                event.setUrl(event.getUrl().replace(matcher.group(1), URL_BASE_TEMPLATE));
+                                lineEvents.add(event);
                             }
                             catch (Throwable t)
                             {
-                                LOG.error(t.toString(), t);
+                                LOG.error(t.getMessage(), t);
                                 throw t;
                             }
                         }
@@ -102,7 +108,7 @@ public class RecordingsService
                     }).whenCompleteAsync((aBoolean, throwable) -> {
                         if (throwable != null)
                         {
-                            LOG.error(throwable.toString(), throwable);
+                            LOG.error(throwable.getMessage(), throwable);
                         }
                     }));
 
@@ -112,7 +118,7 @@ public class RecordingsService
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            LOG.error(e.getMessage(), e);
         }
 
         final boolean[] result = { true };
