@@ -105,8 +105,8 @@ public class BackgroundWebPlayer
         experiment.setRecordingId(rec.getId());
         experiment.setScreenshots(withScreenshots);
         experiment.setSteps((int)eventRepository.countByRecordingId(new ObjectId(recordingId)));
-        experiment.setPosition(0);
-        experiment.setLimit(0);
+        experiment.setPosition(config.getStartStep());
+        experiment.setLimit(config.getFinishStep());
 
         experimentRepository.save(experiment);
 

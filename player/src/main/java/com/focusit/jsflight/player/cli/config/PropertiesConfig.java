@@ -2,6 +2,7 @@ package com.focusit.jsflight.player.cli.config;
 
 import com.beust.jcommander.IParameterValidator;
 import com.beust.jcommander.IStringConverter;
+import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.validators.PositiveInteger;
 import com.focusit.jsflight.player.constants.BrowserType;
 import org.slf4j.Logger;
@@ -15,6 +16,12 @@ import java.util.Properties;
 public class PropertiesConfig implements IConfig
 {
     private static final Logger LOG = LoggerFactory.getLogger(PropertiesConfig.class.getSimpleName());
+
+    private static final IParameterValidator REQUIRED = (name, value) -> {
+        if (value == null){
+            throw new ParameterException("Parameter '" + name + "' is null");
+        }
+    };
 
     private Properties properties = new Properties();
 
@@ -80,7 +87,7 @@ public class PropertiesConfig implements IConfig
     @Override
     public String getPathToRecordingFile()
     {
-        return getProperty(PropertiesConstants.RECORDING_PATH);
+        return getProperty(PropertiesConstants.RECORDING_PATH, REQUIRED);
     }
 
     @Override
@@ -147,6 +154,11 @@ public class PropertiesConfig implements IConfig
     public String getPathToPreProcessorScript()
     {
         return getProperty(PropertiesConstants.PRE_PROCESS_SCRIPT_PATH);
+    }
+
+    @Override
+    public String getTargetBaseUrl() {
+        return getProperty(PropertiesConstants.TARGET_BASE_URL, REQUIRED);
     }
 
     @Override

@@ -73,4 +73,6 @@ public interface IConfig
     Boolean shouldMakeScreenshots();
 
     String getPathToPreProcessorScript();
+
+    String getTargetBaseUrl();
 }

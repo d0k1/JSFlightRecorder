@@ -46,4 +46,6 @@ public class PropertiesConstants {
 
     public static final String XVFB_LOWER_BOUND = "xvfb.lower";
     public static final String XVFB_UPPER_BOUND = "xvfb.upper";
+
+    public static final String TARGET_BASE_URL = "target.baseUrl";
 }

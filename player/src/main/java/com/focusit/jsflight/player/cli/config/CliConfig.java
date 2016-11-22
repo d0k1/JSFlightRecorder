@@ -111,6 +111,9 @@ public class CliConfig implements IConfig
     private Integer xvfbDisplayUpperBound = DefaultValues.XVFB_ZERO_DISPLAY;
 
 
+    @Parameter(names = { "--targetBaseUrl" }, description = "Base url of the target server. Will be used for filling templates in event url", required = true)
+    private String targetBaseUrl;
+
 
     public Boolean shouldShowUsage()
     {
@@ -205,6 +208,11 @@ public class CliConfig implements IConfig
     public String getPathToPreProcessorScript()
     {
         return pathToPreProcessorScript;
+    }
+
+    @Override
+    public String getTargetBaseUrl() {
+        return targetBaseUrl;
     }
 
     @Override

@@ -55,6 +55,7 @@ public class UserScenario
         commonConfiguration.setFormOrDialogXpath(config.getKeepBrowserXpath());
         commonConfiguration.setUiShownTimeoutSeconds(config.getUiShownTimeoutInSeconds());
         commonConfiguration.setIntervalBetweenUiChecksMs(config.getIntervalBetweenUiChecksInMs());
+        commonConfiguration.setTargetBaseUrl(config.getTargetBaseUrl());
 
         ScriptsConfiguration scriptsConfiguration = getConfiguration().getScriptsConfiguration();
         scriptsConfiguration.setDuplicationHandlerScript(readFile(config.getPathToDuplicateHandlerScript()));

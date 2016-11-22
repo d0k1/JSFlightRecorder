@@ -158,7 +158,7 @@ public class ScenarioProcessor
             //Configure webdriver for this event, setting params here so we can change parameters while playback is
             //paused
             seleniumDriver
-                    .setAsyncRequestsCompletedTimeoutInMs(
+                    .setAsyncRequestsCompletedTimeoutInSeconds(
                             commonConfiguration.getAsyncRequestsCompletedTimeoutInSeconds())
                     .setIsAsyncRequestsCompletedScript(scriptsConfiguration.getIsAsyncRequestsCompletedScript())
                     .setMaxElementGroovy(commonConfiguration.getMaxElementGroovy())

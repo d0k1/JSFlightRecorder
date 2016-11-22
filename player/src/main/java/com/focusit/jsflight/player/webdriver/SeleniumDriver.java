@@ -78,7 +78,7 @@ public class SeleniumDriver
 
     private UserScenario scenario;
 
-    private int asyncRequestsCompletedTimeoutInMs;
+    private int asyncRequestsCompletedTimeoutInSeconds;
     private String isAsyncRequestsCompletedScript;
 
     private long intervalBetweenUiChecksInMs;
@@ -166,9 +166,9 @@ public class SeleniumDriver
         return this;
     }
 
-    public SeleniumDriver setAsyncRequestsCompletedTimeoutInMs(int asyncRequestsCompletedTimeoutInMs)
+    public SeleniumDriver setAsyncRequestsCompletedTimeoutInSeconds(int asyncRequestsCompletedTimeoutInSeconds)
     {
-        this.asyncRequestsCompletedTimeoutInMs = asyncRequestsCompletedTimeoutInMs;
+        this.asyncRequestsCompletedTimeoutInSeconds = asyncRequestsCompletedTimeoutInSeconds;
         return this;
     }
 
@@ -690,10 +690,10 @@ public class SeleniumDriver
         {
             return;
         }
-        LOG.info("Waiting while async requests will completed for {} seconds", asyncRequestsCompletedTimeoutInMs);
+        LOG.info("Waiting while async requests will completed for {} seconds", asyncRequestsCompletedTimeoutInSeconds);
         try
         {
-            new WebDriverWait(wd, asyncRequestsCompletedTimeoutInMs, 500).until((Predicate<WebDriver>)input -> {
+            new WebDriverWait(wd, asyncRequestsCompletedTimeoutInSeconds, 500).until((Predicate<WebDriver>) input -> {
                 try
                 {
                     Object result = ((JavascriptExecutor)wd).executeScript(isAsyncRequestsCompletedScript);
@@ -709,7 +709,7 @@ public class SeleniumDriver
         {
             throw new IllegalStateException(String.format(
                     "Async requests was not completed within specified timeout (%ds): %s",
-                    asyncRequestsCompletedTimeoutInMs, event.getString(EventConstants.URL)));
+                    asyncRequestsCompletedTimeoutInSeconds, event.getString(EventConstants.URL)));
         }
     }
 

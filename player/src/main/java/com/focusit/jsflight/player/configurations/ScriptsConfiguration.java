@@ -22,7 +22,7 @@ public class ScriptsConfiguration implements IDefaults
     @JsonIgnore
     private static final Logger LOG = LoggerFactory.getLogger(ScriptsConfiguration.class.getSimpleName());
 
-    @DefaultFile("jmeter/stpProcessor.groovy")
+    @DefaultFile("jmeter/stepProcessor.groovy")
     private String stepProcessorScript;
 
     @DefaultFile("jmeter/scenarioProcessor.groovy")
@@ -71,7 +71,9 @@ public class ScriptsConfiguration implements IDefaults
     private static String getScriptPathForField(Field field)
     {
         DefaultFile defaultFile = field.getAnnotation(DefaultFile.class);
-        return Paths.get(defaultFile.rootDirectory(), defaultFile.value()).toString();
+        String path = Paths.get(defaultFile.rootDirectory(), defaultFile.value()).toString();
+        LOG.info("Trying to read default script from {}", path);
+        return path;
     }
 
     private static Method getMethodWithPrefixForField(Field field, String prefix, Class<?>... parameterTypes)

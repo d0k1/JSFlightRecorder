@@ -57,6 +57,7 @@ public class CommonConfiguration
     @Transient
     @JsonIgnore
     transient private ScriptsClassLoader scriptClassloader = null;
+    private CharSequence targetBaseUrl;
 
     public CommonConfiguration()
     {
@@ -268,5 +269,13 @@ public class CommonConfiguration
         {
             scriptClassloaderLock.unlock();
         }
+    }
+
+    public CharSequence getTargetBaseUrl() {
+        return targetBaseUrl;
+    }
+
+    public void setTargetBaseUrl(CharSequence targetBaseUrl) {
+        this.targetBaseUrl = targetBaseUrl;
     }
 }
