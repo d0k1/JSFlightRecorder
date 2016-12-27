@@ -64,16 +64,6 @@ public class ScriptsConfiguration implements IDefaults
     @DefaultFile("urlReplace.groovy")
     private String urlReplacementScript;
 
-    public String getUrlReplacementScript()
-    {
-        return urlReplacementScript;
-    }
-
-    public void setUrlReplacementScript(String urlReplacementScript)
-    {
-        this.urlReplacementScript = urlReplacementScript;
-    }
-
     private static Method getGetterForField(Field field) throws NoSuchMethodException
     {
         return getMethodWithPrefixForField(field, "get");
@@ -227,7 +217,10 @@ public class ScriptsConfiguration implements IDefaults
 
     public void setSendSignalToProcessScript(@Nullable String sendSignalToProcessScript)
     {
-        this.sendSignalToProcessScript = sendSignalToProcessScript;
+        if (sendSignalToProcessScript != null)
+        {
+            this.sendSignalToProcessScript = sendSignalToProcessScript;
+        }
     }
 
     public String getGetWebDriverPidScript()
@@ -237,7 +230,10 @@ public class ScriptsConfiguration implements IDefaults
 
     public void setGetWebDriverPidScript(@Nullable String getWebDriverPidScript)
     {
-        this.getWebDriverPidScript = getWebDriverPidScript;
+        if (getWebDriverPidScript != null)
+        {
+            this.getWebDriverPidScript = getWebDriverPidScript;
+        }
     }
 
     public String getIsAsyncRequestsCompletedScript()
@@ -250,6 +246,19 @@ public class ScriptsConfiguration implements IDefaults
         if (isAsyncRequestsCompletedScript != null)
         {
             this.isAsyncRequestsCompletedScript = isAsyncRequestsCompletedScript;
+        }
+    }
+
+    public String getUrlReplacementScript()
+    {
+        return urlReplacementScript;
+    }
+
+    public void setUrlReplacementScript(String urlReplacementScript)
+    {
+        if (urlReplacementScript != null)
+        {
+            this.urlReplacementScript = urlReplacementScript;
         }
     }
 

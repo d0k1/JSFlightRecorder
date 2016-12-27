@@ -7,7 +7,6 @@ public class PropertiesConstants
 {
     public static final String BROWSER_EXECUTABLE_PATH = "browser.executable.path";
     public static final String JMETER_TEMPLATE_PATH = "jmeter.template.path";
-    public static final String NO_JMETER_PARAM = "NO_JMETER";
     public static final String RECORDING_PATH = "recording.path";
 
     public static final String SCRIPT_EVENT_HANDLER_SCRIPT_PATH = "scripts.scriptEventHandler.path";

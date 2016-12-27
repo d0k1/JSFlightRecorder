@@ -102,11 +102,6 @@ public class CommonConfiguration
 
     private List<URL> findClasspathForScripts(@Nullable String path)
     {
-        if (path == null)
-        {
-            return new ArrayList<>();
-        }
-
         try
         {
             return Files.walk(Paths.get(path)).filter(Files::isRegularFile).map(CommonConfiguration::toUrl)
