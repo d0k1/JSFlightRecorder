@@ -1,14 +1,12 @@
 package com.focusit.jsflight.player.script;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
-
-import javax.annotation.Nullable;
-
+import com.focusit.jsflight.player.constants.EventConstants;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.script.ScriptEngine;
+import com.focusit.jsflight.script.constants.ScriptBindingConstants;
+import groovy.lang.Binding;
+import groovy.lang.Script;
+import groovy.text.SimpleTemplateEngine;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.openqa.selenium.WebDriver;
@@ -16,14 +14,13 @@ import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.focusit.jsflight.player.constants.EventConstants;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.jsflight.script.ScriptEngine;
-import com.focusit.jsflight.script.constants.ScriptBindingConstants;
-
-import groovy.lang.Binding;
-import groovy.lang.Script;
-import groovy.text.SimpleTemplateEngine;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
 
 /**
  * PlayerScriptProcessor that runs groovy scripts or GString templates
@@ -57,31 +54,25 @@ public class PlayerScriptProcessor
     /**
      * Return an event's url. Used to  change original urls to ones in test environment
      * @param script
-     * @param currentEvent
+     * @param event
      * @return return new target url based on script's execution results
      */
-    public String executeUrlReplacementScript(String script, JSONObject currentEvent)
+    public String executeUrlReplacementScript(String script, JSONObject event)
     {
         Map<String, Object> binding = getEmptyBindingsMap();
-        binding.put(ScriptBindingConstants.EVENT, currentEvent);
-        binding.put(ScriptBindingConstants.APP_BASE_URL,
-                scenario.getConfiguration().getCommonConfiguration().getTargetBaseUrl());
+        binding.put(ScriptBindingConstants.EVENT, event);
+        binding.put(ScriptBindingConstants.APP_BASE_URL, scenario.getConfiguration().getCommonConfiguration()
+                .getTargetBaseUrl());
 
-        String result = currentEvent.getString(EventConstants.URL);
         try
         {
-            result = executeGroovyScript(script, binding, String.class);
-            if (StringUtils.isEmpty(result))
-            {
-                return currentEvent.getString(EventConstants.URL);
-            }
+            return executeGroovyScript(script, binding, String.class);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            LOG.warn("Failed to create duplicateHandler script. Default value is false", e);
+            LOG.warn("Url replacement filed. Default value is the same event url");
+            return event.getString(EventConstants.URL);
         }
-
-        return result;
     }
 
     /**
@@ -138,7 +129,8 @@ public class PlayerScriptProcessor
 
     public void runStepPrePostScript(JSONObject event, int step, boolean pre)
     {
-        String script = getStringOrDefault(event, pre ? EventConstants.PRE : EventConstants.POST, "");
+        String filedName = pre ? EventConstants.PRE : EventConstants.POST;
+        String script = event.has(filedName) ? event.getString(filedName) : "";
 
         if (StringUtils.isBlank(script))
         {
@@ -158,11 +150,6 @@ public class PlayerScriptProcessor
         catch (Throwable ignored)
         {
         }
-    }
-
-    private String getStringOrDefault(JSONObject event, String pre, String defaultString)
-    {
-        return event.has(pre) ? event.getString(pre) : defaultString;
     }
 
     public JSONObject runStepTemplating(UserScenario scenario, JSONObject step)

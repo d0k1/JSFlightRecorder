@@ -1,21 +1,19 @@
 package com.focusit.jsflight.player.cli.config;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.beust.jcommander.IParameterValidator;
 import com.beust.jcommander.IStringConverter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.validators.PositiveInteger;
 import com.focusit.jsflight.player.constants.BrowserType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 public class PropertiesConfig implements IConfig
 {
@@ -86,8 +84,7 @@ public class PropertiesConfig implements IConfig
     @Nullable
     public String getPathToBrowserExecutable()
     {
-        return getProperty(PropertiesConstants.BROWSER_EXECUTABLE_PATH,
-                System.getProperty(PropertiesConstants.BROWSER_EXECUTABLE_PATH), null, String::toString);
+        return getProperty(PropertiesConstants.BROWSER_EXECUTABLE_PATH);
     }
 
     @Override
@@ -172,8 +169,7 @@ public class PropertiesConfig implements IConfig
     @Nonnull
     public String getTargetBaseUrl()
     {
-        return getProperty(PropertiesConstants.TARGET_BASE_URL, System.getProperty("AppTargetUrl"), REQUIRED,
-                String::toString);
+        return getProperty(PropertiesConstants.TARGET_BASE_URL, REQUIRED);
     }
 
     @Override
@@ -193,15 +189,13 @@ public class PropertiesConfig implements IConfig
     @Override
     public String getKeepBrowserXpath()
     {
-        return getProperty(PropertiesConstants.BROWSER_KEEP_XPATH,
-                System.getProperty(PropertiesConstants.BROWSER_KEEP_XPATH), null, String::toString);
+        return getProperty(PropertiesConstants.BROWSER_KEEP_XPATH);
     }
 
     @Override
     public String getSelectXpath()
     {
-        return getProperty(PropertiesConstants.SELECT_XPATH, System.getProperty(PropertiesConstants.SELECT_XPATH), null,
-                String::toString);
+        return getProperty(PropertiesConstants.SELECT_XPATH);
     }
 
     @Override
@@ -227,8 +221,8 @@ public class PropertiesConfig implements IConfig
     @Override
     public Integer getIntervalBetweenUiChecksInMs()
     {
-        return getProperty(PropertiesConstants.UI_CHECKS_INTERVAL_IN_MS, DefaultValues.INTERVAL_BETWEEN_UI_CHECKS_IN_MS,
-                new PositiveInteger(), Integer::new);
+        return getProperty(PropertiesConstants.UI_CHECKS_INTERVAL_IN_MS,
+                DefaultValues.INTERVAL_BETWEEN_UI_CHECKS_IN_MS, new PositiveInteger(), Integer::new);
     }
 
     @Override
@@ -245,14 +239,14 @@ public class PropertiesConfig implements IConfig
 
     public Integer getXvfbDisplayLowerBound()
     {
-        return getProperty(PropertiesConstants.XVFB_LOWER_BOUND, DefaultValues.XVFB_ZERO_DISPLAY, new PositiveInteger(),
-                Integer::new);
+        return getProperty(PropertiesConstants.XVFB_LOWER_BOUND, DefaultValues.XVFB_ZERO_DISPLAY,
+                new PositiveInteger(), Integer::new);
     }
 
     public Integer getXvfbDisplayUpperBound()
     {
-        return getProperty(PropertiesConstants.XVFB_UPPER_BOUND, DefaultValues.XVFB_ZERO_DISPLAY, new PositiveInteger(),
-                Integer::new);
+        return getProperty(PropertiesConstants.XVFB_UPPER_BOUND, DefaultValues.XVFB_ZERO_DISPLAY,
+                new PositiveInteger(), Integer::new);
     }
 
     @Override

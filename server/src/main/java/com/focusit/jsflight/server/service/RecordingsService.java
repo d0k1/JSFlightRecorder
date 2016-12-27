@@ -133,7 +133,7 @@ public class RecordingsService
             LOG.error(e.toString(), e);
         }
 
-        System.out.println("inserted " + eventRepository.getAdded());
+        LOG.info("While exporting {} events was inserted", eventRepository.getAdded());
         return result[0];
     }
 
