@@ -19,6 +19,7 @@ public final class EventConstants
     public static final String FLIGHT_CP = "flight-cp";
     public static final String PRE = "pre";
     public static final String POST = "post";
+    public static final String IFRAME_XPATH = "iframeXpath";
 
     public static class ScriptEvent
     {

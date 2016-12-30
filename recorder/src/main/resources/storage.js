@@ -28,14 +28,21 @@ jsflight.getDetachElement = function(event){
 }
 
 jsflight.getEventInfo = function(event) {
+    event = event || window.event;
 
-    if (event === undefined)
-        event = window.event;
-
-    event.target = 'target' in event ? event.target
+    event.target = 'target' in event
+        ? event.target
         : event.srcElement;
 
     var result = {};
+
+    var iframeDocument = event.target.ownerDocument;
+    var iframeWindow = iframeDocument.defaultView || iframeDocument.parentWindow;
+
+    if (iframeWindow.xpath) {
+        result.iframeXpath = iframeWindow.xpath;
+    }
+
     var inputData = jsflight.getInputData(event.target);
 
     result.caretPosition = inputData.selectionStart;
@@ -56,8 +63,7 @@ jsflight.getEventInfo = function(event) {
 
     if (event.type === 'keyup') {
         if (!event.shiftKey) {
-            result.charCode = String.fromCharCode(result.charCode)
-                    .toLowerCase().charCodeAt(0);
+            result.charCode = String.fromCharCode(result.charCode).toLowerCase().charCodeAt(0);
         }
     }
     result.altKey = event.altKey;
