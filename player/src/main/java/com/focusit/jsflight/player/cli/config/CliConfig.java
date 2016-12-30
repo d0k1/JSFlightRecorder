@@ -119,6 +119,9 @@ public class CliConfig implements IConfig
             "--targetBaseUrl" }, description = "Base url of the target server. Will be used for filling templates in event url", required = true)
     private String targetBaseUrl;
 
+    @Parameter(names = { "--maxRequestsPerScenario" }, description = "The maximum number of requests per one generated JMeter scenario. Default is Long.MAX_VALUE")
+    private Long maximumCountOfRequestPerJMeterScenario = DefaultValues.MAX_REQUESTS_PER_SCENARIO;
+
     public Boolean shouldShowUsage()
     {
         return help;
@@ -230,6 +233,11 @@ public class CliConfig implements IConfig
     public String getTargetBaseUrl()
     {
         return targetBaseUrl;
+    }
+
+    @Override
+    public Long getMaximumCountOfRequestPerJMeterScenario() {
+        return maximumCountOfRequestPerJMeterScenario;
     }
 
     @Override

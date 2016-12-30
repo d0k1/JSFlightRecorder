@@ -4,7 +4,11 @@ import com.focusit.jsflight.player.constants.EventConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Sorted list of recorded events
@@ -13,41 +17,37 @@ import java.util.*;
  */
 public class EventsParser
 {
-    public static List<JSONObject> parse(List<String> content)
+    public static List<JSONObject> parse(List<String> jsonEncodedListsOfEvents)
     {
-        List<JSONObject> events = new ArrayList<>();
-        for (String line : content)
-        {
-            events.addAll(parse(line));
-        }
-        sortEvents(events);
-        return events;
+        return jsonEncodedListsOfEvents
+                .stream()
+                .map(EventsParser::parse)
+                .flatMap(Collection::stream)
+                .sorted(EventsParser::sortEvents)
+                .collect(Collectors.toList());
     }
 
-    public static List<JSONObject> parse(String content)
+    public static List<JSONObject> parse(String jsonEncodedListOfEvents)
     {
-        if (content == null)
+        if (jsonEncodedListOfEvents == null)
         {
             return null;
         }
         List<JSONObject> events = new ArrayList<>();
-        JSONArray rawEvents = new JSONArray(content);
-
-        for (int i = 0; i < rawEvents.length(); i++)
-        {
-            String event = rawEvents.get(i).toString();
-            if (!event.contains(EventConstants.FLIGHT_CP))
+        JSONArray rawEvents = new JSONArray(jsonEncodedListOfEvents);
+        rawEvents.iterator().forEachRemaining(event -> {
+            if (!event.toString().contains(EventConstants.FLIGHT_CP))
             {
                 events.add(new JSONObject(event));
             }
-        }
-        sortEvents(events);
+        });
+
+        Collections.sort(events, EventsParser::sortEvents);
         return events;
     }
 
-    private static void sortEvents(List<JSONObject> events)
+    private static int sortEvents(JSONObject o1, JSONObject o2)
     {
-        Collections.sort(events, (o1, o2) -> ((Long)o1.getLong(EventConstants.TIMESTAMP)).compareTo(o2
-                .getLong(EventConstants.TIMESTAMP)));
+        return ((Long)o1.getLong(EventConstants.TIMESTAMP)).compareTo(o2.getLong(EventConstants.TIMESTAMP));
     }
 }

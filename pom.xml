@@ -28,8 +28,8 @@
         <commons-lang3.version>3.4</commons-lang3.version>
         <commons-math3.version>3.4.1</commons-math3.version>
         <de.flapdoodle.embed.mongo.version>1.50.3</de.flapdoodle.embed.mongo.version>
-        <gmavenplus-plugin.version>1.0</gmavenplus-plugin.version>
-        <groovy-all.version>2.4.5</groovy-all.version>
+        <gmavenplus-plugin.version>1.5</gmavenplus-plugin.version>
+        <groovy-all.version>2.4.8-SNAPSHOT</groovy-all.version>
         <http-builder.version>0.7.1</http-builder.version>
         <httpclient.version>4.5.2</httpclient.version>
         <ivy.version>2.1.0</ivy.version>
@@ -132,11 +132,23 @@
                 <groupId>org.spockframework</groupId>
                 <artifactId>spock-core</artifactId>
                 <version>${spock-core.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.codehaus.groovy</groupId>
+                        <artifactId>groovy-all</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.spockframework</groupId>
                 <artifactId>spock-spring</artifactId>
                 <version>${spock-spring.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.codehaus.groovy</groupId>
+                        <artifactId>groovy-all</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>de.flapdoodle.embed</groupId>
@@ -154,6 +166,7 @@
                 <groupId>org.codehaus.groovy</groupId>
                 <artifactId>groovy-all</artifactId>
                 <version>${groovy-all.version}</version>
+                <classifier>indy</classifier>
             </dependency>
             <dependency>
                 <groupId>com.google.code.findbugs</groupId>
@@ -255,31 +268,67 @@
                 <groupId>org.apache.jmeter</groupId>
                 <artifactId>ApacheJMeter_core</artifactId>
                 <version>${ApacheJMeter.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.codehaus.groovy</groupId>
+                        <artifactId>groovy-all</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.jmeter</groupId>
                 <artifactId>ApacheJMeter_http</artifactId>
                 <version>${ApacheJMeter.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.codehaus.groovy</groupId>
+                        <artifactId>groovy-all</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.jmeter</groupId>
                 <artifactId>ApacheJMeter_components</artifactId>
                 <version>${ApacheJMeter.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.codehaus.groovy</groupId>
+                        <artifactId>groovy-all</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.jmeter</groupId>
                 <artifactId>jorphan</artifactId>
                 <version>${ApacheJMeter.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.codehaus.groovy</groupId>
+                        <artifactId>groovy-all</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.jmeter</groupId>
                 <artifactId>ApacheJMeter_java</artifactId>
                 <version>${ApacheJMeter_java.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.codehaus.groovy</groupId>
+                        <artifactId>groovy-all</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.jmeter</groupId>
                 <artifactId>ApacheJMeter_config</artifactId>
                 <version>${ApacheJMeter.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.codehaus.groovy</groupId>
+                        <artifactId>groovy-all</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
@@ -358,8 +407,9 @@
                         <dependency>
                             <groupId>org.codehaus.groovy</groupId>
                             <artifactId>groovy-all</artifactId>
-                            <version>${groovy-all.version}</version>
-                            <scope>runtime</scope>
+                            <version>2.4.7</version>
+                            <classifier>indy</classifier>
+                            <scope>compile</scope>
                         </dependency>
                     </dependencies>
                 </plugin>
@@ -447,6 +497,14 @@
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
+        </repository>
+        <repository>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>snapshots</id>
+            <name>oss-jfrog-artifactory-snapshots</name>
+            <url>https://oss.jfrog.org/artifactory/oss-snapshot-local</url>
         </repository>
     </repositories>
 </project>

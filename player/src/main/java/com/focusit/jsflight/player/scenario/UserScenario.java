@@ -84,6 +84,7 @@ public class UserScenario
         commonConfiguration.setUiShownTimeoutSeconds(config.getUiShownTimeoutInSeconds());
         commonConfiguration.setIntervalBetweenUiChecksMs(config.getIntervalBetweenUiChecksInMs());
         commonConfiguration.setTargetBaseUrl(config.getTargetBaseUrl());
+        commonConfiguration.setMaxRequestsPerScenario(config.getMaximumCountOfRequestPerJMeterScenario());
 
         ScriptsConfiguration scriptsConfiguration = getConfiguration().getScriptsConfiguration();
         scriptsConfiguration.setUrlReplacementScript(readFile(config.getPathToUrlReplacementScript()));

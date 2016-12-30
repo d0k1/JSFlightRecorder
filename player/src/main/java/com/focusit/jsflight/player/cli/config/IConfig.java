@@ -48,6 +48,7 @@ public interface IConfig
 
     Integer getIntervalBetweenUiChecksInMs();
 
+
     String getProxyHost();
 
     Integer getProxyPort();
@@ -71,4 +72,6 @@ public interface IConfig
     String getPathToPreProcessorScript();
 
     String getTargetBaseUrl();
+
+    Long getMaximumCountOfRequestPerJMeterScenario();
 }

@@ -3,7 +3,9 @@
  * Скрипту доступны след. переменные:
  *      element - WebElement, сам элемент
  *      webdriver - вебдрайвер
- *      logger - лог
+ *      logger - логгер
+ *      classloader - classloader от ScriptEngine
+ *      playerContext - контекст плеера
  */
 
 return false;

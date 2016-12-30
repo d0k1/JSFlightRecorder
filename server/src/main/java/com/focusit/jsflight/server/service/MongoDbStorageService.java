@@ -39,9 +39,6 @@ public class MongoDbStorageService
         metaData.put("recordingName", scenario.getRecordingName());
         metaData.put("recordingId", scenario.getRecordingId());
         metaData.put("experimentId", scenario.getExperimentId());
-        metaData.put("tag", scenario.getTag());
-        metaData.put("tagHash", scenario.getTagHash());
-
         String filename = error
                 ? createErrorImageName(scenario.getRecordingName(), scenario.getExperimentId(), position)
                 : createImageName(scenario.getRecordingName(), scenario.getExperimentId(), position);
@@ -63,33 +60,38 @@ public class MongoDbStorageService
     private InputStream getStreamByFilename(String fname)
     {
         GridFSDBFile file = getGridFsTemplate().findOne(new Query().addCriteria(Criteria.where("filename").is(fname)));
-        if (file != null)
-        {
-            return file.getInputStream();
-        }
-        return null;
+
+        return file != null ? file.getInputStream() : null;
     }
 
-    public void storeJMeterScenario(MongoDbScenario scenario, InputStream stream)
+    public int getCountOfJMeterScenarios(String recordingName, String experimentId)
+    {
+        return getGridFsTemplate().find(
+                new Query()
+                        .addCriteria(Criteria.where("metadata.recordingName").is(recordingName))
+                        .addCriteria(Criteria.where("metadata.experimentId").is(experimentId))
+        ).size();
+    }
+
+    public void storeJMeterScenario(MongoDbScenario scenario, InputStream stream, int index)
     {
         DBObject metaData = new BasicDBObject();
         metaData.put("recordingName", scenario.getRecordingName());
         metaData.put("recordingId", scenario.getRecordingId());
         metaData.put("experimentId", scenario.getExperimentId());
-        metaData.put("tag", scenario.getTag());
-        metaData.put("tagHash", scenario.getTagHash());
+        metaData.put("index", index);
 
-        String fname = createJmxName(scenario.getScenarioFilename(), scenario.getExperimentId());
+        String fname = createJmxName(scenario.getScenarioFilename(), scenario.getExperimentId(), index);
         getGridFsTemplate().store(stream, fname, "text/xml", metaData);
     }
 
-    public InputStream getJMeterScenario(String recordingName, String experimentId)
+    public InputStream getJMeterScenario(String recordingName, String experimentId, int index)
     {
-        return getStreamByFilename(createJmxName(recordingName, experimentId));
+        return getStreamByFilename(createJmxName(recordingName, experimentId, index));
     }
 
-    private String createJmxName(String recordingName, String experimentId) {
-        return recordingName + "_" + experimentId + ".jmx";
+    private String createJmxName(String recordingName, String experimentId, int index) {
+        return recordingName + '_' + experimentId + '_' + index + ".jmx";
     }
 
     private String createImageName(String recordingName, String experimentId, int position)

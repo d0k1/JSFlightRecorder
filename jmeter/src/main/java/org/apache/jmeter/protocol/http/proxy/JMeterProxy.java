@@ -1,6 +1,5 @@
 package org.apache.jmeter.protocol.http.proxy;
 
-import com.focusit.jsflight.jmeter.JMeterRecorder;
 import com.focusit.jsflight.script.jmeter.JMeterJSFlightBridge;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.protocol.http.parser.HTMLParseException;
@@ -77,7 +76,6 @@ public class JMeterProxy extends Thread
      * Reference to Deamon's Map of url string to character encoding for the form
      */
     private final Map<String, String> formEncodings = new HashMap<>();
-    private JMeterRecorder recorder;
     // Use with SSL connection
     private OutputStream outStreamClient = null;
     /**
@@ -299,7 +297,7 @@ public class JMeterProxy extends Thread
                 if (sampler != null)
                 {
                     LOG.info(makeLogMessage("Start scripting %s", sampler));
-                    if (target.getRecorder().getScriptProcessor().processSampleDuringRecord(sampler, result, recorder))
+                    if (target.getRecorder().getScriptProcessor().processSampleDuringRecord(sampler, result, target.getRecorder()))
                     {
                         LOG.info(makeLogMessage("Adding sampler into tree: %s", sampler));
                         if (!JMeterJSFlightBridge.getInstance().isCurrentStepEmpty())
@@ -718,15 +716,5 @@ public class JMeterProxy extends Thread
                 LOG.warn(port + "Error while closing socket", ex);
             }
         }
-    }
-
-    public JMeterRecorder getRecorder()
-    {
-        return recorder;
-    }
-
-    public void setRecorder(JMeterRecorder recorder)
-    {
-        this.recorder = recorder;
     }
 }

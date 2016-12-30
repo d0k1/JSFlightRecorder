@@ -2,7 +2,7 @@ package com.focusit.jsflight.player.cli;
 
 import com.focusit.jsflight.jmeter.JMeterRecorder;
 import com.focusit.jsflight.player.cli.config.IConfig;
-import com.focusit.jsflight.player.configurations.ScriptsConfiguration;
+import com.focusit.jsflight.player.configurations.Configuration;
 import com.focusit.jsflight.player.scenario.ScenarioProcessor;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
@@ -15,22 +15,23 @@ public class CliPlayer
 {
     private static final Logger LOG = LoggerFactory.getLogger(CliPlayer.class);
 
-    private JMeterRecorder createJmeterInstance(ScriptsConfiguration scriptsConfiguration, String templatePath)
+    private JMeterRecorder createJmeterInstance(Configuration configuration, String templatePath)
             throws Exception
     {
-        JMeterRecorder jmeter = new JMeterRecorder();
+        JMeterRecorder jmeter;
         if (StringUtils.isBlank(templatePath))
         {
-            LOG.info("Initializing Jmeter with default jmx template: template.jmx");
-            jmeter.init();
+            LOG.info("Initializing Jmeter with default jmx template: {}", JMeterRecorder.DEFAULT_TEMPLATE_PATH);
+            jmeter = new JMeterRecorder();
         }
         else
         {
             LOG.info("Initializing Jmeter with jmx template: {}", templatePath);
-            jmeter.init(templatePath);
+            jmeter = new JMeterRecorder(templatePath);
         }
+        jmeter.initialize(configuration.getCommonConfiguration().getMaxRequestsPerScenario());
 
-        scriptsConfiguration.syncScripts(jmeter);
+        configuration.getScriptsConfiguration().syncScripts(jmeter);
 
         return jmeter;
     }
@@ -51,7 +52,7 @@ public class CliPlayer
         {
             if (config.shouldEnableRecording())
             {
-                JMeterRecorder jmeter = createJmeterInstance(scenario.getConfiguration().getScriptsConfiguration(),
+                JMeterRecorder jmeter = createJmeterInstance(scenario.getConfiguration(),
                         config.getPathToJmxTemplateFile());
                 jmeter.setProxyPort(config.getProxyPort());
                 jmeter.startRecording();
@@ -64,7 +65,7 @@ public class CliPlayer
                 {
                     jmeter.stopRecording();
                     LOG.info("Saving recorded scenario to {}", config.getGeneratedJmeterScenarioName());
-                    jmeter.saveScenario(config.getGeneratedJmeterScenarioName());
+                    jmeter.saveScenarios(config.getGeneratedJmeterScenarioName());
                 }
             }
             else

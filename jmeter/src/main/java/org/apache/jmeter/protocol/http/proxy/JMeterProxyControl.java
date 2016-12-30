@@ -188,6 +188,8 @@ public class JMeterProxyControl extends GenericController
 
     private final JMeterRecorder recorder;
     private transient JMeterDaemon server;
+    private transient int currentSamplerIndex = 0;
+    private long maxSamplersPerJmx;
     private long lastTime = 0;// When was the last sample seen?
     /*
      * TODO this assumes that the redirected response will always immediately follow the original response.
@@ -210,13 +212,14 @@ public class JMeterProxyControl extends GenericController
     private String storePassword;
     private String keyPassword;
 
-    public JMeterProxyControl(JMeterRecorder jMeterRecorder)
+    public JMeterProxyControl(JMeterRecorder jMeterRecorder, Long maxRequestsPerScenario)
     {
         setPort(DEFAULT_PORT);
         setExcludeList(new HashSet<>());
         setIncludeList(new HashSet<>());
         setCaptureHttpHeaders(true); // maintain original behaviour
         this.recorder = jMeterRecorder;
+        this.maxSamplersPerJmx = maxRequestsPerScenario;
     }
 
     public static boolean isDynamicMode()
@@ -561,6 +564,11 @@ public class JMeterProxyControl extends GenericController
             }
             if (filterContentType(result) && filterUrl(sampler))
             {
+                if (currentSamplerIndex >= maxSamplersPerJmx)
+                {
+                    recorder.splitScenario();
+                    currentSamplerIndex = 0;
+                }
                 TestElement myTarget = target;
                 sampler.setAutoRedirects(samplerRedirectAutomatically);
                 sampler.setFollowRedirects(samplerFollowRedirects);
@@ -568,7 +576,9 @@ public class JMeterProxyControl extends GenericController
                 sampler.setImageParser(samplerDownloadImages);
 
                 Authorization authorization = createAuthorization(subConfigs, sampler);
+
                 placeSampler(sampler, subConfigs, myTarget);
+                currentSamplerIndex++;
             }
             else
             {

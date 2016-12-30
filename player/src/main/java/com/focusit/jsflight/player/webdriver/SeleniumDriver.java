@@ -48,11 +48,6 @@ public class SeleniumDriver
     public static final RemoteWebElement NO_OP_ELEMENT = new RemoteWebElement();
     private static final Logger LOG = LoggerFactory.getLogger(SeleniumDriver.class);
 
-    /**
-     * You must start Xvfb displays from 1 up to 200, i.e [1;200)
-     */
-    private static final int DISPLAY_CAPACITY = 200;
-
     private static final String UI_NOT_SHOWED_UP_MSG = "UI didn't show up";
 
     private static final int PROCESS_SIGNAL_STOP = -19;
@@ -65,10 +60,7 @@ public class SeleniumDriver
         NO_OP_ELEMENT.setId("NO_OP");
     }
 
-    /**
-     * As we close unsued browsers, 200 number of displays is more than enough
-     */
-    private Map<String, Integer> availableDisplays = new HashMap<>(DISPLAY_CAPACITY);
+    private Map<String, Integer> availableDisplays;
     private HashMap<String, String> driverDisplay = new HashMap<>();
     private HashMap<String, WebDriver> tabUuidDrivers = new HashMap<>();
     private Map<String, String> lastUrls = new HashMap<>();
@@ -106,6 +98,7 @@ public class SeleniumDriver
     public SeleniumDriver(UserScenario scenario, Integer xvfbDisplayLowerBound, Integer xvfbDisplayUpperBound)
     {
         this.scenario = scenario;
+        availableDisplays = new HashMap<>(xvfbDisplayUpperBound - xvfbDisplayLowerBound + 1);
 
         for (int i = xvfbDisplayLowerBound; i <= xvfbDisplayUpperBound; i++)
         {
@@ -265,7 +258,7 @@ public class SeleniumDriver
                 FirefoxBinary binary = !StringUtils.isBlank(path) ? new FirefoxBinary(new File(path))
                         : new FirefoxBinary();
                 LOG.info("Binding to {} display", display);
-                availableDisplays.computeIfPresent(display, (d, value) -> value + 1);
+                availableDisplays.compute(display, (d, value) -> value == null ? 0 : value + 1);
                 binary.setEnvironmentProperty("DISPLAY", display);
                 LOG.info("Firefox path is: {}", path);
 

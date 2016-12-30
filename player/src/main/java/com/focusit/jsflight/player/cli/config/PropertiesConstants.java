@@ -20,6 +20,7 @@ public class PropertiesConstants
     public static final String IS_UI_SHOWN_SCRIPT_PATH = "scripts.isUiShown.path";
     public static final String SHOULD_SKIP_KEYBOARD_SCRIPT_PATH = "scripts.shouldSkipKeyboard.path";
     public static final String IS_ASYNC_REQUESTS_COMPLETED_SCRIPT_PATH = "scripts.isAsyncCompleted.path";
+    public static final String URL_REPLACEMENT_SCRIPT_PATH = "scripts.urlReplacement.path";
 
     public static final String START_STEP = "start.step";
     public static final String FINISH_STEP = "finish.step";
@@ -49,5 +50,6 @@ public class PropertiesConstants
     public static final String XVFB_UPPER_BOUND = "xvfb.upper";
 
     public static final String TARGET_BASE_URL = "target.baseUrl";
-    public static final String URL_REPLACEMENT_SCRIPT_PATH = "scripts.urlReplacement.path";
+
+    public static final String MAX_REQUESTS_PER_SCENARIO = "jmeter.generatedScenario.requests.maxCount";
 }

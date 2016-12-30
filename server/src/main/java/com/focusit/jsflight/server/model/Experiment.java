@@ -1,15 +1,13 @@
 package com.focusit.jsflight.server.model;
 
-import java.util.Date;
-
+import com.focusit.jsflight.player.configurations.Configuration;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.focusit.jsflight.player.configurations.Configuration;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.Date;
 
 /**
  * Playing process state
@@ -32,10 +30,6 @@ public class Experiment
     private String recordingName;
 
     private Configuration configuration;
-
-    private String tag;
-
-    private String tagHash;
 
     private int position = 0;
 
@@ -110,26 +104,6 @@ public class Experiment
     public void setScreenshots(Boolean screenshots)
     {
         this.configuration.getCommonConfiguration().setMakeShots(screenshots);
-    }
-
-    public String getTag()
-    {
-        return tag;
-    }
-
-    public void setTag(String tag)
-    {
-        this.tag = tag;
-    }
-
-    public String getTagHash()
-    {
-        return tagHash;
-    }
-
-    public void setTagHash(String tagHash)
-    {
-        this.tagHash = tagHash;
     }
 
     public Configuration getConfiguration()
