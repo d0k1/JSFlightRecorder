@@ -66,6 +66,29 @@ function getXpathToIFrame(iframe) {
     return Xpath.getElementXPath(iframe);
 }
 
+function findFrameLocalIndex(win) {
+    win = win || window; // Assume self by default
+    if (win.parent != win) {
+        for (var i = 0; i < win.parent.frames.length; i++) {
+            if (win.parent.frames[i] == win) {
+                return i;
+            }
+        }
+        throw Error("In a frame, but could not find myself");
+    } else {
+        return -1;
+    }
+}
+
+function findFrameFullIndex(win) {
+     win = win || window; // Assume self by default
+     if (findFrameLocalIndex(win) < 0) {
+         return "";
+     } else {
+         return findFrameFullIndex(win.parent) + "." + findFrameLocalIndex(win);
+     }
+}
+
 /**
  * window - window, from which search should start
  * returns the array of windows. Initial window will be returned too
@@ -81,12 +104,34 @@ getDescendantWindows = function(window) {
             var iframeWindow = windows[i];
             iframeWindow.xpath = (currentWindow.xpath ? currentWindow.xpath + "||" : "") +
                 getXpathToIFrame(iframeWindow.frameElement);
+            iframeWindow.iframeIndices = findFrameFullIndex(iframeWindow).substring(1);
             queue.push(iframeWindow);
         }
         result.push(currentWindow);
     }
 
     return result;
+}
+
+jsflight.bindAllHandlers = function() {
+    var windows = getDescendantWindows(window || document.defaultView);
+    for (var i = 0; i < windows.length; i++) {
+        var win = windows[i];
+        addEventListeners(win, win.document);
+    }
+}
+
+jsflight.unbindAllHandlers = function() {
+    var windows = getDescendantWindows(window || document.defaultView);
+    for (var i = 0; i < windows.length; i++) {
+        var window = windows[i];
+        removeEventListeners(window, window.document);
+    }
+}
+
+jsflight.rebindAllHandlers = function() {
+    jsflight.unbindAllHandlers();
+    jsflight.bindAllHandlers();
 }
 
 /**
@@ -99,11 +144,7 @@ jsflight.startRecorder = function() {
     jsflight.stopTimers();
     jsflight.startTimers();
 
-    var windows = getDescendantWindows(window);
-    for (var i = 0; i < windows.length; i++) {
-        var window = windows[i];
-        addEventListeners(window, window.document);
-    }
+    jsflight.bindAllHandlers();
 
     if (!window.sessionStorage) {
         console.log('No support of window.sessionStorage');
@@ -131,11 +172,7 @@ jsflight.startRecorder = function() {
 jsflight.stopRecorder = function() {
     jsflight.stopTimers();
 
-    var windows = getDescendantWindows(window);
-    for (var i = 0; i < windows.length; i++) {
-        var window = windows[i];
-        removeEventListeners(window, window.document);
-    }
+    jsflight.unbindAllHandlers();
 
     if (typeof (window.sessionStorage) == "undefined") {
         console.log('No support of window.sessionStorage');

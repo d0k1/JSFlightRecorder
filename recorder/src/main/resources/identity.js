@@ -124,20 +124,16 @@ jsflight.getTargetId = function(event) {
     return paths;
 };
 
-jsflight.getElementFullId = function(target) {
-    if (target === undefined) {
-        return null;
-    }
+function isElement(o) {
+    return (
+        typeof HTMLElement === "object"
+            ? o instanceof HTMLElement //DOM2
+            : o && typeof o === "object" && o !== null && o.nodeType === 1 && typeof o.nodeName==="string"
+    );
+}
 
-    if (target === null) {
-        return null;
-    }
-    
-    if(target==window) {
-        return null;
-    }
-    
-    if(target==document) {
+jsflight.getElementFullId = function(target) {
+    if (!target || !isElement(target)) {
         return null;
     }
 

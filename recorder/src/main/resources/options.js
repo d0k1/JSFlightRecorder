@@ -45,7 +45,7 @@ jsflight.options = {
     id_exclusions : [],
     // function that checks if dom ready to be dumped or pictured or not
     dom_ready_check: function(){
-    	return true;
+        return true;
     },
     propertyProvider : function(prop) {
     },

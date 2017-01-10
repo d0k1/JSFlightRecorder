@@ -547,7 +547,7 @@ Xml.isVisible = function(elt)
     }
     catch (err)
     {
-    	console.log("lib.isVisible; EXCEPTION " + err, err);
+        console.log("lib.isVisible; EXCEPTION " + err, err);
     }
 
     return false;

@@ -477,7 +477,7 @@ Css.isValidStylesheet = function(styleSheet)
     }
     catch (e)
     {
-    	console.log("isValidStylesheet "+e, e);
+        console.log("isValidStylesheet "+e, e);
     }
 
     return false;
@@ -533,7 +533,7 @@ Css.addStyleSheet = function(doc, style)
     }
     else
     {
-    	console.log("css.addStyleSheet; ERROR to append a stylesheet");
+        console.log("css.addStyleSheet; ERROR to append a stylesheet");
     }
 };
 
@@ -601,7 +601,7 @@ Css.createStyleSheetMap = function(context)
             }
             catch (err)
             {
-            	console.log("css.createStyleSheetMap; EXCEPTION " + err, err);
+                console.log("css.createStyleSheetMap; EXCEPTION " + err, err);
             }
         }
     });
@@ -642,7 +642,7 @@ Css.getAllStyleSheets = function(context)
         }
         catch(e)
         {
-        	console.log("getAllStyleSheets sheet.cssRules FAILS for "+
+            console.log("getAllStyleSheets sheet.cssRules FAILS for "+
                     (sheet?sheet.href:"null sheet")+e, e);
         }
     }

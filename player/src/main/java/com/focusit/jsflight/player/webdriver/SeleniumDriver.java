@@ -868,13 +868,25 @@ public class SeleniumDriver
         return this;
     }
 
-    public void switchToFrame(WebDriver theWebDriver, String compositeFrameXpath)
+    public void switchToFrame(WebDriver theWebDriver, List<Integer> frameIndices, String compositeFrameXpath)
     {
         theWebDriver.switchTo().defaultContent();
-        for (String frameXpath : Arrays.asList(compositeFrameXpath.split("||")))
+        if (!frameIndices.isEmpty())
         {
-            WebElement frame = theWebDriver.findElement(By.xpath(frameXpath));
-            theWebDriver.switchTo().frame(frame);
+            LOG.info("Switching to frame by indices");
+            for (Integer i : frameIndices)
+            {
+                theWebDriver.switchTo().frame(i);
+            }
+        }
+        else
+        {
+            LOG.info("Switching to frame by xpaths");
+            for (String frameXpath : Arrays.asList(compositeFrameXpath.split("||")))
+            {
+                WebElement frame = theWebDriver.findElement(By.xpath(frameXpath));
+                theWebDriver.switchTo().frame(frame);
+            }
         }
     }
 

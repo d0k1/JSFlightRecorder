@@ -17,7 +17,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Class that really replays an event in given scenario and given selenium driver
@@ -212,14 +215,18 @@ public class ScenarioProcessor
 
             seleniumDriver.waitWhileAsyncRequestsWillCompletedWithRefresh(theWebDriver, event);
 
-            if (event.has(EventConstants.IFRAME_XPATH))
+            if (!event.has(EventConstants.IFRAME_XPATHS) && !event.has(EventConstants.IFRAME_INDICES))
             {
-                String frameXpath = event.getString(EventConstants.IFRAME_XPATH);
-                LOG.info("Switching to frame {}", frameXpath);
-                seleniumDriver.switchToFrame(theWebDriver, frameXpath);
-            } else {
-                LOG.warn("Event {} hasn't frame xpath", position);
+                LOG.warn("Event {} hasn't frame xpath and frame index. Switching to main window", position);
                 theWebDriver.switchTo().defaultContent();
+            }
+            else
+            {
+                String frameXpath = event.getString(EventConstants.IFRAME_XPATHS);
+                List<Integer> frameIndices = Arrays.stream(event.getString(EventConstants.IFRAME_INDICES).split("\\."))
+                        .map(Integer::parseInt).collect(Collectors.toList());
+                LOG.info("Switching to frame {}({})", frameIndices, frameXpath);
+                seleniumDriver.switchToFrame(theWebDriver, frameIndices, frameXpath);
             }
 
             try

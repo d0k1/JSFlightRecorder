@@ -2,6 +2,8 @@
  * Event storage method
  * Event send method
  */
+
+ 
 // jsflight namespace 
 var jsflight = jsflight || {};
 
@@ -30,18 +32,17 @@ jsflight.getDetachElement = function(event){
 jsflight.getEventInfo = function(event) {
     event = event || window.event;
 
-    event.target = 'target' in event
-        ? event.target
-        : event.srcElement;
+    event.target = event.target || event.srcElement;
 
     var result = {};
 
     var iframeDocument = event.target.ownerDocument;
-    var iframeWindow = iframeDocument.defaultView || iframeDocument.parentWindow;
+    var iframeWindow = iframeDocument ? (iframeDocument.defaultView || iframeDocument.parentWindow) : event.target;
 
     if (iframeWindow.xpath) {
         result.iframeXpath = iframeWindow.xpath;
     }
+    result.iframeIndices = iframeWindow.iframeIndices;
 
     var inputData = jsflight.getInputData(event.target);
 
@@ -90,19 +91,19 @@ jsflight.getEventInfo = function(event) {
     result.pageY = event.pageY;
 
     result.screen = {
-    		width : screen.width,
-    		height : screen.height
-    		};
+            width : screen.width,
+            height : screen.height
+            };
 
     result.window = {
-	    	    width : window.outerWidth,
-	    	    height : window.outerHeight
-    		};
+                width : window.outerWidth,
+                height : window.outerHeight
+            };
 
     result.page = {
-    			width : window.innerWidth,
-    			height : window.innerHeight
-    		};
+                width : window.innerWidth,
+                height : window.innerHeight
+            };
 
     result.agent = navigator.userAgent;
     result.image = event.image;
