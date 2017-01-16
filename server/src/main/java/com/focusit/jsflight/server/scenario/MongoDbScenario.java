@@ -82,16 +82,6 @@ public class MongoDbScenario extends UserScenario
         return experiment.getRecordingName();
     }
 
-    public String getTag()
-    {
-        return experiment.getTag();
-    }
-
-    public String getTagHash()
-    {
-        return experiment.getTagHash();
-    }
-
     public String getExperimentId()
     {
         return experiment.getId();

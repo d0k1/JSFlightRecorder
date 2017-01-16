@@ -1,13 +1,16 @@
-import com.focusit.jsflight.player.constants.EventConstants
-import com.focusit.jsflight.player.constants.EventType
-import org.json.JSONArray
 /**
  * Базовый скрипт определения дублей событий
  * Скрипту доступны след. переменные:
  *      current - текущее событие
  *      previous - прыдущее событие
- *      logger - лог
+ *      logger - логгер
+ *      classloader - classloader от ScriptEngine
+ *      playerContext - контекст плеера
  */
+
+import com.focusit.jsflight.player.constants.EventConstants
+import com.focusit.jsflight.player.constants.EventType
+import org.json.JSONArray
 
 static def getTarget(def event){
     if (event.has(EventConstants.SECOND_TARGET)) {

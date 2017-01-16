@@ -1,14 +1,10 @@
 package com.focusit.jsflight.server.controllers;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.Optional;
-
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import com.focusit.jsflight.server.model.Experiment;
+import com.focusit.jsflight.server.model.Recording;
+import com.focusit.jsflight.server.os.OperatingSystemScreenshooter;
+import com.focusit.jsflight.server.player.BackgroundWebPlayer;
+import com.focusit.jsflight.server.service.RecordingsService;
 import org.apache.poi.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,11 +14,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.focusit.jsflight.server.model.Experiment;
-import com.focusit.jsflight.server.model.Recording;
-import com.focusit.jsflight.server.os.OperatingSystemScreenshooter;
-import com.focusit.jsflight.server.player.BackgroundWebPlayer;
-import com.focusit.jsflight.server.service.RecordingsService;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by dkirpichenkov on 29.04.16.
@@ -203,7 +201,28 @@ public class PlayerController
     /**
      * Download recorded JMeter scenario
      * <p>
-     * $ curl "127.0.0.1:8080/player/jmx?experimentId=573b3169c92e9527bc805cc6"
+     * $ curl "127.0.0.1:8080/player/jmx?experimentId=573b3169c92e9527bc805cc6&index=2"
+     *
+     * @param experimentId
+     * @param request
+     * @param response
+     * @throws IOException
+     */
+    @RequestMapping(value = "/countRecordings", method = RequestMethod.GET)
+    public void getCountOfRecordings(@RequestParam("experimentId") String experimentId,
+                       HttpServletRequest request, HttpServletResponse response) throws IOException
+    {
+        int countOfGeneratedScenarios = player.getCountOfGeneratedScenarios(experimentId);
+
+        response.setContentType("text/plain");
+        response.getWriter().print(countOfGeneratedScenarios);
+        response.flushBuffer();
+    }
+
+    /**
+     * Download recorded JMeter scenario
+     * <p>
+     * $ curl "127.0.0.1:8080/player/jmx?experimentId=573b3169c92e9527bc805cc6&index=2"
      *
      * @param experimentId
      * @param request
@@ -211,10 +230,10 @@ public class PlayerController
      * @throws IOException
      */
     @RequestMapping(value = "/jmx", method = RequestMethod.GET)
-    public void jmeter(@RequestParam("experimentId") String experimentId, HttpServletRequest request,
-            HttpServletResponse response) throws IOException
+    public void jmeter(@RequestParam("experimentId") String experimentId, @RequestParam("index") int index,
+                       HttpServletRequest request, HttpServletResponse response) throws IOException
     {
-        InputStream stream = player.getJMX(experimentId);
+        InputStream stream = player.getGeneratedScenario(experimentId, index);
         if (stream == null)
         {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);

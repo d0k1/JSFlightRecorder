@@ -1,3 +1,14 @@
+/**
+ * Базовый скрипт поиска элементов
+ * Скрипту доступны след. переменные:
+ *      target - целевой XPath из события
+ *      webdriver - вебдрайвер
+ *      event - само событие
+ *      logger - логгер
+ *      classloader - classloader от ScriptEngine
+ *      playerContext - контекст плеера
+ */
+
 import com.focusit.jsflight.player.constants.EventType
 import org.openqa.selenium.*
 import org.openqa.selenium.support.ui.ExpectedCondition
@@ -7,15 +18,6 @@ import javax.annotation.Nullable
 import java.util.stream.Collectors
 
 import static com.focusit.jsflight.player.webdriver.SeleniumDriver.NO_OP_ELEMENT
-
-/**
- * Базовый скрипт поиска элементов
- * Скрипту доступны след. переменные:
- *      target - целевой XPath из события
- *      webdriver - вебдрайвер
- *      event - само событие
- *      logger - лог
- */
 
 def swapToValidTreeXp(def elements) {
     // Write you custom logic here

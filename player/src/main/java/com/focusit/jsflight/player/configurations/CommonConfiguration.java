@@ -61,6 +61,7 @@ public class CommonConfiguration
     @JsonIgnore
     transient private ScriptsClassLoader scriptClassloader = null;
     private CharSequence targetBaseUrl;
+    private Long maxRequestsPerScenario;
 
     public CommonConfiguration()
     {
@@ -268,5 +269,15 @@ public class CommonConfiguration
     public void setTargetBaseUrl(CharSequence targetBaseUrl)
     {
         this.targetBaseUrl = targetBaseUrl;
+    }
+
+    public Long getMaxRequestsPerScenario()
+    {
+        return maxRequestsPerScenario;
+    }
+
+    public void setMaxRequestsPerScenario(Long maxRequestsPerScenario)
+    {
+        this.maxRequestsPerScenario = maxRequestsPerScenario;
     }
 }

@@ -749,7 +749,7 @@ Str.safeToString = function(ob)
     }
     catch (exc)
     {
-    	console.log("safeToString FAILS "+exc, exc);
+        console.log("safeToString FAILS "+exc, exc);
     }
     return "[unsupported: no toString() function in type "+typeof(ob)+"]";
 };

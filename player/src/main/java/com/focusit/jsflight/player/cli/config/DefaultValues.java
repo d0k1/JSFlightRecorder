@@ -25,4 +25,5 @@ public final class DefaultValues {
     public static final Integer INTERVAL_BETWEEN_UI_CHECKS_IN_MS = 500;
 
     public static final Integer XVFB_ZERO_DISPLAY = 0;
+    public static final Long MAX_REQUESTS_PER_SCENARIO = Long.MAX_VALUE;
 }

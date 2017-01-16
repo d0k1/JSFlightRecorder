@@ -2,14 +2,16 @@ package com.focusit.jsflight.jmeter;
 
 import com.focusit.jsflight.script.jmeter.JMeterRecorderContext;
 import org.apache.jmeter.config.Arguments;
+import org.apache.jmeter.control.TransactionController;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.protocol.http.control.RecordingController;
+import org.apache.jmeter.protocol.http.control.gui.RecordController;
 import org.apache.jmeter.protocol.http.proxy.JMeterProxyControl;
 import org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase;
 import org.apache.jmeter.save.SaveService;
 import org.apache.jmeter.testelement.TestElement;
-import org.apache.jmeter.testelement.TestElementTraverser;
 import org.apache.jmeter.testelement.property.JMeterProperty;
+import org.apache.jmeter.testelement.property.PropertyIterator;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.collections.HashTree;
 import org.apache.jorphan.collections.HashTreeTraverser;
@@ -18,10 +20,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 /**
  * Interface to control jmeter proxy recorder
@@ -30,17 +29,16 @@ import java.util.Locale;
  */
 public class JMeterRecorder
 {
-    private static final String DEFAULT_TEMPLATE_NAME = "template.jmx";
+    public static final String DEFAULT_TEMPLATE_PATH = "template.jmx";
+    private HashTree mainHashTreeTemplate;
+    private JMeterProxyControl jMeterProxyControl;
 
-    private HashTree hashTree;
-    private JMeterProxyControl ctrl;
+    private List<RecordingController> recordingControllers;
 
-    private RecordingController recCtrl = null;
-    private HashTree recCtrlPlace = null;
-
+    private HashTree transactionControllerSubTree;
     private Arguments vars = null;
 
-    private String currentTemplate = DEFAULT_TEMPLATE_NAME;
+    private String pathToTemplate = DEFAULT_TEMPLATE_PATH;
 
     private JMeterRecorderContext context;
 
@@ -48,23 +46,21 @@ public class JMeterRecorder
 
     public JMeterRecorder()
     {
-        this.context = new JMeterRecorderContext();
-        this.scriptProcessor = new JMeterScriptProcessor();
+        initializeJMeter();
+
+        context = new JMeterRecorderContext();
+        scriptProcessor = new JMeterScriptProcessor();
+        recordingControllers = new LinkedList<>();
     }
 
-    public JMeterScriptProcessor getScriptProcessor()
+    public JMeterRecorder(String pathToTemplate)
     {
-        return scriptProcessor;
+        this();
+        this.pathToTemplate = pathToTemplate;
     }
 
-    public void init() throws Exception
+    private static void initializeJMeter()
     {
-        init(DEFAULT_TEMPLATE_NAME);
-    }
-
-    public void init(String pathToTemplate) throws Exception
-    {
-        this.currentTemplate = pathToTemplate;
         JMeterUtils.setJMeterHome(new File("").getAbsolutePath());
         JMeterUtils.loadJMeterProperties(new File("jmeter.properties").getAbsolutePath());
         JMeterUtils.setProperty("saveservice_properties", File.separator + "saveservice.properties");
@@ -72,82 +68,45 @@ public class JMeterRecorder
         JMeterUtils.setProperty("upgrade_properties", File.separator + "upgrade.properties");
         JMeterUtils.setProperty("system_properties", File.separator + "system.properties");
         JMeterUtils.setLocale(Locale.ENGLISH);
-
         JMeterUtils.setProperty("proxy.cert.directory", new File("").getAbsolutePath());
-        ctrl = new JMeterProxyControl(this);
+    }
 
+    public JMeterScriptProcessor getScriptProcessor()
+    {
+        return scriptProcessor;
+    }
+
+    public void initialize(Long maxRequestsPerScenario) throws Exception
+    {
+        jMeterProxyControl = new JMeterProxyControl(this, maxRequestsPerScenario);
         reset();
     }
 
-    public void saveScenario(OutputStream outStream) throws IOException
+    public int getRecordingsCount()
     {
-        List<TestElement> samples = new ArrayList<>();
+        return recordingControllers.size();
+    }
 
-        TestElement sample = recCtrl.next();
+    public void saveScenario(OutputStream outStream, int recordingIndex) throws IOException
+    {
+        HashTree hashTree = (HashTree)mainHashTreeTemplate.clone();
+        findMainNodesAndTrees(hashTree);
 
-        while (sample != null)
-        {
-            // skip unknown nasty requests
-            if (sample instanceof HTTPSamplerBase)
-            {
-                HTTPSamplerBase http = (HTTPSamplerBase)sample;
-                if (http.getArguments().getArgumentCount() > 0
-                        && http.getArguments().getArgument(0).getValue().startsWith("0Q0O0M0K0I0"))
-                {
-                    sample = recCtrl.next();
-                    continue;
-                }
-            }
-            samples.add(sample);
-            sample = recCtrl.next();
-        }
+        RecordingController recordingController = recordingControllers.get(recordingIndex);
+        HashTree recordingControllerSubTree = transactionControllerSubTree.add(recordingController);
 
-        Collections.sort(samples, (o1, o2) -> {
-            String num1 = o1.getName().split(" ")[0];
-            String num2 = o2.getName().split(" ")[0];
-            return ((Integer)Integer.parseInt(num1)).compareTo(Integer.parseInt(num2));
-        });
+        List<TestElement> samples = extractAppropriateTestElements(recordingController);
 
+        placeAndProcessTestElements(recordingControllerSubTree, samples);
+        SaveService.saveTree(hashTree, outStream);
+    }
+
+    private void placeAndProcessTestElements(HashTree hashTree, List<TestElement> samples)
+    {
         for (TestElement element : samples)
         {
-            final List<TestElement> descendants = new ArrayList<>();
-            final List<JMeterProperty> keys = new ArrayList<>();
-            element.traverse(new TestElementTraverser()
-            {
-
-                @Override
-                public void endProperty(JMeterProperty key)
-                {
-                    if (key.getObjectValue() instanceof HeaderManager)
-                    {
-                        descendants.add((HeaderManager)key.getObjectValue());
-                        keys.add(key);
-                    }
-                }
-
-                @Override
-                public void endTestElement(TestElement el)
-                {
-                }
-
-                @Override
-                public void startProperty(JMeterProperty key)
-                {
-                }
-
-                @Override
-                public void startTestElement(TestElement el)
-                {
-                }
-            });
-
-            for (JMeterProperty key : keys)
-            {
-                element.removeProperty(key.getName());
-            }
-
-            HashTree parent = recCtrlPlace.add(element);
-
+            List<TestElement> descendants = findAndRemoveHeaderManagers(element);
+            HashTree parent = hashTree.add(element);
             descendants.forEach(parent::add);
 
             if (element instanceof HTTPSamplerBase)
@@ -157,60 +116,67 @@ public class JMeterRecorder
                 scriptProcessor.processScenario(http, parent, vars, this);
             }
         }
-        SaveService.saveTree(hashTree, outStream);
     }
 
-    public void saveScenario(String filename) throws IOException
-    {
-        saveScenario(new FileOutputStream(new File(filename)));
+    private List<TestElement> findAndRemoveHeaderManagers(TestElement element) {
+        List<TestElement> descendants = new ArrayList<>();
+
+        for (PropertyIterator iter = element.propertyIterator(); iter.hasNext();)
+        {
+            JMeterProperty property = iter.next();
+            if (property.getObjectValue() instanceof HeaderManager)
+            {
+                descendants.add((HeaderManager)property.getObjectValue());
+                iter.remove();
+            }
+        }
+        return descendants;
     }
 
-    public void startRecording() throws IOException
+    private List<TestElement> extractAppropriateTestElements(RecordingController recordingController)
     {
-        context.reset();
-        ctrl.startProxy();
+        List<TestElement> samples = new ArrayList<>();
+
+        for (TestElement sample; (sample = recordingController.next()) != null;)
+        {
+            // skip unknown nasty requests
+            if (sample instanceof HTTPSamplerBase)
+            {
+                HTTPSamplerBase http = (HTTPSamplerBase)sample;
+                if (http.getArguments().getArgumentCount() > 0
+                        && http.getArguments().getArgument(0).getValue().startsWith("0Q0O0M0K0I0"))
+                {
+                    continue;
+                }
+            }
+            samples.add(sample);
+        }
+
+        Collections.sort(samples, (o1, o2) -> {
+            String num1 = o1.getName().split(" ")[0];
+            String num2 = o2.getName().split(" ")[0];
+            return ((Integer)Integer.parseInt(num1)).compareTo(Integer.parseInt(num2));
+        });
+        return samples;
     }
 
-    public void setProxyPort(int proxyPort) throws IOException
+    private void findMainNodesAndTrees(HashTree hashTree)
     {
-        ctrl.setPort(proxyPort);
-    }
-
-    public void stopRecording()
-    {
-        ctrl.stopProxy();
-    }
-
-    public void reset() throws IOException
-    {
-        hashTree = SaveService.loadTree(new File(currentTemplate));
-
         hashTree.traverse(new HashTreeTraverser()
         {
-
             @Override
             public void addNode(Object node, HashTree subTree)
             {
                 System.out.println("Node: " + node.toString());
 
-                if (node instanceof Arguments)
+                if (node instanceof Arguments && ((Arguments)node).getName().equalsIgnoreCase("UDV"))
                 {
-                    if (((Arguments)node).getName().equalsIgnoreCase("UDV"))
-                    {
-                        if (vars == null)
-                        {
-                            vars = (Arguments)node;
-                        }
-                    }
+                    vars = (Arguments)node;
                 }
 
-                if (node instanceof RecordingController)
+                if (node instanceof TransactionController)
                 {
-                    if (recCtrl == null)
-                    {
-                        recCtrl = (RecordingController)node;
-                        recCtrlPlace = subTree;
-                    }
+                    transactionControllerSubTree = subTree;
                 }
             }
 
@@ -224,8 +190,37 @@ public class JMeterRecorder
             {
             }
         });
+    }
 
-        ctrl.setTargetTestElement(recCtrl);
+    public void saveScenarios(String filename) throws IOException
+    {
+        for (int i = 0; i < recordingControllers.size(); i++)
+        {
+            saveScenario(new FileOutputStream(new File(i + '_' + filename)), i);
+        }
+    }
+
+    public void startRecording() throws IOException
+    {
+        context.reset();
+        jMeterProxyControl.startProxy();
+    }
+
+    public void setProxyPort(int proxyPort) throws IOException
+    {
+        jMeterProxyControl.setPort(proxyPort);
+    }
+
+    public void stopRecording()
+    {
+        jMeterProxyControl.stopProxy();
+    }
+
+    public void reset() throws IOException
+    {
+        mainHashTreeTemplate = SaveService.loadTree(new File(pathToTemplate));
+
+        splitScenario();
     }
 
     public JMeterRecorderContext getContext()
@@ -236,5 +231,16 @@ public class JMeterRecorder
     public void setContext(JMeterRecorderContext context)
     {
         this.context = context;
+    }
+
+    public void splitScenario()
+    {
+        RecordingController recordingController = new RecordingController();
+        recordingController.setProperty(TestElement.TEST_CLASS, RecordingController.class.getName());
+        recordingController.setProperty(TestElement.GUI_CLASS, RecordController.class.getName());
+        recordingController.setName("Recording controller");
+        recordingControllers.add(recordingController);
+
+        jMeterProxyControl.setTargetTestElement(recordingController);
     }
 }

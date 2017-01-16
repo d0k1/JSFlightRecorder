@@ -1,11 +1,7 @@
 package com.focusit.jsflight.server.service;
 
-import java.util.Properties;
-
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-
 import com.focusit.jsflight.server.model.Settings;
+import com.focusit.jsflight.server.scenario.MongoDbScenario;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +10,9 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
 
-import com.focusit.jsflight.server.scenario.MongoDbScenario;
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+import java.util.Properties;
 
 /**
  * Email sender.
@@ -111,7 +109,7 @@ public class EmailNotificationService
 
     public enum EventType
     {
-        PUASED("paused"), TERMINATED("terminated"), DONE("done"), ERROR_IN_BROWSER("error in browser"), UNKNOWN_ERROR(
+        PAUSED("paused"), TERMINATED("terminated"), DONE("done"), ERROR_IN_BROWSER("error in browser"), UNKNOWN_ERROR(
                 "unknown exception");
 
         private String text;

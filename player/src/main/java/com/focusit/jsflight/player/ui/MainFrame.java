@@ -1,5 +1,6 @@
 package com.focusit.jsflight.player.ui;
 
+import com.focusit.jsflight.player.configurations.Configuration;
 import com.focusit.jsflight.player.constants.BrowserType;
 import com.focusit.jsflight.player.fileconfigholder.*;
 import com.focusit.jsflight.player.scenario.UserScenario;
@@ -87,9 +88,10 @@ public class MainFrame
     {
         initialize();
 
-        ScriptEngine.init(scenario.getConfiguration().getCommonConfiguration().getScriptClassloader());
+        Configuration configuration = scenario.getConfiguration();
+        ScriptEngine.init(configuration.getCommonConfiguration().getScriptClassloader());
         jmeter = new JMeterRecorder();
-        jmeter.init();
+        jmeter.initialize(configuration.getCommonConfiguration().getMaxRequestsPerScenario());
     }
 
     public AbstractTableModel createEventTableModel()
@@ -1081,7 +1083,7 @@ public class MainFrame
             {
                 try
                 {
-                    jmeter.saveScenario(scenarioTextField.getText());
+                    jmeter.saveScenarios(scenarioTextField.getText());
                 }
                 catch (IOException e1)
                 {

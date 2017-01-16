@@ -1,6 +1,7 @@
 package com.focusit.jsflight.server.service;
 
 import com.focusit.jsflight.jmeter.JMeterRecorder;
+import com.focusit.jsflight.player.configurations.Configuration;
 import com.focusit.jsflight.player.configurations.ScriptsConfiguration;
 import com.focusit.jsflight.server.scenario.MongoDbScenario;
 import org.slf4j.Logger;
@@ -44,7 +45,8 @@ public class JMeterRecorderService
 
     public void startJMeter(MongoDbScenario scenario) throws Exception
     {
-        if (scenario.getConfiguration().getCommonConfiguration().getProxyPort() != null)
+        Configuration configuration = scenario.getConfiguration();
+        if (configuration.getCommonConfiguration().getProxyPort() != null)
         {
             return;
         }
@@ -61,11 +63,11 @@ public class JMeterRecorderService
             }
 
             int port = availablePorts.remove(0);
-            scenario.getConfiguration().getCommonConfiguration().setProxyPort(port);
+            configuration.getCommonConfiguration().setProxyPort(port);
             JMeterRecorder recorder = new JMeterRecorder();
-            recorder.init();
+            recorder.initialize(configuration.getCommonConfiguration().getMaxRequestsPerScenario());
             recorder.setProxyPort(port);
-            ScriptsConfiguration config = scenario.getConfiguration().getScriptsConfiguration();
+            ScriptsConfiguration config = configuration.getScriptsConfiguration();
 
             config.syncScripts(recorder);
 
@@ -109,12 +111,14 @@ public class JMeterRecorderService
             availablePorts.add(proxyPort);
             scenario.getConfiguration().getCommonConfiguration().setProxyPort(0);
 
-            try (ByteArrayOutputStream baos = new ByteArrayOutputStream())
-            {
-                recorder.saveScenario(baos);
-                try (ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray()))
-                {
-                    storageService.storeJMeterScenario(scenario, bais);
+            LOG.info("Recordings count: {}", recorder.getRecordingsCount());
+
+            for (int i = 0; i < recorder.getRecordingsCount(); i++) {
+                try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                    recorder.saveScenario(baos, i);
+                    try (ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray())) {
+                        storageService.storeJMeterScenario(scenario, bais, i);
+                    }
                 }
             }
         }

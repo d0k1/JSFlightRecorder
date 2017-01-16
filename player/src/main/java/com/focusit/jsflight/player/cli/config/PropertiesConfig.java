@@ -1,21 +1,20 @@
 package com.focusit.jsflight.player.cli.config;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.beust.jcommander.IParameterValidator;
 import com.beust.jcommander.IStringConverter;
 import com.beust.jcommander.ParameterException;
-import com.beust.jcommander.validators.PositiveInteger;
 import com.focusit.jsflight.player.constants.BrowserType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 
 public class PropertiesConfig implements IConfig
 {
@@ -25,6 +24,24 @@ public class PropertiesConfig implements IConfig
         if (value == null)
         {
             throw new ParameterException("Parameter '" + name + "' is null");
+        }
+    };
+    private static final IParameterValidator ZERO = (name, value) -> {
+        if (value != null && Integer.valueOf(value) != 0)
+        {
+            throw new ParameterException("Parameter '" + name + "' must be a valid positive integer");
+        }
+    };
+    private static final IParameterValidator POSITIVE_INTEGER = (name, value) -> {
+        if (value != null && Integer.valueOf(value) <= 0)
+        {
+            throw new ParameterException("Parameter '" + name + "' must be a valid positive integer");
+        }
+    };
+    private static final IParameterValidator POSITIVE_LONG = (name, value) -> {
+        if (value != null && Long.valueOf(value) <= 0)
+        {
+            throw new ParameterException("Parameter '" + name + "' must be a valid positive long");
         }
     };
 
@@ -39,12 +56,47 @@ public class PropertiesConfig implements IConfig
     {
         try (InputStream input = new FileInputStream(propertiesFilePath))
         {
+            LOG.info("Initializing properties from '{}' file", propertiesFilePath);
             properties.load(input);
         }
         catch (IOException e)
         {
             LOG.error(e.getMessage(), e);
         }
+    }
+
+    private IParameterValidator or(IParameterValidator... validators)
+    {
+        return (name, value) -> {
+            boolean isValid = false;
+            List<ParameterException> exceptions = new ArrayList<>();
+            for (int i = 0; i < validators.length && !isValid; i++)
+            {
+                try
+                {
+                    validators[i].validate(name, value);
+                    isValid = true;
+                }
+                catch (ParameterException e)
+                {
+                    exceptions.add(e);
+                }
+            }
+
+            if (!isValid)
+            {
+                StringBuilder exceptionMessage = new StringBuilder();
+                for (ParameterException exception : exceptions)
+                {
+                    if (exceptionMessage.length() != 0)
+                    {
+                        exceptionMessage.append(" or ");
+                    }
+                    exceptionMessage.append(exception.getMessage());
+                }
+                throw new ParameterException(exceptionMessage.toString());
+            }
+        };
     }
 
     private String getProperty(String name)
@@ -54,26 +106,25 @@ public class PropertiesConfig implements IConfig
 
     private String getProperty(String name, IParameterValidator validator)
     {
-        return getProperty(name, validator, String::toString);
+        return getProperty(name, validator, (IStringConverter<String>)String::toString);
     }
 
     private <T> T getProperty(String name, IParameterValidator validator, IStringConverter<T> converter)
     {
-        return getProperty(name, null, converter, validator);
+        return getProperty(name, null, validator, converter);
+    }
+
+    private <T> T getProperty(String name, T defaultValue, IStringConverter<T> converter)
+    {
+        return getProperty(name, defaultValue, null, converter);
     }
 
     private <T> T getProperty(String name, T defaultValue, IParameterValidator validator, IStringConverter<T> converter)
     {
-        return getProperty(name, defaultValue == null ? null : defaultValue.toString(), converter, validator);
-    }
-
-    private <T> T getProperty(String name, String defaultValue, IStringConverter<T> converter,
-            IParameterValidator validator)
-    {
         String value = properties.getProperty(name);
         if (value == null && defaultValue != null)
         {
-            value = defaultValue;
+            value = defaultValue.toString();
         }
         if (validator != null)
         {
@@ -181,16 +232,23 @@ public class PropertiesConfig implements IConfig
     }
 
     @Override
+    public Long getMaximumCountOfRequestPerJMeterScenario()
+    {
+        return getProperty(PropertiesConstants.MAX_REQUESTS_PER_SCENARIO, DefaultValues.MAX_REQUESTS_PER_SCENARIO,
+                POSITIVE_LONG, Long::new);
+    }
+
+    @Override
     public Integer getStartStep()
     {
-        return getProperty(PropertiesConstants.START_STEP, DefaultValues.START_STEP, new PositiveInteger(),
+        return getProperty(PropertiesConstants.START_STEP, DefaultValues.START_STEP, or(ZERO, POSITIVE_INTEGER),
                 Integer::new);
     }
 
     @Override
     public Integer getFinishStep()
     {
-        return getProperty(PropertiesConstants.FINISH_STEP, DefaultValues.FINISH_STEP, new PositiveInteger(),
+        return getProperty(PropertiesConstants.FINISH_STEP, DefaultValues.FINISH_STEP, or(ZERO, POSITIVE_INTEGER),
                 Integer::new);
     }
 
@@ -210,27 +268,28 @@ public class PropertiesConfig implements IConfig
     public String getGeneratedJmeterScenarioName()
     {
         return getProperty(PropertiesConstants.JMETER_GENERATED_SCENARIO_NAME, DefaultValues.GENERATED_SCENARIO_NAME,
-                String::toString, null);
+                String::toString);
     }
 
     @Override
     public Integer getAsyncRequestsCompletedTimeoutInSeconds()
     {
         return getProperty(PropertiesConstants.ASYNC_REQUESTS_COMPLETED_TIMEOUT_IN_SECONDS,
-                DefaultValues.ASYNC_REQUESTS_COMPLETED_TIMEOUT_IN_SECONDS, null, Integer::new);
+                DefaultValues.ASYNC_REQUESTS_COMPLETED_TIMEOUT_IN_SECONDS, POSITIVE_INTEGER, Integer::new);
     }
 
     @Override
     public Integer getUiShownTimeoutInSeconds()
     {
-        return getProperty(PropertiesConstants.UI_SHOWN_TIMEOUT, DefaultValues.UI_SHOWN_TIMEOUT, null, Integer::new);
+        return getProperty(PropertiesConstants.UI_SHOWN_TIMEOUT, DefaultValues.UI_SHOWN_TIMEOUT, POSITIVE_INTEGER,
+                Integer::new);
     }
 
     @Override
     public Integer getIntervalBetweenUiChecksInMs()
     {
-        return getProperty(PropertiesConstants.UI_CHECKS_INTERVAL_IN_MS, DefaultValues.INTERVAL_BETWEEN_UI_CHECKS_IN_MS,
-                new PositiveInteger(), Integer::new);
+        return getProperty(PropertiesConstants.UI_CHECKS_INTERVAL_IN_MS,
+                DefaultValues.INTERVAL_BETWEEN_UI_CHECKS_IN_MS, POSITIVE_INTEGER, Integer::new);
     }
 
     @Override
@@ -242,55 +301,55 @@ public class PropertiesConfig implements IConfig
     @Override
     public Integer getProxyPort()
     {
-        return getProperty(PropertiesConstants.PROXY_PORT, new PositiveInteger(), Integer::new);
+        return getProperty(PropertiesConstants.PROXY_PORT, POSITIVE_INTEGER, (IStringConverter<Integer>)Integer::new);
     }
 
     public Integer getXvfbDisplayLowerBound()
     {
-        return getProperty(PropertiesConstants.XVFB_LOWER_BOUND, DefaultValues.XVFB_ZERO_DISPLAY, new PositiveInteger(),
-                Integer::new);
+        return getProperty(PropertiesConstants.XVFB_LOWER_BOUND, DefaultValues.XVFB_ZERO_DISPLAY,
+                or(ZERO, POSITIVE_INTEGER), Integer::new);
     }
 
     public Integer getXvfbDisplayUpperBound()
     {
-        return getProperty(PropertiesConstants.XVFB_UPPER_BOUND, DefaultValues.XVFB_ZERO_DISPLAY, new PositiveInteger(),
-                Integer::new);
+        return getProperty(PropertiesConstants.XVFB_UPPER_BOUND, DefaultValues.XVFB_ZERO_DISPLAY,
+                or(ZERO, POSITIVE_INTEGER), Integer::new);
     }
 
     @Override
     public String getScreenshotsDirectory()
     {
-        return getProperty(PropertiesConstants.SCREENSHOT_DIRECTORY, DefaultValues.SCREENSHOTS_DIRECTORY, null,
+        return getProperty(PropertiesConstants.SCREENSHOT_DIRECTORY, DefaultValues.SCREENSHOTS_DIRECTORY,
                 String::toString);
     }
 
     @Override
     public BrowserType getBrowserType()
     {
-        return getProperty(PropertiesConstants.BROWSER_TYPE, DefaultValues.BROWSER_TYPE, null, BrowserType::valueOf);
+        return getProperty(PropertiesConstants.BROWSER_TYPE, DefaultValues.BROWSER_TYPE, BrowserType::valueOf);
     }
 
     @Override
     public Boolean shouldEnableRecording()
     {
-        return getProperty(PropertiesConstants.RECORDING_ENABLED, DefaultValues.ENABLE_RECORDING, null, Boolean::new);
+        return getProperty(PropertiesConstants.RECORDING_ENABLED, DefaultValues.ENABLE_RECORDING, Boolean::new);
     }
 
     @Override
     public Boolean isHeadlessModeEnabled()
     {
-        return getProperty(PropertiesConstants.HEADLESS_ENABLED, DefaultValues.HEADLESS, null, Boolean::new);
+        return getProperty(PropertiesConstants.HEADLESS_ENABLED, DefaultValues.HEADLESS, Boolean::new);
     }
 
     @Override
     public Boolean shouldUseRandomChars()
     {
-        return getProperty(PropertiesConstants.USE_RANDOM_CHARS, DefaultValues.USE_RANDOM_CHARS, null, Boolean::new);
+        return getProperty(PropertiesConstants.USE_RANDOM_CHARS, DefaultValues.USE_RANDOM_CHARS, Boolean::new);
     }
 
     @Override
     public Boolean shouldMakeScreenshots()
     {
-        return getProperty(PropertiesConstants.MAKE_SCREENSHOTS, DefaultValues.MAKE_SCREENSHOTS, null, Boolean::new);
+        return getProperty(PropertiesConstants.MAKE_SCREENSHOTS, DefaultValues.MAKE_SCREENSHOTS, Boolean::new);
     }
 }

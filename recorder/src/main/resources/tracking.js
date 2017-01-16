@@ -28,6 +28,7 @@ jsflight.TrackMouse = function(mouseEvent) {
     } finally {
         // console.log("Event: " + data + "\n");
         jsflight.eventId++;
+        jsflight.rebindAllHandlers();
     }
 };
 
@@ -36,12 +37,11 @@ jsflight.TrackMouse = function(mouseEvent) {
  */
 jsflight.TrackKeyboard = function(keyboardEvent) {
     // ignoring self activation/deactivation
-    if (event.ctrlKey && event.altKey && event.shiftKey && (event.which || event.keyCode) == 38) {
+    if (keyboardEvent.ctrlKey && keyboardEvent.altKey && keyboardEvent.shiftKey &&
+            [38, 40].indexOf(keyboardEvent.which || keyboardEvent.keyCode) >= 0) {
         return;
     }
-    if (event.ctrlKey && event.altKey && event.shiftKey && (event.which || event.keyCode) == 40) {
-        return;
-    }
+
     try {
         if (keyboardEvent.target && keyboardEvent.target.id) {
             // ignoring self buttons
@@ -73,6 +73,7 @@ jsflight.TrackHash = function(event) {
         console.log(e);
     } finally {
         jsflight.eventId++;
+        jsflight.rebindAllHandlers();
     }
     
     if(jsflight.options.saveShotOnHashChange){

@@ -116,7 +116,6 @@ public class JMeterDaemon extends Thread implements Stoppable
                         // Pass request to new proxy thread
                         JMeterProxy thd = proxyClass.newInstance();
                         thd.configure(clientSocket, target);
-                        thd.setRecorder(target.getRecorder());
                         thd.start();
                     }
                 }

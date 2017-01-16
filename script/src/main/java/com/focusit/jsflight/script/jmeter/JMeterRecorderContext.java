@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class JMeterRecorderContext
 {
-    private final ConcurrentHashMap<String, Object> templateReplacemnts = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Object> templateReplacements = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Object> properties = new ConcurrentHashMap<>();
 
     /**
@@ -21,7 +21,7 @@ public class JMeterRecorderContext
      */
     public void addTemplate(String source, Object template)
     {
-        templateReplacemnts.put(source, template);
+        templateReplacements.put(source, template);
     }
 
     /**
@@ -32,7 +32,7 @@ public class JMeterRecorderContext
      */
     public Object getTemplate(String source)
     {
-        return templateReplacemnts.get(source);
+        return templateReplacements.get(source);
     }
 
     /**
@@ -40,7 +40,7 @@ public class JMeterRecorderContext
      */
     public void reset()
     {
-        templateReplacemnts.clear();
+        templateReplacements.clear();
     }
 
     /**
@@ -50,7 +50,7 @@ public class JMeterRecorderContext
      */
     public Collection<String> getSources()
     {
-        return templateReplacemnts.keySet();
+        return templateReplacements.keySet();
     }
 
     public void addProperty(String key, Object value)
