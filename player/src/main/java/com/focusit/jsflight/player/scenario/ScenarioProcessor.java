@@ -182,6 +182,14 @@ public class ScenarioProcessor
                 return;
             }
 
+            String target = UserScenario.getTargetForEvent(event);
+
+            if (EventType.MOUSE_WHEEL.equals(type) && !target.contains("popup"))
+            {
+                LOG.info("Unnecessary scroll");
+                return;
+            }
+
             //Configure webdriver for this event, setting params here so we can change parameters while playback is
             //paused
             seleniumDriver
@@ -209,12 +217,11 @@ public class ScenarioProcessor
             }
             seleniumDriver.openEventUrl(theWebDriver, event);
 
-            String target = UserScenario.getTargetForEvent(event);
-
             LOG.info("Event {}. Display {}", position, seleniumDriver.getDriverDisplay(theWebDriver));
 
             seleniumDriver.waitWhileAsyncRequestsWillCompletedWithRefresh(theWebDriver, event);
 
+            theWebDriver.switchTo().window(theWebDriver.getWindowHandle());
             if (!event.has(EventConstants.IFRAME_XPATHS) && !event.has(EventConstants.IFRAME_INDICES))
             {
                 LOG.warn("Event {} hasn't frame xpath and frame index. Switching to main window", position);
