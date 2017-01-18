@@ -29,6 +29,8 @@ class SeleniumDriverSpec extends Specification {
 
         JSONObject testEvent = new JSONObject();
         testEvent.put("tabuuid", "1")
+        testEvent.put("window.width", 1500);
+        testEvent.put("window.height", 1500);
 
         WebDriverWrapper wd = getWd(testEvent)
 
@@ -44,8 +46,10 @@ class SeleniumDriverSpec extends Specification {
 
     def "browser without form quits"() {
         JSONObject testEvent = new JSONObject();
-        testEvent.put("tabuuid", "2")
+        testEvent.put("tabuuid", "2");
         testEvent.put("uuid", "123");
+        testEvent.put("window.width", 1500);
+        testEvent.put("window.height", 1500);
         WebDriverWrapper wd = getWd(testEvent)
         when:
         sd.releaseBrowser(wd.getWrappedDriver(), testEvent)
