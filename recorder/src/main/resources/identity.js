@@ -88,8 +88,7 @@ jsflight.getElementXpathId = function(element){
 jsflight.getElementTreeXPath = function(element) {
     var paths = [];
 
-    // Use nodeName (instead of localName) so namespace prefix is included (if
-    // any).
+    // Use nodeName (instead of localName) so namespace prefix is included (if any).
     for (; element && element.nodeType == 1; element = element.parentNode) {
         var index = 0;
         for (var sibling = element.previousSibling; sibling; sibling = sibling.previousSibling) {
@@ -125,20 +124,16 @@ jsflight.getTargetId = function(event) {
     return paths;
 };
 
-jsflight.getElementFullId = function(target) {
-    if (target === undefined) {
-        return null;
-    }
+function isElement(o) {
+    return (
+        typeof HTMLElement === "object"
+            ? o instanceof HTMLElement //DOM2
+            : o && typeof o === "object" && o !== null && o.nodeType === 1 && typeof o.nodeName==="string"
+    );
+}
 
-    if (target === null) {
-        return null;
-    }
-    
-    if(target==window) {
-        return null;
-    }
-    
-    if(target==document) {
+jsflight.getElementFullId = function(target) {
+    if (!target || !isElement(target)) {
         return null;
     }
 

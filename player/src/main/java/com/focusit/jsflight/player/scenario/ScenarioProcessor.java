@@ -1,16 +1,5 @@
 package com.focusit.jsflight.player.scenario;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.Map;
-
-import org.json.JSONObject;
-import org.openqa.selenium.WebDriver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.focusit.jsflight.player.configurations.CommonConfiguration;
 import com.focusit.jsflight.player.configurations.ScriptsConfiguration;
 import com.focusit.jsflight.player.constants.BrowserType;
@@ -19,6 +8,19 @@ import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 import com.focusit.jsflight.script.constants.ScriptBindingConstants;
+import org.json.JSONObject;
+import org.openqa.selenium.WebDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Class that really replays an event in given scenario and given selenium driver
@@ -83,8 +85,8 @@ public class ScenarioProcessor
      * @param theWebDriver
      * @param position
      */
-    protected void makeAShot(UserScenario scenario, SeleniumDriver seleniumDriver, WebDriver theWebDriver, int position,
-            boolean isError)
+    protected void makeAShot(UserScenario scenario, SeleniumDriver seleniumDriver, WebDriver theWebDriver,
+            int position, boolean isError)
     {
         if (scenario.getConfiguration().getCommonConfiguration().getMakeShots())
         {
@@ -115,8 +117,8 @@ public class ScenarioProcessor
         scenario.getContext().setCurrentScenarioStep(event);
 
         ScriptsConfiguration scriptsConfiguration = scenario.getConfiguration().getScriptsConfiguration();
-        String eventUrl = new PlayerScriptProcessor(scenario)
-                .executeUrlReplacementScript(scriptsConfiguration.getUrlReplacementScript(), event);
+        String eventUrl = new PlayerScriptProcessor(scenario).executeUrlReplacementScript(
+                scriptsConfiguration.getUrlReplacementScript(), event);
         event.put(EventConstants.URL, eventUrl);
         LOG.info("Current step URL: {}", eventUrl);
 
@@ -175,8 +177,8 @@ public class ScenarioProcessor
 
             if (type.equalsIgnoreCase(EventType.SCRIPT))
             {
-                new PlayerScriptProcessor(scenario)
-                        .executeScriptEvent(scriptsConfiguration.getScriptEventHandlerScript(), event);
+                new PlayerScriptProcessor(scenario).executeScriptEvent(
+                        scriptsConfiguration.getScriptEventHandlerScript(), event);
                 return;
             }
 
@@ -207,14 +209,29 @@ public class ScenarioProcessor
             }
             seleniumDriver.openEventUrl(theWebDriver, event);
 
-            String target = UserScenario.getTargetForEvent(event);
-
             LOG.info("Event {}. Display {}", position, seleniumDriver.getDriverDisplay(theWebDriver));
 
             seleniumDriver.waitWhileAsyncRequestsWillCompletedWithRefresh(theWebDriver, event);
 
+            theWebDriver.switchTo().window(theWebDriver.getWindowHandle());
+            if (!event.has(EventConstants.IFRAME_XPATHS) && !event.has(EventConstants.IFRAME_INDICES))
+            {
+                LOG.warn("Event {} hasn't frame xpath and frame index. Switching to main window", position);
+                theWebDriver.switchTo().defaultContent();
+            }
+            else
+            {
+                String frameXpath = event.getString(EventConstants.IFRAME_XPATHS);
+                List<Integer> frameIndices = Arrays.stream(event.getString(EventConstants.IFRAME_INDICES).split("\\."))
+                        .map(Integer::parseInt).collect(Collectors.toList());
+                LOG.info("Switching to frame {}({})", frameIndices, frameXpath);
+                seleniumDriver.switchToFrame(theWebDriver, frameIndices, frameXpath);
+            }
+
             try
             {
+                String target = UserScenario.getTargetForEvent(event);
+
                 switch (type)
                 {
                 case EventType.MOUSE_WHEEL:
@@ -281,6 +298,7 @@ public class ScenarioProcessor
     {
         long begin = System.currentTimeMillis();
 
+        LOG.info("Playing the scenario");
         if (start > 0)
         {
             LOG.info("Skipping first {} events.", start);
@@ -288,8 +306,8 @@ public class ScenarioProcessor
         }
 
         int maxPosition = finish > 0 ? finish : scenario.getStepsCount();
-        LOG.info("Playing scenario. Start step: {}, finish step: {}. Steps count: {}", start, maxPosition,
-                maxPosition - start);
+        LOG.info("Playing scenario. Start step: {}, finish step: {}. Steps count: {}", start, maxPosition, maxPosition
+                - start);
         while (scenario.getPosition() != maxPosition)
         {
             LOG.info("Step " + scenario.getPosition());

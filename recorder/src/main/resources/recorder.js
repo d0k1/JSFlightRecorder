@@ -8,6 +8,131 @@
 // jsflight namespace 
 var jsflight = jsflight || {};
 
+function bind(el, eventType, handler) {
+    if (el.addEventListener) { // DOM Level 2 browsers
+        el.addEventListener(eventType, handler, false);
+    } else if (el.attachEvent) { // IE <= 8
+        el.attachEvent('on' + eventType, handler);
+    } else { // ancient browsers
+        el['on' + eventType] = handler;
+    }
+}
+
+function unbind(el, eventType, handler) {
+    if (el.removeEventListener) {
+        el.removeEventListener(eventType, handler, false);
+    } else if (el.detachEvent) {
+        el.detachEvent("on" + eventType, handler);
+    } else {
+        el["on" + eventType] = null;
+    }
+}
+
+addEventListeners = function(window, document) {
+    bind(document, 'click', jsflight.TrackMouse);
+    bind(document, 'mousedown', jsflight.TrackMouse);
+    bind(document, 'mousemove', jsflight.TrackMouse);
+    bind(document, 'mousewheel', jsflight.TrackMouse);
+    bind(document, 'scroll', jsflight.TrackMouse);
+    bind(document, 'keypress', jsflight.TrackKeyboard);
+    bind(document, 'keyup', jsflight.TrackKeyboard);
+    bind(document, 'keydown', jsflight.TrackKeyboard);
+    bind(document, 'paste', jsflight.TrackKeyboard);
+    bind(window, 'hashchange', jsflight.TrackHash);
+}
+
+removeEventListeners = function(window, document) {
+    unbind(document, 'click', jsflight.TrackMouse);
+    unbind(document, 'mousedown', jsflight.TrackMouse);
+    unbind(document, 'mousemove', jsflight.TrackMouse);
+    unbind(document, 'mousewheel', jsflight.TrackMouse);
+    unbind(document, 'scroll', jsflight.TrackMouse);
+    unbind(document, 'keypress', jsflight.TrackKeyboard);
+    unbind(document, 'keyup', jsflight.TrackKeyboard);
+    unbind(document, 'keydown', jsflight.TrackKeyboard);
+    unbind(window, 'hashchange', jsflight.TrackHash);
+}
+
+function getXpathToIFrame(iframe) {
+    if (iframe.id) {
+        return "//iframe[@id='" + iframe.id + "']";
+    }
+    if (iframe.name) {
+        return "//iframe[@name='" + iframe.name + "']";
+    }
+    if (iframe.title) {
+        return "//iframe[@title='" + iframe.title + "']";
+    }
+    return Xpath.getElementXPath(iframe);
+}
+
+function findFrameLocalIndex(win) {
+    win = win || window; // Assume self by default
+    if (win.parent != win) {
+        for (var i = 0; i < win.parent.frames.length; i++) {
+            if (win.parent.frames[i] == win) {
+                return i;
+            }
+        }
+        throw Error("In a frame, but could not find myself");
+    } else {
+        return -1;
+    }
+}
+
+function findFrameFullIndex(win) {
+     win = win || window; // Assume self by default
+     if (findFrameLocalIndex(win) < 0) {
+         return "";
+     } else {
+         return findFrameFullIndex(win.parent) + "." + findFrameLocalIndex(win);
+     }
+}
+
+/**
+ * window - window, from which search should start
+ * returns the array of windows. Initial window will be returned too
+ */
+function getDescendantWindows(window) {
+    var result = [];
+    var queue = [window];
+    while (queue.length > 0) {
+        var currentWindow = queue.pop();
+
+        var windows = currentWindow.frames;
+        for (var i = 0; i < windows.length; i++) {
+            var iframeWindow = windows[i];
+            iframeWindow.xpath = (currentWindow.xpath ? currentWindow.xpath + "||" : "") +
+                getXpathToIFrame(iframeWindow.frameElement);
+            iframeWindow.iframeIndices = findFrameFullIndex(iframeWindow).substring(1);
+            queue.push(iframeWindow);
+        }
+        result.push(currentWindow);
+    }
+
+    return result;
+}
+
+jsflight.bindAllHandlers = function() {
+    var windows = getDescendantWindows(window || document.defaultView);
+    for (var i = 0; i < windows.length; i++) {
+        var win = windows[i];
+        addEventListeners(win, win.document);
+    }
+}
+
+jsflight.unbindAllHandlers = function() {
+    var windows = getDescendantWindows(window || document.defaultView);
+    for (var i = 0; i < windows.length; i++) {
+        var win = windows[i];
+        removeEventListeners(win, win.document);
+    }
+}
+
+jsflight.rebindAllHandlers = function() {
+    jsflight.unbindAllHandlers();
+    jsflight.bindAllHandlers();
+}
 
 /**
  * Start recorder
@@ -19,30 +144,9 @@ jsflight.startRecorder = function() {
     jsflight.stopTimers();
     jsflight.startTimers();
 
-    if (document.addEventListener) {
-        document.addEventListener('click', jsflight.TrackMouse);
-        document.addEventListener('mousedown', jsflight.TrackMouse);
-        document.addEventListener('mousemove', jsflight.TrackMouse);
-        document.addEventListener('mousewheel', jsflight.TrackMouse);
-        document.addEventListener('scroll', jsflight.TrackMouse);
-        document.addEventListener('keypress', jsflight.TrackKeyboard);
-        document.addEventListener('keyup', jsflight.TrackKeyboard);
-        document.addEventListener('keydown', jsflight.TrackKeyboard);
-        document.addEventListener('paste', jsflight.TrackKeyboard);
-        window.addEventListener('hashchange', jsflight.TrackHash);
-    } else {
-        document.attachEvent('onclick', jsflight.TrackMouse);
-        document.attachEvent('onmousedown', jsflight.TrackMouse);
-        document.attachEvent('onmousemove', jsflight.TrackMouse);
-        document.attachEvent('onmousewheel', jsflight.TrackMouse);
-        document.attachEvent('onscroll', jsflight.TrackMouse);
-        document.attachEvent('onkeypress', jsflight.TrackKeyboard);
-        document.attachEvent('onkeyup', jsflight.TrackKeyboard);
-        document.attachEvent('onkeydown', jsflight.TrackKeyboard);
-        document.attachEvent('onpaste', jsflight.TrackKeyboard);
-        window.attachEvent('onhashchange', jsflight.TrackHash);
-    }
-    if (typeof (window.sessionStorage) == "undefined") {
+    jsflight.bindAllHandlers();
+
+    if (!window.sessionStorage) {
         console.log('No support of window.sessionStorage');
         return false;
     }
@@ -67,27 +171,8 @@ jsflight.startRecorder = function() {
  */
 jsflight.stopRecorder = function() {
     jsflight.stopTimers();
-    if (document.removeEventListener) {
-        document.removeEventListener('click', jsflight.TrackMouse);
-        document.removeEventListener('mousedown', jsflight.TrackMouse);
-        document.removeEventListener('mousemove', jsflight.TrackMouse);
-        document.removeEventListener('mousewheel', jsflight.TrackMouse);
-        document.removeEventListener('scroll', jsflight.TrackMouse);
-        document.removeEventListener('keypress', jsflight.TrackKeyboard);
-        document.removeEventListener('keyup', jsflight.TrackKeyboard);
-        document.removeEventListener('keydown', jsflight.TrackKeyboard);
-        window.removeEventListener('hashchange', jsflight.TrackHash);
-    } else {
-        document.detachEvent('click', jsflight.TrackMouse);
-        document.detachEvent('mousedown', jsflight.TrackMouse);
-        document.detachEvent('mousemove', jsflight.TrackMouse);
-        document.detachEvent('mousewheel', jsflight.TrackMouse);
-        document.detachEvent('scroll', jsflight.TrackMouse);
-        document.detachEvent('keypress', jsflight.TrackKeyboard);
-        document.detachEvent('keyup', jsflight.TrackKeyboard);
-        document.detachEvent('keydown', jsflight.TrackKeyboard);
-        window.detachEvent('hashchange', jsflight.TrackHash);
-    }
+
+    jsflight.unbindAllHandlers();
 
     if (typeof (window.sessionStorage) == "undefined") {
         console.log('No support of window.sessionStorage');
@@ -120,7 +205,7 @@ jsflight.shouldStartOnLoad = function() {
         return false;
     }
 
-    return !!window.sessionStorage.getItem('recorder.active');
+    return Boolean(window.sessionStorage.getItem('recorder.active'));
 };
 
 /**
@@ -236,3 +321,21 @@ jsflight.stop_recording_timer = function() {
 jsflight.send_data_timer = function() {
     jsflight.sendEventData(false);
 };
+
+(function (window, document) {
+    var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+    var eventListenerSupported = window.addEventListener;
+
+    if (MutationObserver) {
+        window.obs = new MutationObserver(function (mutations, observer) {
+            jsflight.rebindAllHandlers();
+        });
+
+        window.obs.observe(document, {childList:true, subtree:true});
+    }
+    else if (eventListenerSupported) {
+        document.addEventListener('DOMNodeInserted', function (event) {
+            jsflight.rebindAllHandlers();
+        }, false);
+    }
+})(window, document);

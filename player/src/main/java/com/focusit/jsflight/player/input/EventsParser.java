@@ -3,6 +3,8 @@ package com.focusit.jsflight.player.input;
 import com.focusit.jsflight.player.constants.EventConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,6 +19,8 @@ import java.util.stream.Collectors;
  */
 public class EventsParser
 {
+    private static final Logger LOG = LoggerFactory.getLogger(EventsParser.class);
+
     public static List<JSONObject> parse(List<String> jsonEncodedListsOfEvents)
     {
         return jsonEncodedListsOfEvents
@@ -34,13 +38,17 @@ public class EventsParser
             return null;
         }
         List<JSONObject> events = new ArrayList<>();
+        LOG.info("Start parsing line");
         JSONArray rawEvents = new JSONArray(jsonEncodedListOfEvents);
         rawEvents.iterator().forEachRemaining(event -> {
             if (!event.toString().contains(EventConstants.FLIGHT_CP))
             {
-                events.add(new JSONObject(event));
+                events.add(new JSONObject((String)event));
+                LOG.info("Add {} event", events.size());
             }
         });
+
+        LOG.info("Parsing line is done");
 
         Collections.sort(events, EventsParser::sortEvents);
         return events;

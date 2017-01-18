@@ -1,21 +1,20 @@
 package com.focusit.jsflight.player.cli.config;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.beust.jcommander.IParameterValidator;
 import com.beust.jcommander.IStringConverter;
 import com.beust.jcommander.ParameterException;
-import com.beust.jcommander.validators.PositiveInteger;
 import com.focusit.jsflight.player.constants.BrowserType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 
 public class PropertiesConfig implements IConfig
 {
@@ -27,16 +26,20 @@ public class PropertiesConfig implements IConfig
             throw new ParameterException("Parameter '" + name + "' is null");
         }
     };
-    private static final PositiveInteger POSITIVE_INTEGER = new PositiveInteger();
-    private static final IParameterValidator POSITIVE_LONG = (name, value) -> {
-        try
+    private static final IParameterValidator ZERO = (name, value) -> {
+        if (value != null && Integer.valueOf(value) != 0)
         {
-            if (value == null || Long.valueOf(value) <= 0)
-            {
-                throw new Exception();
-            }
+            throw new ParameterException("Parameter '" + name + "' must be a zero");
         }
-        catch (Exception ignored)
+    };
+    private static final IParameterValidator POSITIVE_INTEGER = (name, value) -> {
+        if (value != null && Integer.valueOf(value) <= 0)
+        {
+            throw new ParameterException("Parameter '" + name + "' must be a valid positive integer");
+        }
+    };
+    private static final IParameterValidator POSITIVE_LONG = (name, value) -> {
+        if (value != null && Long.valueOf(value) <= 0)
         {
             throw new ParameterException("Parameter '" + name + "' must be a valid positive long");
         }
@@ -60,6 +63,40 @@ public class PropertiesConfig implements IConfig
         {
             LOG.error(e.getMessage(), e);
         }
+    }
+
+    private IParameterValidator or(IParameterValidator... validators)
+    {
+        return (name, value) -> {
+            boolean isValid = false;
+            List<ParameterException> exceptions = new ArrayList<>();
+            for (int i = 0; i < validators.length && !isValid; i++)
+            {
+                try
+                {
+                    validators[i].validate(name, value);
+                    isValid = true;
+                }
+                catch (ParameterException e)
+                {
+                    exceptions.add(e);
+                }
+            }
+
+            if (!isValid)
+            {
+                StringBuilder exceptionMessage = new StringBuilder();
+                for (ParameterException exception : exceptions)
+                {
+                    if (exceptionMessage.length() != 0)
+                    {
+                        exceptionMessage.append(" or ");
+                    }
+                    exceptionMessage.append(exception.getMessage());
+                }
+                throw new ParameterException(exceptionMessage.toString());
+            }
+        };
     }
 
     private String getProperty(String name)
@@ -204,13 +241,15 @@ public class PropertiesConfig implements IConfig
     @Override
     public Integer getStartStep()
     {
-        return getProperty(PropertiesConstants.START_STEP, DefaultValues.START_STEP, POSITIVE_INTEGER, Integer::new);
+        return getProperty(PropertiesConstants.START_STEP, DefaultValues.START_STEP, or(ZERO, POSITIVE_INTEGER),
+                Integer::new);
     }
 
     @Override
     public Integer getFinishStep()
     {
-        return getProperty(PropertiesConstants.FINISH_STEP, DefaultValues.FINISH_STEP, POSITIVE_INTEGER, Integer::new);
+        return getProperty(PropertiesConstants.FINISH_STEP, DefaultValues.FINISH_STEP, or(ZERO, POSITIVE_INTEGER),
+                Integer::new);
     }
 
     @Override
@@ -236,13 +275,14 @@ public class PropertiesConfig implements IConfig
     public Integer getAsyncRequestsCompletedTimeoutInSeconds()
     {
         return getProperty(PropertiesConstants.ASYNC_REQUESTS_COMPLETED_TIMEOUT_IN_SECONDS,
-                DefaultValues.ASYNC_REQUESTS_COMPLETED_TIMEOUT_IN_SECONDS, Integer::new);
+                DefaultValues.ASYNC_REQUESTS_COMPLETED_TIMEOUT_IN_SECONDS, POSITIVE_INTEGER, Integer::new);
     }
 
     @Override
     public Integer getUiShownTimeoutInSeconds()
     {
-        return getProperty(PropertiesConstants.UI_SHOWN_TIMEOUT, DefaultValues.UI_SHOWN_TIMEOUT, Integer::new);
+        return getProperty(PropertiesConstants.UI_SHOWN_TIMEOUT, DefaultValues.UI_SHOWN_TIMEOUT, POSITIVE_INTEGER,
+                Integer::new);
     }
 
     @Override
@@ -266,14 +306,14 @@ public class PropertiesConfig implements IConfig
 
     public Integer getXvfbDisplayLowerBound()
     {
-        return getProperty(PropertiesConstants.XVFB_LOWER_BOUND, DefaultValues.XVFB_ZERO_DISPLAY, POSITIVE_INTEGER,
-                Integer::new);
+        return getProperty(PropertiesConstants.XVFB_LOWER_BOUND, DefaultValues.XVFB_ZERO_DISPLAY,
+                or(ZERO, POSITIVE_INTEGER), Integer::new);
     }
 
     public Integer getXvfbDisplayUpperBound()
     {
-        return getProperty(PropertiesConstants.XVFB_UPPER_BOUND, DefaultValues.XVFB_ZERO_DISPLAY, POSITIVE_INTEGER,
-                Integer::new);
+        return getProperty(PropertiesConstants.XVFB_UPPER_BOUND, DefaultValues.XVFB_ZERO_DISPLAY,
+                or(ZERO, POSITIVE_INTEGER), Integer::new);
     }
 
     @Override
