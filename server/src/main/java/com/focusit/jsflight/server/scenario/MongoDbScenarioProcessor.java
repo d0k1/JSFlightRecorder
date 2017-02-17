@@ -28,6 +28,7 @@ public class MongoDbScenarioProcessor extends ScenarioProcessor
 
     public MongoDbScenarioProcessor(MongoDbStorageService screenshotsService)
     {
+        super(context);
         this.screenshotsService = screenshotsService;
     }
 

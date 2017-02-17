@@ -1,14 +1,14 @@
 package com.focusit.jsflight.player.script;
 
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.annotation.Nullable;
-
+import com.focusit.jsflight.player.constants.EventConstants;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.script.ScriptEngine;
+import com.focusit.jsflight.script.constants.ScriptBindingConstants;
+import com.focusit.jsflight.script.player.PlayerContext;
+import groovy.lang.Binding;
+import groovy.lang.GroovyClassLoader;
+import groovy.lang.Script;
+import groovy.text.GStringTemplateEngine;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
@@ -28,6 +28,13 @@ import groovy.lang.Binding;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.Script;
 import groovy.text.GStringTemplateEngine;
+import javax.annotation.Nullable;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * PlayerScriptProcessor that runs groovy scripts or GString templates
@@ -46,11 +53,11 @@ public class PlayerScriptProcessor
         Velocity.init();
     }
 
-    private UserScenario scenario;
+    private PlayerContext context;
 
-    public PlayerScriptProcessor(UserScenario scenario)
+    public PlayerScriptProcessor(PlayerContext context)
     {
-        this.scenario = scenario;
+        this.context = context;
     }
 
     public static Map<String, Object> getEmptyBindingsMap()
@@ -73,7 +80,7 @@ public class PlayerScriptProcessor
      * @param event
      * @return return new target url based on script's execution results
      */
-    public String executeUrlReplacementScript(String script, JSONObject event)
+    public String executeUrlReplacementScript(String script, JSONObject event, UserScenario scenario)
     {
         Map<String, Object> binding = getEmptyBindingsMap();
         binding.put(ScriptBindingConstants.EVENT, event);
@@ -143,7 +150,7 @@ public class PlayerScriptProcessor
         }
     }
 
-    public void runStepPrePostScript(JSONObject event, int step, boolean pre)
+    public void runStepPrePostScript(JSONObject event, int step, boolean pre, UserScenario scenario)
     {
         String filedName = pre ? EventConstants.PRE : EventConstants.POST;
         String script = event.has(filedName) ? event.getString(filedName) : "";
@@ -170,15 +177,14 @@ public class PlayerScriptProcessor
 
     public JSONObject runStepTemplating(UserScenario scenario, JSONObject step)
     {
-        VelocityContext ctx = new VelocityContext(scenario.getContext().asMap());
+        VelocityContext ctx = new VelocityContext(context.asMap());
 
-        JSONObject result = step;
-        result.keySet().forEach(key -> {
-            if (result.get(key) instanceof String && result.getString(key).contains("$"))
+        step.keySet().forEach(key -> {
+            if (step.get(key) instanceof String && step.getString(key).contains("$"))
             {
                 try
                 {
-                    String source = result.getString(key);
+                    String source = step.getString(key);
                     source = source.replace("#", "#[[#]]#");
 
                     StringWriter writer = new StringWriter();
@@ -186,7 +192,7 @@ public class PlayerScriptProcessor
                     Velocity.evaluate(ctx, writer, id, source);
 
                     String parsed = writer.toString();
-                    result.put(key, parsed);
+                    step.put(key, parsed);
                 }
                 catch (Exception e)
                 {
@@ -194,7 +200,7 @@ public class PlayerScriptProcessor
                 }
             }
         });
-        return result;
+        return step;
     }
 
     /**
@@ -257,10 +263,10 @@ public class PlayerScriptProcessor
     {
         binding.setVariable(ScriptBindingConstants.LOGGER, LOG);
         binding.setVariable(ScriptBindingConstants.CLASSLOADER, ScriptEngine.getClassLoader());
-        binding.setVariable(ScriptBindingConstants.PLAYER_CONTEXT, scenario.getContext());
+        binding.setVariable(ScriptBindingConstants.PLAYER_CONTEXT, context);
     }
 
-    public void doWaitAfterEvent(SeleniumDriver seleniumDriver, WebDriver theWebDriver, JSONObject event)
+    public void doWaitAfterEvent(SeleniumDriver seleniumDriver, WebDriver theWebDriver, JSONObject event, UserScenario scenario)
     {
         Map<String, Object> binding = PlayerScriptProcessor.getEmptyBindingsMap();
         binding.put("seleniumDriver", seleniumDriver);

@@ -9,7 +9,6 @@ import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.input.EventsParser;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
-import com.focusit.jsflight.script.player.PlayerContext;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -40,7 +39,6 @@ public class UserScenario
     private volatile int position = 0;
     private List<JSONObject> events = new ArrayList<>();
     private String preProcessScenarioScript;
-    private PlayerContext context = new PlayerContext();
     private Configuration configuration = new Configuration();
 
     public static String getTagForEvent(JSONObject event)
@@ -156,11 +154,6 @@ public class UserScenario
         this.configuration = configuration;
     }
 
-    public PlayerContext getContext()
-    {
-        return context;
-    }
-
     public int getPosition()
     {
         return position;
@@ -221,7 +214,7 @@ public class UserScenario
     {
         JSONObject prev = getPrevEvent(event);
 
-        return prev != null && new PlayerScriptProcessor(this).executeDuplicateHandlerScript(script, event, prev);
+        return prev != null && new PlayerScriptProcessor().executeDuplicateHandlerScript(script, event, prev);
 
     }
 
@@ -234,7 +227,6 @@ public class UserScenario
     {
         events.clear();
         events.addAll(EventsParser.parse(FileInput.getContent(filename)));
-        context.reset();
     }
 
     public void parseNextLine(String filename) throws IOException
@@ -257,7 +249,7 @@ public class UserScenario
     {
         if (!StringUtils.isBlank(preProcessScenarioScript))
         {
-            new PlayerScriptProcessor(this).preProcessScenario(preProcessScenarioScript, events);
+            new PlayerScriptProcessor().preProcessScenario(preProcessScenarioScript, events);
         }
     }
 
@@ -268,13 +260,12 @@ public class UserScenario
 
     public void rewind()
     {
-        context.reset();
         setPosition(0);
     }
 
     public void runPostProcessor(String script)
     {
-        PlayerScriptProcessor engine = new PlayerScriptProcessor(this);
+        PlayerScriptProcessor engine = new PlayerScriptProcessor();
         engine.testPostProcess(script, events);
     }
 

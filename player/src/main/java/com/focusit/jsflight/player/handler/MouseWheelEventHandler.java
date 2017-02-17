@@ -13,9 +13,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by Gallyam Biktashev on 16.02.17.
  */
-public class MouseEventHandler implements BaseEventHandler
+public class MouseWheelEventHandler extends BaseEventHandler
 {
-    private static final Logger LOG = LoggerFactory.getLogger(MouseEventHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MouseWheelEventHandler.class);
 
     @Override
     public void handleEvent(WebDriver webDriver, JSONObject event)
@@ -23,7 +23,7 @@ public class MouseEventHandler implements BaseEventHandler
 
         if (!event.has(EventConstants.DELTA_Y))
         {
-            LOG.error("event has no deltaY - cant process scroll", new Exception());
+            LOG.error("event hasn't deltaY - can't process scroll", new Exception());
             return;
         }
         String target = UserScenario.getTargetForEvent(event);

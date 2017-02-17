@@ -4,6 +4,7 @@ import com.beust.jcommander.IParameterValidator;
 import com.beust.jcommander.IStringConverter;
 import com.beust.jcommander.ParameterException;
 import com.focusit.jsflight.player.constants.BrowserType;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,7 +89,7 @@ public class PropertiesConfig implements IConfig
                 StringBuilder exceptionMessage = new StringBuilder();
                 for (ParameterException exception : exceptions)
                 {
-                    if (exceptionMessage.length() != 0)
+                    if (!StringUtils.isBlank(exceptionMessage))
                     {
                         exceptionMessage.append(" or ");
                     }

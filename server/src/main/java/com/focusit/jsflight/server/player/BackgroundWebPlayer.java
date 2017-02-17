@@ -153,7 +153,7 @@ public class BackgroundWebPlayer
         experimentLastUrls.put(experimentId, lastUrls);
 
         SeleniumDriver driver = experimentDriver.getOrDefault(experimentId,
-                new SeleniumDriver(scenario, config.getXvfbDisplayLowerBound(), config.getXvfbDisplayUpperBound()))
+                new SeleniumDriver(scenario, context, config.getXvfbDisplayLowerBound(), config.getXvfbDisplayUpperBound()))
                 .setLastUrls(lastUrls);
         experimentDriver.put(experimentId, driver);
 

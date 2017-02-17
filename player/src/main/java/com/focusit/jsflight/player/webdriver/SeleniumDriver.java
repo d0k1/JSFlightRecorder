@@ -7,6 +7,7 @@ import com.focusit.jsflight.player.iframe.FrameSwitcher;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.jsflight.script.constants.ScriptBindingConstants;
+import com.focusit.jsflight.script.player.PlayerContext;
 import com.google.common.base.Predicate;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -95,15 +96,17 @@ public class SeleniumDriver
 
     private String selectXpath;
     private String keepBrowserXpath;
+    private PlayerContext context;
 
-    public SeleniumDriver(UserScenario scenario)
+    public SeleniumDriver(UserScenario scenario, PlayerContext context)
     {
-        this(scenario, 0, -1);
+        this(scenario, context, 0, -1);
     }
 
-    public SeleniumDriver(UserScenario scenario, Integer xvfbDisplayLowerBound, Integer xvfbDisplayUpperBound)
+    public SeleniumDriver(UserScenario scenario, PlayerContext context, Integer xvfbDisplayLowerBound, Integer xvfbDisplayUpperBound)
     {
         this.scenario = scenario;
+        this.context = context;
         availableDisplays = new HashMap<>(xvfbDisplayUpperBound - xvfbDisplayLowerBound + 1);
 
         for (int i = xvfbDisplayLowerBound; i <= xvfbDisplayUpperBound; i++)
@@ -203,7 +206,7 @@ public class SeleniumDriver
 
     public void closeWebDrivers()
     {
-        PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
+        PlayerScriptProcessor processor = new PlayerScriptProcessor(context);
         tabUuidDrivers.values().forEach(driver -> {
             String pid = getFirefoxPid(driver);
             processor.executeProcessSignalScript(sendSignalToProcessScript, PROCESS_SIGNAL_CONT, pid);
@@ -217,7 +220,7 @@ public class SeleniumDriver
         binding.put(ScriptBindingConstants.WEB_DRIVER, wd);
         binding.put(ScriptBindingConstants.TARGET, target);
         binding.put(ScriptBindingConstants.EVENT, event);
-        WebElement webElement = new PlayerScriptProcessor(scenario).executeGroovyScript(elementLookupScript, binding,
+        WebElement webElement = new PlayerScriptProcessor(context).executeGroovyScript(elementLookupScript, binding,
                 WebElement.class);
         if (webElement == null)
         {
@@ -519,7 +522,7 @@ public class SeleniumDriver
             return;
         }
         ensureElementInWindow(wd, element);
-        boolean isSelect = new PlayerScriptProcessor(scenario).executeSelectDeterminerScript(isSelectElementScript, wd,
+        boolean isSelect = new PlayerScriptProcessor(context).executeSelectDeterminerScript(isSelectElementScript, wd,
                 element);
         click(wd, event, element);
         if (isSelect)
@@ -650,7 +653,7 @@ public class SeleniumDriver
             availableDisplays.put(display, availableDisplays.get(display) - 1);
             LOG.info("Display {} is used {} times now", display, availableDisplays.get(display));
         }
-        PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
+        PlayerScriptProcessor processor = new PlayerScriptProcessor(context);
         String firefoxPid = getFirefoxPid(driver);
         processor.executeProcessSignalScript(sendSignalToProcessScript, PROCESS_SIGNAL_CONT, firefoxPid);
 
@@ -669,7 +672,7 @@ public class SeleniumDriver
 
     private String getFirefoxPid(WebDriver driver)
     {
-        PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
+        PlayerScriptProcessor processor = new PlayerScriptProcessor(context);
         Map<String, Object> binding = PlayerScriptProcessor.getEmptyBindingsMap();
         binding.put(ScriptBindingConstants.WEB_DRIVER, getSeleniumDriver(driver));
         return processor.executeGroovyScript(getWebDriverPidScript, binding, String.class);
@@ -792,14 +795,14 @@ public class SeleniumDriver
         //TODO remove this when recording of cursor in text box is implemented
         Map<String, Object> bindings = PlayerScriptProcessor.getEmptyBindingsMap();
         bindings.put(ScriptBindingConstants.ELEMENT, element);
-        return new PlayerScriptProcessor(scenario).executeGroovyScript(skipKeyboardScript, bindings, Boolean.class);
+        return new PlayerScriptProcessor(context).executeGroovyScript(skipKeyboardScript, bindings, Boolean.class);
     }
 
     private WebElement getMax(WebDriver wd, String script)
     {
         Map<String, Object> binding = PlayerScriptProcessor.getEmptyBindingsMap();
         binding.put(ScriptBindingConstants.WEB_DRIVER, wd);
-        return new PlayerScriptProcessor(scenario).executeGroovyScript(script, binding, WebElement.class);
+        return new PlayerScriptProcessor(context).executeGroovyScript(script, binding, WebElement.class);
     }
 
     private void resizeForEvent(WebDriver wd, JSONObject event)
@@ -841,8 +844,8 @@ public class SeleniumDriver
                             {
                                 Map<String, Object> binding = PlayerScriptProcessor.getEmptyBindingsMap();
                                 binding.put(ScriptBindingConstants.WEB_DRIVER, driver);
-                                return new PlayerScriptProcessor(scenario).executeGroovyScript(isUiShownScript, binding,
-                                        Boolean.class);
+                                return new PlayerScriptProcessor(context).executeGroovyScript(isUiShownScript,
+                                        binding, Boolean.class);
                             }
                             catch (WebDriverException e)
                             {
@@ -860,14 +863,15 @@ public class SeleniumDriver
 
     private void awakenAllDrivers()
     {
-        PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
-        tabUuidDrivers.values().forEach(driver -> processor.executeProcessSignalScript(sendSignalToProcessScript,
-                PROCESS_SIGNAL_CONT, getFirefoxPid(driver)));
+        PlayerScriptProcessor processor = new PlayerScriptProcessor(context);
+        tabUuidDrivers.values().forEach(
+                driver -> processor.executeProcessSignalScript(sendSignalToProcessScript, PROCESS_SIGNAL_CONT,
+                        getFirefoxPid(driver)));
     }
 
     private void prioritize(WebDriver wd)
     {
-        PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
+        PlayerScriptProcessor processor = new PlayerScriptProcessor(context);
         String firefoxPid = getFirefoxPid(wd);
         processor.executeProcessSignalScript(sendSignalToProcessScript, PROCESS_SIGNAL_CONT, firefoxPid);
         LOG.info("Prioritizing driver with pid: {}", firefoxPid);

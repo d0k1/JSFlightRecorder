@@ -260,7 +260,7 @@ public class MainFrame
     protected void playTheScenario()
     {
         saveControlersOptions();
-        new ScenarioProcessor().play(scenario, seleniumDriver);
+        new ScenarioProcessor(context).play(scenario, seleniumDriver);
         model.fireTableDataChanged();
     }
 
@@ -587,7 +587,7 @@ public class MainFrame
             @Override
             public void mouseClicked(MouseEvent e)
             {
-                new ScenarioProcessor().applyStep(scenario, seleniumDriver, scenario.getPosition());
+                new ScenarioProcessor(context).applyStep(scenario, seleniumDriver, scenario.getPosition());
                 scenario.moveToNextStep();
                 model.fireTableDataChanged();
             }
@@ -616,7 +616,7 @@ public class MainFrame
             @Override
             public void mouseClicked(MouseEvent e)
             {
-                new ScenarioProcessor().applyStep(scenario, seleniumDriver, table.getSelectedRow());
+                new ScenarioProcessor(context).applyStep(scenario, seleniumDriver, table.getSelectedRow());
             }
         });
         btnParse.addMouseListener(new MouseAdapter()

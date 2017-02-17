@@ -7,6 +7,7 @@ import com.focusit.jsflight.player.scenario.ScenarioProcessor;
 import com.focusit.jsflight.player.scenario.UserScenario;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 import com.focusit.jsflight.script.ScriptEngine;
+import com.focusit.jsflight.script.player.PlayerContext;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,8 @@ public class CliPlayer
         LOG.info("Loading recording from {}", config.getPathToRecordingFile());
         scenario.parse(config.getPathToRecordingFile());
         scenario.preProcessScenario();
-        SeleniumDriver seleniumDriver = new SeleniumDriver(scenario, config.getXvfbDisplayLowerBound(),
+        PlayerContext context = new PlayerContext();
+        SeleniumDriver seleniumDriver = new SeleniumDriver(scenario, context, config.getXvfbDisplayLowerBound(),
                 config.getXvfbDisplayUpperBound());
         try
         {
@@ -58,7 +60,7 @@ public class CliPlayer
                 jmeter.startRecording();
                 try
                 {
-                    new ScenarioProcessor().play(scenario, seleniumDriver, config.getStartStep(),
+                    new ScenarioProcessor(context).play(scenario, seleniumDriver, config.getStartStep(),
                             config.getFinishStep());
                 }
                 finally
@@ -70,7 +72,7 @@ public class CliPlayer
             }
             else
             {
-                new ScenarioProcessor().play(scenario, seleniumDriver, config.getStartStep(), config.getFinishStep());
+                new ScenarioProcessor(context).play(scenario, seleniumDriver, config.getStartStep(), config.getFinishStep());
             }
         }
         finally
