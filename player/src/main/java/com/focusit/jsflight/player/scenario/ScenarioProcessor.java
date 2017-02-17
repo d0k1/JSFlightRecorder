@@ -1,24 +1,24 @@
 package com.focusit.jsflight.player.scenario;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.Map;
-
-import org.json.JSONObject;
-import org.openqa.selenium.WebDriver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.focusit.jsflight.player.configurations.CommonConfiguration;
 import com.focusit.jsflight.player.configurations.ScriptsConfiguration;
 import com.focusit.jsflight.player.constants.BrowserType;
 import com.focusit.jsflight.player.constants.EventConstants;
 import com.focusit.jsflight.player.constants.EventType;
+import com.focusit.jsflight.player.iframe.FrameSwitcher;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
 import com.focusit.jsflight.script.constants.ScriptBindingConstants;
+import org.json.JSONObject;
+import org.openqa.selenium.WebDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.Map;
 
 /**
  * Class that really replays an event in given scenario and given selenium driver
@@ -47,7 +47,7 @@ public class ScenarioProcessor
      * @param wd
      * @throws Exception
      */
-    protected void hasBrowserAnError(UserScenario scenario, WebDriver wd) throws Exception
+    protected void throwIfBrowserHaveAnError(UserScenario scenario, WebDriver wd) throws Exception
     {
         String findBrowserErrorScript = scenario.getConfiguration().getScriptsConfiguration()
                 .getIsBrowserHaveErrorScript();
@@ -211,7 +211,7 @@ public class ScenarioProcessor
 
             seleniumDriver.waitWhileAsyncRequestsWillCompletedWithRefresh(theWebDriver, event);
 
-            SeleniumDriver.switchToWorkingFrame(theWebDriver, event);
+            FrameSwitcher.switchToWorkingFrame(theWebDriver, event);
 
             try
             {
@@ -221,31 +221,27 @@ public class ScenarioProcessor
                 {
                 case EventType.MOUSE_WHEEL:
                     seleniumDriver.processMouseWheel(theWebDriver, event, target);
-                    seleniumDriver.waitWhileAsyncRequestsWillCompletedWithRefresh(theWebDriver, event);
                     break;
                 case EventType.SCROLL_EMULATION:
                     seleniumDriver.processScroll(theWebDriver, event, target);
-                    seleniumDriver.waitWhileAsyncRequestsWillCompletedWithRefresh(theWebDriver, event);
                     break;
                 case EventType.MOUSE_DOWN:
                 case EventType.CLICK:
                     seleniumDriver.processMouseEvent(theWebDriver, event);
-                    seleniumDriver.waitWhileAsyncRequestsWillCompletedWithRefresh(theWebDriver, event);
                     break;
                 case EventType.KEY_UP:
                 case EventType.KEY_DOWN:
                     seleniumDriver.processKeyDownKeyUpEvents(theWebDriver, event);
-                    seleniumDriver.waitWhileAsyncRequestsWillCompletedWithRefresh(theWebDriver, event);
                     break;
                 case EventType.KEY_PRESS:
                     seleniumDriver.processKeyPressEvent(theWebDriver, event);
-                    seleniumDriver.waitWhileAsyncRequestsWillCompletedWithRefresh(theWebDriver, event);
                     break;
                 default:
                     break;
                 }
 
-                hasBrowserAnError(scenario, theWebDriver);
+                seleniumDriver.waitWhileAsyncRequestsWillCompletedWithRefresh(theWebDriver, event);
+                throwIfBrowserHaveAnError(scenario, theWebDriver);
             }
             catch (Exception e)
             {

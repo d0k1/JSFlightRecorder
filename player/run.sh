@@ -1,1 +1,0 @@
-java -Dcp=../external/player/liba -cp target/player-3.8.jar:target/player-3.8-jar-with-dependencies.jar Player

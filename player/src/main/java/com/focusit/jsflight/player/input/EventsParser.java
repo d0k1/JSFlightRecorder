@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,7 +49,7 @@ public class EventsParser
 
         LOG.info("Parsing line is done");
 
-        Collections.sort(events, EventsParser::sortEvents);
+        events.sort(EventsParser::sortEvents);
         return events;
     }
 

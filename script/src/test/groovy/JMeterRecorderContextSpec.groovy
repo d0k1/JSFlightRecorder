@@ -5,7 +5,7 @@ import spock.lang.Specification
  * Created by dkirpichenkov on 06.05.16.
  */
 
-public class JMeterRecorderContextJMeterRecorderContextSpec extends Specification {
+class JMeterRecorderContextSpec extends Specification {
     public static final String PROPERTY = "property"
     String VALUE = "userObject\$123";
     String UDV = "userObject.123";

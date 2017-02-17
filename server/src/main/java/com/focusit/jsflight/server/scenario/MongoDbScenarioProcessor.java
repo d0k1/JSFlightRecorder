@@ -32,11 +32,11 @@ public class MongoDbScenarioProcessor extends ScenarioProcessor
     }
 
     @Override
-    protected void hasBrowserAnError(UserScenario scenario, WebDriver wd) throws Exception
+    protected void throwIfBrowserHaveAnError(UserScenario scenario, WebDriver wd) throws Exception
     {
         try
         {
-            super.hasBrowserAnError(scenario, wd);
+            super.throwIfBrowserHaveAnError(scenario, wd);
         }
         catch (IllegalStateException e)
         {

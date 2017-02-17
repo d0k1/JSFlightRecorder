@@ -1,24 +1,21 @@
-package player
+package com.focusit.player.specs
 
 import com.focusit.jsflight.player.scenario.UserScenario
 import com.focusit.jsflight.player.script.PlayerScriptProcessor
 import com.focusit.jsflight.script.ScriptEngine
 import org.bson.types.ObjectId
 import org.json.JSONObject
-import spock.lang.Specification
-
-
 /**
  * Created by doki on 03.02.17.
  */
-class PlayerScriptProcessorSpec extends Specification {
+class PlayerScriptProcessorSpec extends BaseSpec {
     UserScenario scenario;
     PlayerScriptProcessor proc;
 
     def setup() {
         ScriptEngine.init(ClassLoader.getSystemClassLoader())
-        proc = new PlayerScriptProcessor();
         scenario = new UserScenario();
+        proc = new PlayerScriptProcessor(scenario);
     }
 
     def "every step field could be evaluated by template engine"() {

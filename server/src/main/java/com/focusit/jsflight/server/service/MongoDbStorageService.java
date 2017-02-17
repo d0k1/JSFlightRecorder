@@ -39,9 +39,8 @@ public class MongoDbStorageService
         metaData.put("recordingName", scenario.getRecordingName());
         metaData.put("recordingId", scenario.getRecordingId());
         metaData.put("experimentId", scenario.getExperimentId());
-        String filename = error
-                ? createErrorImageName(scenario.getRecordingName(), scenario.getExperimentId(), position)
-                : createImageName(scenario.getRecordingName(), scenario.getExperimentId(), position);
+        String filename = error ? createErrorImageName(scenario.getRecordingName(), scenario.getExperimentId(),
+                position) : createImageName(scenario.getRecordingName(), scenario.getExperimentId(), position);
 
         getGridFsTemplate().store(stream, filename, "image/png", metaData);
     }
@@ -56,6 +55,13 @@ public class MongoDbStorageService
         return getStreamByFilename(createErrorImageName(recordingName, experimentId, step));
     }
 
+    public void deleteScreenshots(String recordingName, String experimentId)
+    {
+        getGridFsTemplate().delete(
+                new Query().addCriteria(Criteria.where("metadata.recordingName").is(recordingName)).addCriteria(
+                        Criteria.where("metadata.experimentId").is(experimentId)));
+    }
+
     @Nullable
     private InputStream getStreamByFilename(String fname)
     {
@@ -67,10 +73,8 @@ public class MongoDbStorageService
     public int getCountOfJMeterScenarios(String recordingName, String experimentId)
     {
         return getGridFsTemplate().find(
-                new Query()
-                        .addCriteria(Criteria.where("metadata.recordingName").is(recordingName))
-                        .addCriteria(Criteria.where("metadata.experimentId").is(experimentId))
-        ).size();
+                new Query().addCriteria(Criteria.where("metadata.recordingName").is(recordingName)).addCriteria(
+                        Criteria.where("metadata.experimentId").is(experimentId))).size();
     }
 
     public void storeJMeterScenario(MongoDbScenario scenario, InputStream stream, int index)
@@ -90,14 +94,14 @@ public class MongoDbStorageService
         return getStreamByFilename(createJmxName(recordingName, experimentId, index));
     }
 
-    private String createJmxName(String recordingName, String experimentId, int index) {
+    private String createJmxName(String recordingName, String experimentId, int index)
+    {
         return recordingName + '_' + experimentId + '_' + index + ".jmx";
     }
 
     private String createImageName(String recordingName, String experimentId, int position)
     {
-        return String.format("%s_%s_%s.png", recordingName, experimentId,
-                String.format(POSITION_FORMAT, position));
+        return String.format("%s_%s_%s.png", recordingName, experimentId, String.format(POSITION_FORMAT, position));
     }
 
     private String createErrorImageName(String recordingName, String experimentId, int position)

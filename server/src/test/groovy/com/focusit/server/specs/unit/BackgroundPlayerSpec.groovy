@@ -1,11 +1,10 @@
-package com.focusit.specs.unit
+package com.focusit.server.specs.unit
 
-import spock.lang.Specification
-
+import com.focusit.server.specs.BaseSpec
 /**
  * Created by doki on 18.05.16.
  */
-class BackgroundPlayerSpec extends Specification {
+class BackgroundPlayerSpec extends BaseSpec {
 
     def "playing can be paused at any time"() {
 

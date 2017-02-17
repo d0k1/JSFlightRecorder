@@ -1,19 +1,18 @@
 package com.focusit.jsflight.player.webdriver;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
+import com.focusit.jsflight.player.constants.BrowserType;
+import com.focusit.jsflight.player.constants.EventConstants;
+import com.focusit.jsflight.player.constants.EventType;
+import com.focusit.jsflight.player.iframe.FrameSwitcher;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.player.script.PlayerScriptProcessor;
+import com.focusit.jsflight.script.constants.ScriptBindingConstants;
+import com.google.common.base.Predicate;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.openqa.selenium.*;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
@@ -26,13 +25,11 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.focusit.jsflight.player.constants.BrowserType;
-import com.focusit.jsflight.player.constants.EventConstants;
-import com.focusit.jsflight.player.constants.EventType;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.jsflight.player.script.PlayerScriptProcessor;
-import com.focusit.jsflight.script.constants.ScriptBindingConstants;
-import com.google.common.base.Predicate;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.*;
 
 /**
  * Selenium webdriver proxy: runs a browser, sends events, make screenshots
@@ -112,58 +109,6 @@ public class SeleniumDriver
         for (int i = xvfbDisplayLowerBound; i <= xvfbDisplayUpperBound; i++)
         {
             availableDisplays.put(":" + i, 0);
-        }
-    }
-
-    public static void switchToWorkingFrame(WebDriver theWebDriver, JSONObject event)
-    {
-
-        if (!event.has(EventConstants.IFRAME_XPATHS) && !event.has(EventConstants.IFRAME_INDICES))
-        {
-            LOG.warn("Event with id {} hasn't frame xpath and frame index. Switching to main window",
-                    event.getInt(EventConstants.EVENT_ID));
-            switchToTopWindow(theWebDriver);
-        }
-        else
-        {
-            String frameXpath = event.getString(EventConstants.IFRAME_XPATHS);
-            List<Integer> frameIndices = Arrays.stream(event.getString(EventConstants.IFRAME_INDICES).split("\\."))
-                    .map(Integer::parseInt).collect(Collectors.toList());
-            LOG.info("Switching to frame {}({})", frameIndices, frameXpath);
-            switchToFrame(theWebDriver, frameIndices, frameXpath);
-        }
-
-    }
-
-    public static void switchToTopWindow(WebDriver webDriver)
-    {
-        webDriver.switchTo().window(webDriver.getWindowHandle());
-    }
-
-    public static void switchToFrame(WebDriver theWebDriver, List<Integer> frameIndices, String compositeFrameXpath)
-    {
-        switchToTopWindow(theWebDriver);
-        if (!frameIndices.isEmpty())
-        {
-            LOG.info("Switching to frame by indices");
-            try
-            {
-                for (int i : frameIndices)
-                {
-                    theWebDriver.switchTo().frame(i);
-                }
-                return;
-            }
-            catch (Exception ignored)
-            {
-                LOG.warn("Switching to frame by index was failed");
-            }
-        }
-        LOG.info("Switching to frame by xpaths");
-        for (String frameXpath : Arrays.asList(compositeFrameXpath.split("\\|\\|")))
-        {
-            WebElement frame = theWebDriver.findElement(By.xpath(frameXpath));
-            theWebDriver.switchTo().frame(frame);
         }
     }
 
@@ -304,7 +249,7 @@ public class SeleniumDriver
             if (!availableDisplays.isEmpty())
             {
                 display = availableDisplays.keySet().stream()
-                        .min((one, other) -> availableDisplays.get(one) - availableDisplays.get(other)).get();
+                        .min(Comparator.comparingInt(one -> availableDisplays.get(one))).get();
             }
             if (display == null)
             {
@@ -332,8 +277,7 @@ public class SeleniumDriver
         return driver;
     }
 
-    private FirefoxDriver createFirefoxDriver(String display, String binaryPath,
-            DesiredCapabilities desiredCapabilities)
+    private FirefoxDriver createFirefoxDriver(String display, String binaryPath, DesiredCapabilities desiredCapabilities)
     {
         FirefoxProfile profile = createDefaultFirefoxProfile();
         FirefoxBinary binary = !StringUtils.isBlank(binaryPath) ? new FirefoxBinary(new File(binaryPath))
@@ -405,19 +349,14 @@ public class SeleniumDriver
     {
         try
         {
-            return new WebDriverWait(wd, 20L, 500).until(new ExpectedCondition<WebElement>()
-            {
-                @Override
-                public WebElement apply(WebDriver input)
+            return new WebDriverWait(wd, 20L, 500).until((ExpectedCondition<WebElement>)input -> {
+                try
                 {
-                    try
-                    {
-                        return wd.findElement(By.xpath(xpath));
-                    }
-                    catch (NoSuchElementException e)
-                    {
-                        return null;
-                    }
+                    return wd.findElement(By.xpath(xpath));
+                }
+                catch (NoSuchElementException e)
+                {
+                    return null;
                 }
             });
         }
@@ -447,7 +386,7 @@ public class SeleniumDriver
             throw new IllegalStateException("Keypress event don't have a char");
         }
 
-        String keys = null;
+        String keys;
 
         if (event.has(EventConstants.CHAR))
         {
@@ -496,9 +435,9 @@ public class SeleniumDriver
             return;
         }
 
-        if (!event.has(EventConstants.KEY_CODE))
+        if (!event.has(EventConstants.KEY_CODE) && !event.has(EventConstants.CHAR_CODE))
         {
-            throw new IllegalStateException("Keydown/Keyup event don't have keyCode property");
+            throw new IllegalStateException("Keydown/Keyup event don't have keyCode/charCode property");
         }
 
         Actions actions = new Actions(wd);
@@ -510,7 +449,13 @@ public class SeleniumDriver
             }
         });
 
-        switch (event.getBigInteger(EventConstants.KEY_CODE).intValue())
+        // Backward compatibility
+        int code = event.getInt(EventConstants.CHAR_CODE);
+        if (code == 0)
+        {
+            code = event.getInt(EventConstants.KEY_CODE);
+        }
+        switch (code)
         {
         case 8:
             actions.sendKeys(element, Keys.BACK_SPACE);
@@ -640,8 +585,8 @@ public class SeleniumDriver
         //Web lookup script MUST return //html element if scroll occurs not in a popup
         if (!el.getTagName().equalsIgnoreCase("html"))
         {
-            ((JavascriptExecutor)wd).executeScript("arguments[0].scrollTop = arguments[0].scrollTop + arguments[1]", el,
-                    event.getInt(EventConstants.DELTA_Y));
+            ((JavascriptExecutor)wd).executeScript("arguments[0].scrollTop = arguments[0].scrollTop + arguments[1]",
+                    el, event.getInt(EventConstants.DELTA_Y));
         }
         else
         {
@@ -680,7 +625,7 @@ public class SeleniumDriver
 
     public void releaseBrowser(WebDriver driver, JSONObject event)
     {
-        driver.switchTo().defaultContent();
+        FrameSwitcher.switchToTopWindow(driver);
         if (shouldKeepBrowser(driver))
         {
             LOG.info("Keep browser xpath matches some element, or it wasn't specified");
@@ -793,9 +738,9 @@ public class SeleniumDriver
         }
         catch (TimeoutException e)
         {
-            throw new IllegalStateException(
-                    String.format("Async requests was not completed within specified timeout (%ds): %s",
-                            asyncRequestsCompletedTimeoutInSeconds, event.getString(EventConstants.URL)));
+            throw new IllegalStateException(String.format(
+                    "Async requests was not completed within specified timeout (%ds): %s",
+                    asyncRequestsCompletedTimeoutInSeconds, event.getString(EventConstants.URL)));
         }
     }
 
@@ -887,8 +832,8 @@ public class SeleniumDriver
                             {
                                 Map<String, Object> binding = PlayerScriptProcessor.getEmptyBindingsMap();
                                 binding.put(ScriptBindingConstants.WEB_DRIVER, driver);
-                                return new PlayerScriptProcessor(scenario).executeGroovyScript(isUiShownScript, binding,
-                                        Boolean.class);
+                                return new PlayerScriptProcessor(scenario).executeGroovyScript(isUiShownScript,
+                                        binding, Boolean.class);
                             }
                             catch (WebDriverException e)
                             {
@@ -907,8 +852,9 @@ public class SeleniumDriver
     private void awakenAllDrivers()
     {
         PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
-        tabUuidDrivers.values().forEach(driver -> processor.executeProcessSignalScript(sendSignalToProcessScript,
-                PROCESS_SIGNAL_CONT, getFirefoxPid(driver)));
+        tabUuidDrivers.values().forEach(
+                driver -> processor.executeProcessSignalScript(sendSignalToProcessScript, PROCESS_SIGNAL_CONT,
+                        getFirefoxPid(driver)));
     }
 
     private void prioritize(WebDriver wd)
@@ -917,8 +863,13 @@ public class SeleniumDriver
         String firefoxPid = getFirefoxPid(wd);
         processor.executeProcessSignalScript(sendSignalToProcessScript, PROCESS_SIGNAL_CONT, firefoxPid);
         LOG.info("Prioritizing driver with pid: {}", firefoxPid);
-        tabUuidDrivers.values().stream().filter(driver -> !driver.equals(wd)).forEach(driver -> processor
-                .executeProcessSignalScript(sendSignalToProcessScript, PROCESS_SIGNAL_STOP, getFirefoxPid(driver)));
+        tabUuidDrivers
+                .values()
+                .stream()
+                .filter(driver -> !driver.equals(wd))
+                .forEach(
+                        driver -> processor.executeProcessSignalScript(sendSignalToProcessScript, PROCESS_SIGNAL_STOP,
+                                getFirefoxPid(driver)));
     }
 
     private FirefoxProfile createDefaultFirefoxProfile()

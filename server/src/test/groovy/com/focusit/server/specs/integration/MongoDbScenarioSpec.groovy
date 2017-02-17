@@ -1,4 +1,4 @@
-package com.focusit.specs.integration
+package com.focusit.server.specs.integration
 
 import com.focusit.jsflight.server.ServerApplication
 import com.focusit.jsflight.server.model.Event
@@ -6,6 +6,7 @@ import com.focusit.jsflight.server.model.Experiment
 import com.focusit.jsflight.server.repository.EventRepository
 import com.focusit.jsflight.server.repository.ExperimentRepository
 import com.focusit.jsflight.server.scenario.MongoDbScenario
+import com.focusit.server.specs.BaseSpec
 import org.bson.types.ObjectId
 import org.json.JSONObject
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -14,10 +15,8 @@ import org.springframework.boot.test.SpringApplicationContextLoader
 import org.springframework.boot.test.WebIntegrationTest
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.TestPropertySource
-import spock.lang.Specification
 
 import javax.inject.Inject
-
 /**
  * Created by dkirpichenkov on 23.05.16.
  */
@@ -25,7 +24,7 @@ import javax.inject.Inject
 @ContextConfiguration(loader = SpringApplicationContextLoader.class, classes = [ServerApplication.class])
 @WebIntegrationTest
 @TestPropertySource("classpath:app.integration.test.properties")
-public class MongoDbScenarioSpec extends Specification {
+public class MongoDbScenarioSpec extends BaseSpec {
     @Inject
     EventRepository eventRepositoryCustom;
     @Inject
@@ -141,7 +140,7 @@ public class MongoDbScenarioSpec extends Specification {
         when:
         scenario.moveToNextStep();
         then:
-        experimentRepository.findOne(experiment.getId()).position == position + 1;
+        experimentRepository.findOne(new ObjectId(experiment.getId())).position == position + 1;
     }
 
     def "next doesn't change the position in experiment after last step has passed"() {
