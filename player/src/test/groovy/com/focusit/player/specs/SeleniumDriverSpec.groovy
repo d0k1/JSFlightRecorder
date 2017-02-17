@@ -5,7 +5,6 @@ import com.focusit.jsflight.player.scenario.UserScenario
 import com.focusit.jsflight.player.webdriver.SeleniumDriver
 import com.focusit.jsflight.script.ScriptEngine
 import org.json.JSONObject
-import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.WebElement
 import org.openqa.selenium.remote.RemoteWebDriver
@@ -108,51 +107,6 @@ class SeleniumDriverSpec extends BaseSpec {
         then:
         1 * wd.findElement(_) >> Mock(WebElement)
         thrown(IllegalStateException)
-    }
-
-    def "should switch into iframe by indices"() {
-        given:
-        JSONObject event = getSimpleEvent()
-        event.put(EventConstants.EVENT_ID, 5)
-        event.put(EventConstants.IFRAME_INDICES, "1.2.3")
-        WebDriver webDriver = Mock(WebDriver)
-        WebDriver.TargetLocator locator = Mock(WebDriver.TargetLocator)
-        def windowHandle = "windowHandle"
-
-        when:
-        SeleniumDriver.switchToWorkingFrame(webDriver, event)
-
-        then:
-        1 * webDriver.getWindowHandle() >> windowHandle
-        4 * webDriver.switchTo() >> locator
-        1 * locator.window(windowHandle)
-        1 * locator.frame(1)
-        1 * locator.frame(2)
-        1 * locator.frame(3)
-        0 * _
-    }
-
-    def "should switch into iframe by xpaths"() {
-        given:
-        JSONObject event = getSimpleEvent()
-        event.put(EventConstants.EVENT_ID, 5)
-        event.put(EventConstants.IFRAME_XPATHS, "//iframe[0]||iframe[1]||/path/to/frame")
-        WebDriver webDriver = Mock(WebDriver)
-        WebDriver.TargetLocator locator = Mock(WebDriver.TargetLocator)
-        def windowHandle = "windowHandle"
-
-        when:
-        SeleniumDriver.switchToWorkingFrame(webDriver, event)
-
-        then:
-        1 * webDriver.getWindowHandle() >> windowHandle
-        4 * webDriver.switchTo() >> locator
-        1 * locator.window(windowHandle)
-        1 * webDriver.findElement(By.xpath("//iframe[0]")) >> Mock(WebElement)
-        1 * webDriver.findElement(By.xpath("iframe[1]")) >> Mock(WebElement)
-        1 * webDriver.findElement(By.xpath("/path/to/frame")) >> Mock(WebElement)
-        3 * locator.frame(_ as WebElement)
-        0 * _
     }
 
     JSONObject getSimpleEvent() {
