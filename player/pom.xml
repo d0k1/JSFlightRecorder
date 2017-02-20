@@ -30,10 +30,6 @@
             <artifactId>log4j-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-jcl</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.github.d0k1.jsflight</groupId>
             <artifactId>jmeter</artifactId>
         </dependency>
