@@ -13,7 +13,6 @@
         <groupId>com.github.d0k1.jsflight</groupId>
         <artifactId>jsflight</artifactId>
         <version>4.17-SNAPSHOT</version>
-        <!-- <relativePath>../sample-multi-module-parent</relativePath> -->
     </parent>
 
     <dependencies>
@@ -98,7 +97,6 @@
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-commons</artifactId>
-            <version>1.11.4.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>org.apache.ivy</groupId>
@@ -112,12 +110,10 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
-            <version>2.6.5</version>
         </dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
-            <version>1.3.2</version>
         </dependency>
     </dependencies>
 
