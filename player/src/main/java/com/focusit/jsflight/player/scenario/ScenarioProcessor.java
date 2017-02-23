@@ -5,6 +5,9 @@ import com.focusit.jsflight.player.configurations.ScriptsConfiguration;
 import com.focusit.jsflight.player.constants.BrowserType;
 import com.focusit.jsflight.player.constants.EventConstants;
 import com.focusit.jsflight.player.constants.EventType;
+import com.focusit.jsflight.player.handler.BaseEventHandler;
+import com.focusit.jsflight.player.handler.MouseClickEventHandler;
+import com.focusit.jsflight.player.handler.MouseWheelEventHandler;
 import com.focusit.jsflight.player.iframe.FrameSwitcher;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.jsflight.player.webdriver.SeleniumDriver;
@@ -19,6 +22,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -230,17 +234,27 @@ public class ScenarioProcessor
             {
                 String target = UserScenario.getTargetForEvent(event);
 
+                BaseEventHandler eventHandler;
                 switch (type)
                 {
                 case EventType.MOUSE_WHEEL:
-                    seleniumDriver.processMouseWheel(webDriver, event, target);
+                    eventHandler = new MouseWheelEventHandler();
+                    eventHandler.handleEvent(webDriver, event);
+                    seleniumDriver.waitWhileAsyncRequestsWillCompletedWithRefresh(webDriver, event);
                     break;
                 case EventType.SCROLL_EMULATION:
                     seleniumDriver.processScroll(webDriver, event, target);
                     break;
                 case EventType.MOUSE_DOWN:
                 case EventType.CLICK:
-                    seleniumDriver.processMouseEvent(webDriver, event);
+                    eventHandler = new MouseClickEventHandler();
+                    Map<String, String> additionalProperties = new HashMap<>();
+                    additionalProperties.put(MouseClickEventHandler.IS_SELECT_ELEMENT_SCRIPT,
+                            scriptsConfiguration.getIsSelectElementScript());
+                    additionalProperties.put(MouseClickEventHandler.SELECT_XPATH, commonConfiguration.getFormOrDialogXpath());
+                    eventHandler.addAdditionalProperties(additionalProperties);
+                    eventHandler.handleEvent(webDriver, event);
+                    seleniumDriver.waitWhileAsyncRequestsWillCompletedWithRefresh(webDriver, event);
                     break;
                 case EventType.KEY_UP:
                 case EventType.KEY_DOWN:

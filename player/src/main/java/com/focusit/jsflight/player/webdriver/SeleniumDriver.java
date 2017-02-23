@@ -347,27 +347,6 @@ public class SeleniumDriver
         }
     }
 
-    public WebElement waitElement(WebDriver wd, String xpath)
-    {
-        try
-        {
-            return new WebDriverWait(wd, 200L, 500).until((ExpectedCondition<WebElement>)input -> {
-                try
-                {
-                    return wd.findElement(By.xpath(xpath));
-                }
-                catch (NoSuchElementException e)
-                {
-                    return null;
-                }
-            });
-        }
-        catch (TimeoutException e)
-        {
-            throw new NoSuchElementException("Element was not found within timeout. Xpath " + xpath);
-        }
-    }
-
     public void processKeyPressEvent(WebDriver driver, JSONObject event) throws UnsupportedEncodingException
     {
         WebElement element = findTargetWebElement(driver, event, UserScenario.getTargetForEvent(event));
@@ -512,95 +491,6 @@ public class SeleniumDriver
             return true;
         }
         return false;
-    }
-
-    public void processMouseEvent(WebDriver wd, JSONObject event)
-    {
-        WebElement element = findTargetWebElement(wd, event, UserScenario.getTargetForEvent(event));
-        if (isNoOp(event, element))
-        {
-            return;
-        }
-        ensureElementInWindow(wd, element);
-        boolean isSelect = new PlayerScriptProcessor(context).executeSelectDeterminerScript(isSelectElementScript, wd,
-                element);
-        click(wd, event, element);
-        if (isSelect)
-        {
-            //Wait for select to popup
-            LOG.debug("Mouse event is kind of select");
-            try
-            {
-                waitElement(wd, selectXpath);
-            }
-            catch (NoSuchElementException ex)
-            {
-                LOG.warn("Element supposed to be a select didn't provide a " + selectXpath + "element", ex);
-            }
-        }
-    }
-
-    private void click(WebDriver wd, JSONObject event, WebElement element)
-    {
-        if (element.isDisplayed())
-        {
-
-            if (event.getInt(EventConstants.BUTTON) == 2)
-            {
-                try
-                {
-                    new Actions(wd).contextClick(element).perform();
-                }
-                catch (WebDriverException ex)
-                {
-                    try
-                    {
-                        LOG.warn("Error simulation right click. Retrying after 2 sec.");
-                        Thread.sleep(2000);
-
-                        new Actions(wd).contextClick(element).perform();
-                    }
-                    catch (Exception e)
-                    {
-                        LOG.error("Error while simulating right click.", e);
-                    }
-                }
-            }
-            else
-            {
-                element.click();
-            }
-        }
-        else
-        {
-            JavascriptExecutor executor = (JavascriptExecutor)wd;
-            executor.executeScript("arguments[0].click();", element);
-        }
-    }
-
-    public void processMouseWheel(WebDriver wd, JSONObject event, String target)
-    {
-        if (!event.has(EventConstants.DELTA_Y))
-        {
-            LOG.error("event has no deltaY - cant process scroll", new Exception());
-            return;
-        }
-        WebElement el = findTargetWebElement(wd, event, target);
-        if (isNoOp(event, el))
-        {
-            return;
-        }
-        //Web lookup script MUST return //html element if scroll occurs not in a popup
-        if (!el.getTagName().equalsIgnoreCase("html"))
-        {
-            ((JavascriptExecutor)wd).executeScript("arguments[0].scrollTop = arguments[0].scrollTop + arguments[1]", el,
-                    event.getInt(EventConstants.DELTA_Y));
-        }
-        else
-        {
-            ((JavascriptExecutor)wd).executeScript("window.scrollBy(0, arguments[0])",
-                    event.getInt(EventConstants.DELTA_Y));
-        }
     }
 
     public void processScroll(WebDriver wd, JSONObject event, String target)
