@@ -5,7 +5,7 @@ import com.focusit.jsflight.server.model.Recording;
 import com.focusit.jsflight.server.os.OperatingSystemScreenshooter;
 import com.focusit.jsflight.server.player.BackgroundWebPlayer;
 import com.focusit.jsflight.server.service.RecordingsService;
-import org.apache.poi.util.IOUtils;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,6 +19,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,6 +40,14 @@ public class PlayerController
     {
         this.recordingsService = recordingsService;
         this.player = player;
+    }
+
+    @RequestMapping(value = "/version", method = RequestMethod.GET)
+    public String getServerVersion() throws IOException {
+        StringWriter writer = new StringWriter();
+        IOUtils.copy(getClass().getClassLoader().getResourceAsStream("git.properties"), writer,
+                StandardCharsets.UTF_8);
+        return writer.toString();
     }
 
     /**
