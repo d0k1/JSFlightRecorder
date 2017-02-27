@@ -272,12 +272,14 @@
             console.log('No support of window.sessionStorage');
             return;
         }
+
         var storage = window.sessionStorage;
 
         var events = [];
         var keys = [];
-        for (var key in storage) {
-            if (key.startsWith('recorder.eventId.')) {
+        for (var i = 0; i < storage.length; i++) {
+            var key = storage.key(i);
+            if (key && key.startsWith('recorder.eventId.')) {
                 events.push(storage.getItem(key));
                 keys.push(key);
             }
