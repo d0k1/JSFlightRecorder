@@ -43,13 +43,10 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class PlayerScriptProcessor
 {
-    private static final GStringTemplateEngine templateEngine = new GStringTemplateEngine(
-            new GroovyClassLoader(ScriptEngine.getClassLoader()));
     private static final Logger LOG = LoggerFactory.getLogger(PlayerScriptProcessor.class);
 
     static
     {
-        System.setProperty("groovy.GStringTemplateEngine.reuseClassLoader", "true");
         Velocity.init();
     }
 

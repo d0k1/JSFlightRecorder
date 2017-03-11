@@ -17,7 +17,7 @@ public abstract class BaseEventHandler
 
     public abstract void handleEvent(WebDriver webDriver, JSONObject event);
 
-    public WebElement findTargetWebElement(WebDriver webDriver, JSONObject event, String target)
+    protected WebElement findTargetWebElement(WebDriver webDriver, JSONObject event, String target)
     {
         return null;
     };
