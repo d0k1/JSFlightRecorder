@@ -9,6 +9,7 @@ import com.focusit.jsflight.player.constants.EventType;
 import com.focusit.jsflight.player.input.EventsParser;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
+import com.focusit.jsflight.script.player.PlayerContext;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -40,6 +41,20 @@ public class UserScenario
     private List<JSONObject> events = new ArrayList<>();
     private String preProcessScenarioScript;
     private Configuration configuration = new Configuration();
+
+    private PlayerContext context;
+    private PlayerScriptProcessor scriptProcessor;
+
+    public UserScenario()
+    {
+        context = new PlayerContext();
+        scriptProcessor = new PlayerScriptProcessor(context);
+    }
+
+    public PlayerContext getContext()
+    {
+        return context;
+    }
 
     public static String getTagForEvent(JSONObject event)
     {
@@ -214,7 +229,7 @@ public class UserScenario
     {
         JSONObject prev = getPrevEvent(event);
 
-        return prev != null && new PlayerScriptProcessor().executeDuplicateHandlerScript(script, event, prev);
+        return prev != null && scriptProcessor.executeDuplicateHandlerScript(script, event, prev);
 
     }
 
@@ -249,7 +264,7 @@ public class UserScenario
     {
         if (!StringUtils.isBlank(preProcessScenarioScript))
         {
-            new PlayerScriptProcessor().preProcessScenario(preProcessScenarioScript, events);
+            scriptProcessor.preProcessScenario(preProcessScenarioScript, events);
         }
     }
 
@@ -265,8 +280,7 @@ public class UserScenario
 
     public void runPostProcessor(String script)
     {
-        PlayerScriptProcessor engine = new PlayerScriptProcessor();
-        engine.testPostProcess(script, events);
+        scriptProcessor.testPostProcess(script, events);
     }
 
     public void saveScenario(String filename) throws IOException

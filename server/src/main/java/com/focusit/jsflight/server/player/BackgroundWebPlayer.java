@@ -140,7 +140,6 @@ public class BackgroundWebPlayer
 
         MongoDbScenario scenario = new MongoDbScenario(experiment, eventRepository, experimentRepository);
         scenario.initFromConfig(config);
-        MongoDbScenarioProcessor processor = new MongoDbScenarioProcessor(storageService);
 
         ScriptEngine.init(scenario.getConfiguration().getCommonConfiguration().getScriptClassloader());
         if (config.shouldEnableRecording())
@@ -153,15 +152,16 @@ public class BackgroundWebPlayer
         experimentLastUrls.put(experimentId, lastUrls);
 
         SeleniumDriver driver = experimentDriver.getOrDefault(experimentId,
-                new SeleniumDriver(scenario, context, config.getXvfbDisplayLowerBound(), config.getXvfbDisplayUpperBound()))
+                new SeleniumDriver(scenario.getContext(), config.getXvfbDisplayLowerBound(), config.getXvfbDisplayUpperBound()))
                 .setLastUrls(lastUrls);
         experimentDriver.put(experimentId, driver);
 
+        MongoDbScenarioProcessor processor = new MongoDbScenarioProcessor(scenario, driver, storageService);
         playingFutures
                 .put(experimentId,
                         CompletableFuture
                                 .runAsync(
-                                        () -> processor.play(scenario, driver, scenario.getFirstStep(),
+                                        () -> processor.play(scenario.getFirstStep(),
                                                 scenario.getMaxStep()))
                                 .whenCompleteAsync(
                                         (aVoid, throwable) -> {

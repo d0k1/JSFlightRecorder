@@ -5,6 +5,7 @@ import org.json.JSONObject;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -13,7 +14,7 @@ import java.util.Map;
 public abstract class BaseEventHandler
 {
     protected PlayerContext context;
-    protected Map<String, String> additionalProperties;
+    protected Map<String, String> additionalProperties = new HashMap<>();
 
     public abstract void handleEvent(WebDriver webDriver, JSONObject event);
 
@@ -22,8 +23,8 @@ public abstract class BaseEventHandler
         return null;
     };
 
-    public void addAdditionalProperties(Map<String, String> properties)
+    public void addAdditionalProperty(String key, String value)
     {
-        additionalProperties.putAll(properties);
+        additionalProperties.put(key, value);
     }
 }

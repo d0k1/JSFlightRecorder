@@ -26,18 +26,18 @@ public class MongoDbScenarioProcessor extends ScenarioProcessor
     private static final Logger LOG = LoggerFactory.getLogger(MongoDbScenarioProcessor.class);
     private MongoDbStorageService screenshotsService;
 
-    public MongoDbScenarioProcessor(MongoDbStorageService screenshotsService)
+    public MongoDbScenarioProcessor(UserScenario scenario, SeleniumDriver seleniumDriver, MongoDbStorageService screenshotsService)
     {
-        super(context);
+        super(scenario, seleniumDriver);
         this.screenshotsService = screenshotsService;
     }
 
     @Override
-    protected void throwIfBrowserHaveAnError(UserScenario scenario, WebDriver wd) throws Exception
+    protected void throwIfBrowserHaveAnError(WebDriver wd) throws Exception
     {
         try
         {
-            super.throwIfBrowserHaveAnError(scenario, wd);
+            super.throwIfBrowserHaveAnError(wd);
         }
         catch (IllegalStateException e)
         {
@@ -54,8 +54,7 @@ public class MongoDbScenarioProcessor extends ScenarioProcessor
     }
 
     @Override
-    protected void makeAShot(UserScenario scenario, SeleniumDriver seleniumDriver, WebDriver theWebDriver,
-            int position, boolean isError)
+    protected void makeAShot(WebDriver theWebDriver, int position, boolean isError)
     {
         MongoDbScenario mongoDbScenario = (MongoDbScenario)scenario;
         if (scenario.getConfiguration().getCommonConfiguration().getMakeShots()) {

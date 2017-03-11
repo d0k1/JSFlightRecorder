@@ -9,7 +9,6 @@ import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.jsflight.script.constants.ScriptBindingConstants;
 import com.focusit.jsflight.script.player.PlayerContext;
 import com.google.common.base.Predicate;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.openqa.selenium.*;
@@ -17,11 +16,9 @@ import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
-import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebElement;
-import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 /**
@@ -53,29 +49,18 @@ public class SeleniumDriver
     private static final int PROCESS_SIGNAL_CONT = -18;
     private static final int PROCESS_SIGNAL_FORCE_KILL = -9;
 
-    private static final Map<String, Keys> SPECIAL_KEYS_MAPPING = new HashMap<>();
     private static final String DISPLAY = "DISPLAY";
 
     static
     {
         //This must be set due to equals of WebElement
         NO_OP_ELEMENT.setId("NO_OP");
-
-        SPECIAL_KEYS_MAPPING.put(EventConstants.CTRL_KEY, Keys.CONTROL);
-        SPECIAL_KEYS_MAPPING.put(EventConstants.ALT_KEY, Keys.ALT);
-        SPECIAL_KEYS_MAPPING.put(EventConstants.SHIFT_KEY, Keys.SHIFT);
-        SPECIAL_KEYS_MAPPING.put(EventConstants.META_KEY, Keys.META);
-
     }
 
     private Map<String, Integer> availableDisplays;
     private HashMap<String, String> driverDisplay = new HashMap<>();
     private HashMap<String, WebDriver> tabUuidDrivers = new HashMap<>();
     private Map<String, String> lastUrls = new HashMap<>();
-
-    private StringGenerator stringGenerator;
-
-    private UserScenario scenario;
 
     private int asyncRequestsCompletedTimeoutInSeconds;
     private String isAsyncRequestsCompletedScript;
@@ -98,14 +83,13 @@ public class SeleniumDriver
     private String keepBrowserXpath;
     private PlayerContext context;
 
-    public SeleniumDriver(UserScenario scenario, PlayerContext context)
+    public SeleniumDriver(PlayerContext context)
     {
-        this(scenario, context, 0, -1);
+        this(context, 0, -1);
     }
 
-    public SeleniumDriver(UserScenario scenario, PlayerContext context, Integer xvfbDisplayLowerBound, Integer xvfbDisplayUpperBound)
+    public SeleniumDriver(PlayerContext context, Integer xvfbDisplayLowerBound, Integer xvfbDisplayUpperBound)
     {
-        this.scenario = scenario;
         this.context = context;
         availableDisplays = new HashMap<>(xvfbDisplayUpperBound - xvfbDisplayLowerBound + 1);
 
@@ -164,7 +148,6 @@ public class SeleniumDriver
 
     public SeleniumDriver setUseRandomStringGenerator(boolean useRandomStringGenerator)
     {
-        initializeStringGenerator(useRandomStringGenerator);
         return this;
     }
 
@@ -347,141 +330,6 @@ public class SeleniumDriver
         }
     }
 
-    public void processKeyPressEvent(WebDriver driver, JSONObject event) throws UnsupportedEncodingException
-    {
-        WebElement element = findTargetWebElement(driver, event, UserScenario.getTargetForEvent(event));
-
-        if (isNoOp(event, element))
-        {
-            return;
-        }
-        //TODO remove this when recording of cursor in text box is implemented
-        if (skipKeyboardForElement(element))
-        {
-            LOG.warn("Keyboard processing for non empty Date is disabled");
-            return;
-        }
-
-        if (!event.has(EventConstants.CHAR) && !event.has(EventConstants.CHAR_CODE))
-        {
-            throw new IllegalStateException("Keypress event don't have a char");
-        }
-
-        String keys;
-
-        if (event.has(EventConstants.CHAR))
-        {
-            keys = event.getString(EventConstants.CHAR);
-        }
-        else
-        {
-            char ch = (char)event.getBigDecimal(EventConstants.CHAR_CODE).intValue();
-            keys = stringGenerator.getAsString(ch);
-        }
-
-        LOG.info("Trying to fill input with: {}", keys);
-        if (event.has(EventConstants.IFRAME_XPATHS) || event.has(EventConstants.IFRAME_INDICES))
-        {
-            LOG.info("Input is iframe");
-            element.sendKeys(keys);
-        }
-        else
-        {
-            LOG.info("Input is ordinary input");
-            String prevText = element.getAttribute("value");
-            //If current value indicates a placeholder it must be discarded
-
-            // TODO WTF is placeholders??
-            if (placeholders.contains(prevText))
-            {
-                element.clear();
-            }
-            element.sendKeys(keys);
-        }
-    }
-
-    public void processKeyDownKeyUpEvents(WebDriver wd, JSONObject event) throws UnsupportedEncodingException
-    {
-        WebElement element = findTargetWebElement(wd, event, UserScenario.getTargetForEvent(event));
-
-        if (isNoOp(event, element))
-        {
-            return;
-        }
-
-        //TODO remove this when recording of cursor in text box is implemented
-        if (skipKeyboardForElement(element))
-        {
-            LOG.warn("Keyboard processing for non empty Date is disabled");
-            return;
-        }
-
-        if (!event.has(EventConstants.KEY_CODE) && !event.has(EventConstants.CHAR_CODE))
-        {
-            throw new IllegalStateException("Keydown/Keyup event don't have keyCode/charCode property");
-        }
-
-        Actions actions = new Actions(wd);
-
-        SPECIAL_KEYS_MAPPING.keySet().forEach(property -> {
-            if (event.getBoolean(property))
-            {
-                actions.keyDown(element, SPECIAL_KEYS_MAPPING.get(property));
-            }
-        });
-
-        // Backward compatibility
-        int code = event.getInt(EventConstants.CHAR_CODE);
-        if (code == 0)
-        {
-            code = event.getInt(EventConstants.KEY_CODE);
-        }
-        switch (code)
-        {
-        case 8:
-            actions.sendKeys(element, Keys.BACK_SPACE);
-            break;
-        case 27:
-            actions.sendKeys(element, Keys.ESCAPE);
-            break;
-        case 46:
-            actions.sendKeys(element, Keys.DELETE);
-            break;
-        case 13:
-            actions.sendKeys(element, Keys.ENTER);
-            break;
-        case 37:
-            actions.sendKeys(element, Keys.ARROW_LEFT);
-            break;
-        case 38:
-            actions.sendKeys(element, Keys.ARROW_UP);
-            break;
-        case 39:
-            actions.sendKeys(element, Keys.ARROW_RIGHT);
-            break;
-        case 40:
-            actions.sendKeys(element, Keys.ARROW_DOWN);
-            break;
-        }
-
-        SPECIAL_KEYS_MAPPING.keySet().forEach(property -> {
-            if (event.getBoolean(property))
-            {
-                actions.keyUp(element, SPECIAL_KEYS_MAPPING.get(property));
-            }
-        });
-
-        try
-        {
-            actions.perform();
-        }
-        catch (Exception ex)
-        {
-            // TODO Fix correctly
-            LOG.error("Sending keys to and invisible element. must have JS workaround: " + ex.toString(), ex);
-        }
-    }
-
     private boolean isNoOp(JSONObject event, WebElement element)
     {
         if (element.equals(NO_OP_ELEMENT))
@@ -578,11 +426,6 @@ public class SeleniumDriver
         lastUrls.clear();
     }
 
-    public void setScenario(UserScenario scenario)
-    {
-        this.scenario = scenario;
-    }
-
     public void updateLastUrl(JSONObject event, String url)
     {
         lastUrls.put(UserScenario.getTagForEvent(event), url);
@@ -669,14 +512,6 @@ public class SeleniumDriver
             //anyway TODO think of not using hardcoded constants in scrolling
             String scrollScript = "window.scrollTo(0, " + elementY / 2 + ");";
             ((JavascriptExecutor)wd).executeScript(scrollScript);
-        }
-    }
-
-    private void initializeStringGenerator(boolean useRandomChars)
-    {
-        if (stringGenerator == null)
-        {
-            stringGenerator = useRandomChars ? new RandomStringGenerator() : new CharStringGenerator();
         }
     }
 
@@ -806,37 +641,4 @@ public class SeleniumDriver
         return this;
     }
 
-    private static abstract class StringGenerator
-    {
-        protected static final Logger LOG = LoggerFactory.getLogger(StringGenerator.class);
-
-        public String getAsString(char ch) throws UnsupportedEncodingException
-        {
-            String result = generate(ch);
-            LOG.info("Returning {}", result);
-            return result;
-        }
-
-        public abstract String generate(char ch) throws UnsupportedEncodingException;
-    }
-
-    private static class CharStringGenerator extends StringGenerator
-    {
-        @Override
-        public String generate(char ch) throws UnsupportedEncodingException
-        {
-            return String.valueOf(ch);
-        }
-
-    }
-
-    private static class RandomStringGenerator extends StringGenerator
-    {
-        @Override
-        public String generate(char ch)
-        {
-            return RandomStringUtils.randomAlphanumeric(1);
-        }
-
-    }
 }

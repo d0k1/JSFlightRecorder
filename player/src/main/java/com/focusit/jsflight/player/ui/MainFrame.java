@@ -77,7 +77,7 @@ public class MainFrame
     private JTextField firefoxDsiplay;
     private JTextField formDialogXpathField;
 
-    private SeleniumDriver seleniumDriver = new SeleniumDriver(scenario);
+    private SeleniumDriver seleniumDriver = new SeleniumDriver(scenario.getContext());
 
     /**
      * Create the application.
@@ -260,7 +260,7 @@ public class MainFrame
     protected void playTheScenario()
     {
         saveControlersOptions();
-        new ScenarioProcessor(context).play(scenario, seleniumDriver);
+        new ScenarioProcessor(scenario, seleniumDriver).play();
         model.fireTableDataChanged();
     }
 
@@ -587,7 +587,7 @@ public class MainFrame
             @Override
             public void mouseClicked(MouseEvent e)
             {
-                new ScenarioProcessor(context).applyStep(scenario, seleniumDriver, scenario.getPosition());
+                new ScenarioProcessor(scenario, seleniumDriver).applyStep(scenario.getPosition());
                 scenario.moveToNextStep();
                 model.fireTableDataChanged();
             }
@@ -616,7 +616,7 @@ public class MainFrame
             @Override
             public void mouseClicked(MouseEvent e)
             {
-                new ScenarioProcessor(context).applyStep(scenario, seleniumDriver, table.getSelectedRow());
+                new ScenarioProcessor(scenario, seleniumDriver).applyStep(table.getSelectedRow());
             }
         });
         btnParse.addMouseListener(new MouseAdapter()
