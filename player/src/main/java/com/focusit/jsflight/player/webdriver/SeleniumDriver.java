@@ -214,8 +214,6 @@ public class SeleniumDriver
 
     public WebElement findTargetWebElement(WebDriver wd, JSONObject event, String target)
     {
-        waitWhileAsyncRequestsWillCompletedWithRefresh(wd, event);
-
         Map<String, Object> binding = PlayerScriptProcessor.getEmptyBindingsMap();
         binding.put(ScriptBindingConstants.WEB_DRIVER, wd);
         binding.put(ScriptBindingConstants.TARGET, target);
@@ -278,8 +276,7 @@ public class SeleniumDriver
         return driver;
     }
 
-    private FirefoxDriver createFirefoxDriver(String display, String binaryPath,
-            DesiredCapabilities desiredCapabilities)
+    private FirefoxDriver createFirefoxDriver(String display, String binaryPath, DesiredCapabilities desiredCapabilities)
     {
         FirefoxProfile profile = createDefaultFirefoxProfile();
         FirefoxBinary binary = !StringUtils.isBlank(binaryPath) ? new FirefoxBinary(new File(binaryPath))
@@ -593,8 +590,8 @@ public class SeleniumDriver
         //Web lookup script MUST return //html element if scroll occurs not in a popup
         if (!el.getTagName().equalsIgnoreCase("html"))
         {
-            ((JavascriptExecutor)wd).executeScript("arguments[0].scrollTop = arguments[0].scrollTop + arguments[1]", el,
-                    event.getInt(EventConstants.DELTA_Y));
+            ((JavascriptExecutor)wd).executeScript("arguments[0].scrollTop = arguments[0].scrollTop + arguments[1]",
+                    el, event.getInt(EventConstants.DELTA_Y));
         }
         else
         {
@@ -612,7 +609,6 @@ public class SeleniumDriver
         }
         do
         {
-            waitWhileAsyncRequestsWillCompletedWithRefresh(wd, event);
             try
             {
                 WebElement el = getMax(wd, maxElementGroovy);
@@ -711,6 +707,9 @@ public class SeleniumDriver
             {
                 throw e;
             }
+            LOG.warn("Async request wasn't completed in {}s. Second try with refresh",
+                    asyncRequestsCompletedTimeoutInSeconds);
+            LOG.warn(e.getLocalizedMessage(), e);
             wd.navigate().refresh();
             waitWhileAsyncRequestsWillCompleted(wd, event);
         }
@@ -746,9 +745,11 @@ public class SeleniumDriver
         }
         catch (TimeoutException e)
         {
-            throw new IllegalStateException(
-                    String.format("Async requests was not completed within specified timeout (%ds): %s",
-                            asyncRequestsCompletedTimeoutInSeconds, event.getString(EventConstants.URL)));
+            LOG.warn("Async requests was not completed within specified timeout ({}s): {}",
+                    asyncRequestsCompletedTimeoutInSeconds, event.getString(EventConstants.URL));
+            throw new IllegalStateException(String.format(
+                    "Async requests was not completed within specified timeout (%ds): %s",
+                    asyncRequestsCompletedTimeoutInSeconds, event.getString(EventConstants.URL)));
         }
     }
 
@@ -840,8 +841,8 @@ public class SeleniumDriver
                             {
                                 Map<String, Object> binding = PlayerScriptProcessor.getEmptyBindingsMap();
                                 binding.put(ScriptBindingConstants.WEB_DRIVER, driver);
-                                return new PlayerScriptProcessor(scenario).executeGroovyScript(isUiShownScript, binding,
-                                        Boolean.class);
+                                return new PlayerScriptProcessor(scenario).executeGroovyScript(isUiShownScript,
+                                        binding, Boolean.class);
                             }
                             catch (WebDriverException e)
                             {
@@ -860,8 +861,9 @@ public class SeleniumDriver
     private void awakenAllDrivers()
     {
         PlayerScriptProcessor processor = new PlayerScriptProcessor(scenario);
-        tabUuidDrivers.values().forEach(driver -> processor.executeProcessSignalScript(sendSignalToProcessScript,
-                PROCESS_SIGNAL_CONT, getFirefoxPid(driver)));
+        tabUuidDrivers.values().forEach(
+                driver -> processor.executeProcessSignalScript(sendSignalToProcessScript, PROCESS_SIGNAL_CONT,
+                        getFirefoxPid(driver)));
     }
 
     private void prioritize(WebDriver wd)
@@ -870,8 +872,13 @@ public class SeleniumDriver
         String firefoxPid = getFirefoxPid(wd);
         processor.executeProcessSignalScript(sendSignalToProcessScript, PROCESS_SIGNAL_CONT, firefoxPid);
         LOG.info("Prioritizing driver with pid: {}", firefoxPid);
-        tabUuidDrivers.values().stream().filter(driver -> !driver.equals(wd)).forEach(driver -> processor
-                .executeProcessSignalScript(sendSignalToProcessScript, PROCESS_SIGNAL_STOP, getFirefoxPid(driver)));
+        tabUuidDrivers
+                .values()
+                .stream()
+                .filter(driver -> !driver.equals(wd))
+                .forEach(
+                        driver -> processor.executeProcessSignalScript(sendSignalToProcessScript, PROCESS_SIGNAL_STOP,
+                                getFirefoxPid(driver)));
     }
 
     private FirefoxProfile createDefaultFirefoxProfile()
