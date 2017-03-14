@@ -73,11 +73,12 @@ class SeleniumDriverSpec extends BaseSpec {
         event.put(EventConstants.CHAR_CODE, 48.0)
         event.put(EventConstants.URL, "url")
         WebDriver wd = getWd(event)
+        WebElement element = Mock(WebElement)
         when:
         sd.processKeyPressEvent(wd, event)
         then:
-        1 * wd.executeScript(_) >> "true"
-        1 * wd.findElement(_) >> Mock(WebElement)
+        1 * wd.findElement(_) >> element
+        1 * element.sendKeys('0')
     }
 
     def "processKeyPress must work with CHAR field of an event"() {
@@ -87,11 +88,12 @@ class SeleniumDriverSpec extends BaseSpec {
         event.put(EventConstants.CHAR, '0')
         event.put(EventConstants.URL, "url")
         WebDriver wd = getWd(event)
+        WebElement element = Mock(WebElement)
         when:
         sd.processKeyPressEvent(wd, event)
         then:
-        1 * wd.executeScript(_) >> "true"
-        1 * wd.findElement(_) >> Mock(WebElement)
+        1 * wd.findElement(_) >> element
+        1 * element.sendKeys('0')
     }
 
     def "processKeyPress throws exception if event has neither CHAR nor CHAR_COD"() {
@@ -103,7 +105,6 @@ class SeleniumDriverSpec extends BaseSpec {
         when:
         sd.processKeyPressEvent(wd, event)
         then:
-        1 * wd.executeScript(_) >> "true"
         1 * wd.findElement(_) >> Mock(WebElement)
         thrown(IllegalStateException)
     }

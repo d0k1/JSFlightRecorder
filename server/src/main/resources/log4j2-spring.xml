@@ -14,23 +14,20 @@
         </RandomAccessFile>
         <Console name="STDOUT" target="SYSTEM_OUT">
             <PatternLayout pattern="${pattern}"/>
-            <Filters>
-                <ThresholdFilter level="info"  onMatch="ACCEPT" onMismatch="DENY"/>
-            </Filters>
         </Console>
     </Appenders>
 
     <Loggers>
         <!--Log levels sorted ascending by verbosity: OFF/FATAL/ERROR/WARN/INFO/DEBUG/TRACE/ALL-->
-        <Logger name="com.focusit" level="info">
-            <AppenderRef ref="SERVER_FILE" />
+        <Logger name="com.focusit.jsflight" level="INFO">
+            <AppenderRef ref="SERVER_FILE" level="INFO" />
         </Logger>
-        <Logger name="org.apache.jmeter.protocol.http.proxy" level="warn">
-            <AppenderRef ref="JMETER_FILE" />
+        <Logger name="com.focusit.jsflight.jmeter" level="INFO">
+            <AppenderRef ref="JMETER_FILE" level="INFO" />
         </Logger>
 
-        <Root level="info">
-            <AppenderRef ref="STDOUT"/>
+        <Root level="ERROR">
+            <AppenderRef ref="STDOUT" level="ERROR" />
         </Root>
     </Loggers>
 </Configuration>
