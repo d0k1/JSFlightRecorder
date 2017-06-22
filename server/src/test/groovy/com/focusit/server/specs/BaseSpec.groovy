@@ -7,7 +7,7 @@ import spock.lang.Specification
  */
 abstract class BaseSpec extends Specification {
     def cleanupSpec() {
-        new File('${sys:logs.dir}').deleteDir()
+        new File('logs').deleteDir()
         new File('velocity.log').delete()
     }
 }

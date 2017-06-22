@@ -2,10 +2,10 @@
 <Configuration>
     <Properties>
         <Property name="pattern">%-5level | %date{ISO8601} | [%tread] | %logger (%file:%line) - %msg%n</Property>
-        <Property name="logs.dir">.</Property>
-        <Property name="logging.file">server.player.log</Property>
+        <Property name="logs.dir">logs</Property>
+        <Property name="logging.file">player.log</Property>
         <Property name="serverFileName">${sys:logs.dir}/${sys:logging.file}</Property>
-        <Property name="jmeterFileName">${sys:logs.dir}/server.jmeter.log</Property>
+        <Property name="jmeterFileName">${sys:logs.dir}/jmeter.log</Property>
     </Properties>
     <Appenders>
         <RandomAccessFile name="SERVER_FILE" fileName="${serverFileName}" append="false">
