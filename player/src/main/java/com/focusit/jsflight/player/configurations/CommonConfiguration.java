@@ -13,11 +13,8 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
 
 /**
  * Common configuration i.e. everything about player. browser settings, timeout settings
@@ -99,18 +96,18 @@ public class CommonConfiguration
         this.uiShownTimeoutSeconds = uiShownTimeoutSeconds;
     }
 
-    private List<URL> findClasspathForScripts(@Nullable String path)
+    private URL[] findClasspathForScripts(@Nullable String path)
     {
         try
         {
             return Files.walk(Paths.get(path)).filter(Files::isRegularFile).map(CommonConfiguration::toUrl)
-                    .filter(Objects::nonNull).collect(Collectors.toList());
+                    .filter(Objects::nonNull).toArray(URL[]::new);
         }
         catch (Exception e)
         {
             LOG.error(e.toString(), e);
         }
-        return new ArrayList<>();
+        return new URL[0];
     }
 
     public boolean getMakeShots()
@@ -246,7 +243,7 @@ public class CommonConfiguration
         {
             if (scriptClassloader == null)
             {
-                URL[] urls = findClasspathForScripts(System.getProperty("cp")).stream().toArray(URL[]::new);
+                URL[] urls = findClasspathForScripts(System.getProperty("cp"));
                 scriptClassloader = ScriptsClassLoaderFactory.createScriptsClassLoader(getClass().getClassLoader(), urls);
                 LOG.info("Urls, used for scripts classloader: {}", (Object) urls);
             }

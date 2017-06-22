@@ -40,10 +40,11 @@ public class ScriptsClassLoaderFactory
         Class<?> startingClass = clazz;
         while (clazz != null)
         {
-            Method method = getMethodUsingObjectClasses(clazz, name, args);
+            Method method = tryToGetMethod(clazz, name, args);
             if (method == null)
             {
-                method = getMethodUsingPrimitiveClasses(clazz, name, args);
+                args = convertToPrimitiveClasses(args);
+                method = tryToGetMethod(clazz, name, args);
             }
             if (method != null)
             {
@@ -56,30 +57,12 @@ public class ScriptsClassLoaderFactory
                 startingClass));
     }
 
-    private static Method getMethodUsingPrimitiveClasses(Class<?> clazz, String name, Class[] args)
-    {
-        args = convertToPrimitiveClasses(args);
-
-        if (LOG.isDebugEnabled())
-        {
-            LOG.debug("Searching for method {}({}) in {} using primitives", name, StringUtils.join(args, ", "), clazz);
-        }
-        try
-        {
-            return clazz.getDeclaredMethod(name, args);
-        }
-        catch (NoSuchMethodException e)
-        {
-            return null;
-        }
-    }
-
     private static Class<?>[] convertToPrimitiveClasses(Class[] args)
     {
         return Arrays.stream(args).map(arg -> TO_PRIMITIVES.getOrDefault(arg, arg)).toArray(Class<?>[]::new);
     }
 
-    private static Method getMethodUsingObjectClasses(Class<?> clazz, String name, Class[] args)
+    private static Method tryToGetMethod(Class<?> clazz, String name, Class[] args)
     {
         if (LOG.isDebugEnabled())
         {
@@ -112,11 +95,18 @@ public class ScriptsClassLoaderFactory
             {
                 try
                 {
-                    return invokeUrlClassLoaderMethod(urlClassLoader, method.getName(), args, argTypes);
+                    Object result = invokeObjectMethod(urlClassLoader, method.getName(), args, argTypes);
+                    if (result == null)
+                    {
+                        throw new InvocationTargetException(new Exception(
+                                "UrlClassLoader returned null. Trying with parent ClassLoader"));
+                    }
+
+                    return result;
                 }
                 catch (InvocationTargetException e)
                 {
-                    return invokeParentClassLoaderMethod(parent, method.getName(), args, argTypes);
+                    return invokeObjectMethod(parent, method.getName(), args, argTypes);
                 }
             }
             catch (InvocationTargetException e)
@@ -127,46 +117,22 @@ public class ScriptsClassLoaderFactory
         return (ClassLoader)enhancer.create(new Class[] { ClassLoader.class }, new Object[] { null });
     }
 
-    private static Object invokeUrlClassLoaderMethod(URLClassLoader urlClassLoader, String methodName, Object[] args,
-            Class[] argTypes) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException
+    private static Object invokeObjectMethod(Object object, String methodName, Object[] args,
+                                             Class[] argTypes) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException
     {
-        Method urlMethod = getMethod(urlClassLoader.getClass(), methodName, argTypes);
-        boolean isUrlMethodAccessible = urlMethod.isAccessible();
-        urlMethod.setAccessible(true);
+        Method method = getMethod(object.getClass(), methodName, argTypes);
+        boolean isMethodAccessible = method.isAccessible();
+        method.setAccessible(true);
 
         try
         {
-            Object result = urlMethod.invoke(urlClassLoader, args);
-            LOG.debug("Done: calling {} with result: {}", urlMethod, result);
-            if (result == null)
-            {
-                throw new InvocationTargetException(new Exception(
-                        "UrlClassLoader returned null. Trying with parent ClassLoader"));
-            }
+            Object result = method.invoke(object, args);
+            LOG.debug("Done: calling {} with result: {}", method, result);
             return result;
         }
         finally
         {
-            urlMethod.setAccessible(isUrlMethodAccessible);
-        }
-    }
-
-    private static Object invokeParentClassLoaderMethod(ClassLoader parent, String methodName, Object[] args,
-            Class[] argTypes) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException
-    {
-        Method parentMethod = getMethod(parent.getClass(), methodName, argTypes);
-        boolean isParentMethodAccessible = parentMethod.isAccessible();
-        parentMethod.setAccessible(true);
-
-        try
-        {
-            Object result = parentMethod.invoke(parent, args);
-            LOG.debug("Done: calling {} with result: {}", parentMethod, result);
-            return result;
-        }
-        finally
-        {
-            parentMethod.setAccessible(isParentMethodAccessible);
+            method.setAccessible(isMethodAccessible);
         }
     }
 
