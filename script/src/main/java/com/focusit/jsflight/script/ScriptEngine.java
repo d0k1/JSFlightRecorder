@@ -1,8 +1,6 @@
 package com.focusit.jsflight.script;
 
-import groovy.lang.Binding;
-import groovy.lang.GroovyClassLoader;
-import groovy.lang.Script;
+import groovy.lang.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,6 +68,7 @@ public final class ScriptEngine
             {
                 return;
             }
+            LOG.info("Initializing script engine");
             groovyClassLoader = new GroovyClassLoader(classLoader);
             initialized = true;
         }

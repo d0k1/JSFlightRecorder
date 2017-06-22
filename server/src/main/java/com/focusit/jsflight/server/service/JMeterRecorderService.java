@@ -115,9 +115,14 @@ public class JMeterRecorderService
 
             for (int i = 0; i < recorder.getRecordingsCount(); i++) {
                 try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                    LOG.info("Start saving {} scenario", i);
+                    LOG.info("Save into ByteArrayOutputStream");
                     recorder.saveScenario(baos, i);
+                    LOG.info("Saved into ByteArrayOutputStream");
                     try (ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray())) {
+                        LOG.info("Save into MongoDB");
                         storageService.storeJMeterScenario(scenario, bais, i);
+                        LOG.info("Saved into MongoDB");
                     }
                 }
             }

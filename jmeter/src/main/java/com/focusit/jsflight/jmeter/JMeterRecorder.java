@@ -15,6 +15,8 @@ import org.apache.jmeter.testelement.property.PropertyIterator;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.collections.HashTree;
 import org.apache.jorphan.collections.HashTreeTraverser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -29,6 +31,7 @@ import java.util.*;
  */
 public class JMeterRecorder
 {
+    public static final Logger LOG = LoggerFactory.getLogger(JMeterRecorder.class);
     public static final String DEFAULT_TEMPLATE_PATH = "template.jmx";
     private HashTree mainHashTreeTemplate;
     private JMeterProxyControl jMeterProxyControl;
@@ -89,15 +92,21 @@ public class JMeterRecorder
 
     public void saveScenario(OutputStream outStream, int recordingIndex) throws IOException
     {
+        LOG.info("Start {} scenario saving", recordingIndex);
+        LOG.info("Cloning template tree");
         HashTree hashTree = (HashTree)mainHashTreeTemplate.clone();
+        LOG.info("Searching for main nodes and trees");
         findMainNodesAndTrees(hashTree);
 
         RecordingController recordingController = recordingControllers.get(recordingIndex);
         HashTree recordingControllerSubTree = transactionControllerSubTree.add(recordingController);
 
+        LOG.info("Extracting test elements");
         List<TestElement> samples = extractAppropriateTestElements(recordingController);
 
+        LOG.info("Placing test elements");
         placeAndProcessTestElements(recordingControllerSubTree, samples);
+        LOG.info("Saving into out stream");
         SaveService.saveTree(hashTree, outStream);
     }
 
@@ -113,7 +122,9 @@ public class JMeterRecorder
             {
                 HTTPSamplerBase http = (HTTPSamplerBase)element;
 
+                LOG.info("Start sampler processing");
                 scriptProcessor.processScenario(http, parent, vars, this);
+                LOG.info("Stop sampler processing");
             }
         }
     }

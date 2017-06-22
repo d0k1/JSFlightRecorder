@@ -1,5 +1,13 @@
 package com.focusit.jsflight.player.configurations;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.focusit.jsflight.player.constants.BrowserType;
+import com.focusit.jsflight.script.ScriptsClassLoaderFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.annotation.Transient;
+
+import javax.annotation.Nullable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -10,16 +18,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
-
-import javax.annotation.Nullable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.annotation.Transient;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.focusit.jsflight.player.constants.BrowserType;
-import com.focusit.jsflight.script.ScriptsClassLoader;
 
 /**
  * Common configuration i.e. everything about player. browser settings, timeout settings
@@ -59,7 +57,7 @@ public class CommonConfiguration
     private long intervalBetweenUiChecksMs;
     @Transient
     @JsonIgnore
-    transient private ScriptsClassLoader scriptClassloader = null;
+    transient private ClassLoader scriptClassloader = null;
     private CharSequence targetBaseUrl;
     private Long maxRequestsPerScenario;
 
@@ -241,17 +239,16 @@ public class CommonConfiguration
         this.formOrDialogXpath = formOrDialogXpath;
     }
 
-    public ScriptsClassLoader getScriptClassloader()
+    public ClassLoader getScriptClassloader()
     {
         scriptClassloaderLock.lock();
         try
         {
             if (scriptClassloader == null)
             {
-                ArrayList<URL> urls = new ArrayList<>();
-                urls.addAll(findClasspathForScripts(System.getProperty("cp")));
-                scriptClassloader = new ScriptsClassLoader(this.getClass().getClassLoader(),
-                        urls.toArray(new URL[urls.size()]));
+                URL[] urls = findClasspathForScripts(System.getProperty("cp")).stream().toArray(URL[]::new);
+                scriptClassloader = ScriptsClassLoaderFactory.createScriptsClassLoader(getClass().getClassLoader(), urls);
+                LOG.info("Urls, used for scripts classloader: {}", (Object) urls);
             }
             return scriptClassloader;
         }

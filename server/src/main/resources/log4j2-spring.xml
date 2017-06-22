@@ -2,11 +2,13 @@
 <Configuration>
     <Properties>
         <Property name="pattern">%-5level | %date{ISO8601} | [%tread] | %logger (%file:%line) - %msg%n</Property>
+        <Property name="logs.dir">.</Property>
+        <Property name="logging.file">server.player.log</Property>
         <Property name="serverFileName">${sys:logs.dir}/${sys:logging.file}</Property>
         <Property name="jmeterFileName">${sys:logs.dir}/server.jmeter.log</Property>
     </Properties>
     <Appenders>
-        <RandomAccessFile name="SERVER_FILE" fileName="${serverFileName}" append="true">
+        <RandomAccessFile name="SERVER_FILE" fileName="${serverFileName}" append="false">
             <PatternLayout pattern="${pattern}"/>
         </RandomAccessFile>
         <RandomAccessFile name="JMETER_FILE" fileName="${jmeterFileName}" append="false">
@@ -19,15 +21,21 @@
 
     <Loggers>
         <!--Log levels sorted ascending by verbosity: OFF/FATAL/ERROR/WARN/INFO/DEBUG/TRACE/ALL-->
-        <Logger name="com.focusit.jsflight" level="INFO">
-            <AppenderRef ref="SERVER_FILE" level="INFO" />
+        <Logger name="com.focusit.jsflight.player" level="info" additivity="false">
+            <AppenderRef ref="SERVER_FILE"/>
+            <AppenderRef ref="STDOUT"/>
         </Logger>
-        <Logger name="com.focusit.jsflight.jmeter" level="INFO">
-            <AppenderRef ref="JMETER_FILE" level="INFO" />
+        <Logger name="com.focusit.jsflight.script" level="info" additivity="false">
+            <AppenderRef ref="SERVER_FILE"/>
+            <AppenderRef ref="STDOUT"/>
+        </Logger>
+        <Logger name="com.focusit.jsflight.jmeter" level="info" additivity="false">
+            <AppenderRef ref="JMETER_FILE"/>
+            <AppenderRef ref="STDOUT"/>
         </Logger>
 
-        <Root level="ERROR">
-            <AppenderRef ref="STDOUT" level="ERROR" />
+        <Root level="error">
+            <AppenderRef ref="STDOUT"/>
         </Root>
     </Loggers>
 </Configuration>

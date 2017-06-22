@@ -117,6 +117,11 @@ public class JMeterScriptProcessor
             return;
         }
         compiledProcessScript.setBinding(binding);
-        compiledProcessScript.run();
+        LOG.info("Run compiled script");
+        try {
+            compiledProcessScript.run();
+        } catch (Throwable throwable) {
+            LOG.error(throwable.getMessage(), throwable);
+        }
     }
 }

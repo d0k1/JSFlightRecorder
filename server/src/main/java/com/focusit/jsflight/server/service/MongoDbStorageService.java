@@ -79,14 +79,19 @@ public class MongoDbStorageService
 
     public void storeJMeterScenario(MongoDbScenario scenario, InputStream stream, int index)
     {
+        LOG.info("Starting to store JMeter scenario");
         DBObject metaData = new BasicDBObject();
         metaData.put("recordingName", scenario.getRecordingName());
         metaData.put("recordingId", scenario.getRecordingId());
         metaData.put("experimentId", scenario.getExperimentId());
         metaData.put("index", index);
+        LOG.info("Metadata construction finished");
 
         String fname = createJmxName(scenario.getScenarioFilename(), scenario.getExperimentId(), index);
+        LOG.info("Name of the scenario in DB: {}", fname);
+        LOG.info("Starting storing");
         getGridFsTemplate().store(stream, fname, "text/xml", metaData);
+        LOG.info("Stored successfully");
     }
 
     public InputStream getJMeterScenario(String recordingName, String experimentId, int index)
