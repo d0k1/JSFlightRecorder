@@ -2,7 +2,7 @@ package com.focusit.jsflight.player.configurations;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.focusit.jsflight.player.constants.BrowserType;
-import com.focusit.jsflight.script.ScriptsClassLoaderFactory;
+import com.focusit.jsflight.script.ScriptsClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.Transient;
@@ -214,15 +214,29 @@ public class CommonConfiguration
     {
         if (getMaxElementGroovy() == null)
         {
-            setMaxElementGroovy(
-                    "def list = webdriver.findElements(org.openqa.selenium.By.xpath(\"//div[@id='gwt-debug-PopupListSelect']//div[@__idx]\"));\n"
-                            + "\n" + "def maxEl = null;\n" + "Integer val = null;\n" + "\n" + "def tempEl = null;\n"
-                            + "def tempVal = 0;\n" + "\n" + "for(int i=0;i<list.size();i++)\n" + "{\n"
-                            + "\ttempEl = list.get(i);\n"
-                            + "\ttempVal = Integer.parseInt(tempEl.getAttribute(\"__idx\"));\n" + "\n"
-                            + "\tif(maxEl==null)\n" + "\t{\n" + "\t\tmaxEl = tempEl;\n" + "\t\tval = tempVal;\n"
-                            + "\t\tcontinue;\n" + "\t}\n" + "\n" + "\tif(val<tempVal){\n" + "\t\tmaxEl = tempEl;\n"
-                            + "\t\tval = tempVal;\n" + "\t}\n" + "}\n" + "\n" + "return maxEl;\n");
+            setMaxElementGroovy("def list = webdriver.findElements(org.openqa.selenium.By.xpath(\"//div[@id='gwt-debug-PopupListSelect']//div[@__idx]\"));\n"
+                    + "\n"
+                    + "def maxEl = null;\n"
+                    + "Integer val = null;\n"
+                    + "\n"
+                    + "def tempEl = null;\n"
+                    + "def tempVal = 0;\n"
+                    + "\n"
+                    + "for(int i=0;i<list.size();i++)\n"
+                    + "{\n"
+                    + "\ttempEl = list.get(i);\n"
+                    + "\ttempVal = Integer.parseInt(tempEl.getAttribute(\"__idx\"));\n"
+                    + "\n"
+                    + "\tif(maxEl==null)\n"
+                    + "\t{\n"
+                    + "\t\tmaxEl = tempEl;\n"
+                    + "\t\tval = tempVal;\n"
+                    + "\t\tcontinue;\n"
+                    + "\t}\n"
+                    + "\n"
+                    + "\tif(val<tempVal){\n"
+                    + "\t\tmaxEl = tempEl;\n"
+                    + "\t\tval = tempVal;\n" + "\t}\n" + "}\n" + "\n" + "return maxEl;\n");
         }
     }
 
@@ -244,8 +258,8 @@ public class CommonConfiguration
             if (scriptClassloader == null)
             {
                 URL[] urls = findClasspathForScripts(System.getProperty("cp"));
-                scriptClassloader = ScriptsClassLoaderFactory.createScriptsClassLoader(getClass().getClassLoader(), urls);
-                LOG.info("Urls, used for scripts classloader: {}", (Object) urls);
+                scriptClassloader = new ScriptsClassLoader(urls, getClass().getClassLoader());
+                LOG.info("Urls, used for scripts classloader: {}", (Object)urls);
             }
             return scriptClassloader;
         }
