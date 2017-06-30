@@ -123,6 +123,9 @@ public class CliConfig implements IConfig
             "--maxRequestsPerScenario" }, description = "The maximum number of requests per one generated JMeter scenario. Default is Long.MAX_VALUE")
     private Long maximumCountOfRequestPerJMeterScenario = DefaultValues.MAX_REQUESTS_PER_SCENARIO;
 
+    @Parameter(names = { "--closeWebDriversOnError" }, description = "Whether to close browsers on error")
+    private Boolean shouldCloseWebDriversOnError = DefaultValues.SHOULD_CLOSE_WEB_DRIVERS_ON_ERROR;
+
     public Boolean shouldShowUsage()
     {
         return help;
@@ -246,6 +249,11 @@ public class CliConfig implements IConfig
     public Long getMaximumCountOfRequestPerJMeterScenario()
     {
         return maximumCountOfRequestPerJMeterScenario;
+    }
+
+    @Override
+    public Boolean shouldCloseWebDriversOnError() {
+        return shouldCloseWebDriversOnError;
     }
 
     @Override

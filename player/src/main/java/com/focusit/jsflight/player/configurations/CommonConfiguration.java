@@ -44,6 +44,8 @@ public class CommonConfiguration
     private String formOrDialogXpath;
     private String maxElementGroovy;
 
+    private boolean shouldCloseWebDriversOnError;
+
     /**
      * Timeout in seconds for UI to appear
      */
@@ -287,5 +289,13 @@ public class CommonConfiguration
     public void setMaxRequestsPerScenario(Long maxRequestsPerScenario)
     {
         this.maxRequestsPerScenario = maxRequestsPerScenario;
+    }
+
+    public boolean shouldCloseWebDriversOnError() {
+        return shouldCloseWebDriversOnError;
+    }
+
+    public void setShouldCloseWebDriversOnError(boolean shouldCloseWebDriversOnError) {
+        this.shouldCloseWebDriversOnError = shouldCloseWebDriversOnError;
     }
 }

@@ -5,7 +5,6 @@ package com.focusit.jsflight.player.cli.config;
  */
 public class PropertiesConstants
 {
-    public static final String BROWSER_EXECUTABLE_PATH = "browser.executable.path";
     public static final String JMETER_TEMPLATE_PATH = "jmeter.template.path";
     public static final String RECORDING_PATH = "recording.path";
 
@@ -41,7 +40,9 @@ public class PropertiesConstants
     public static final String SCREENSHOT_DIRECTORY = "screenshot.directory";
     public static final String MAKE_SCREENSHOTS = "screenshot.make";
 
+    public static final String BROWSER_EXECUTABLE_PATH = "browser.executable.path";
     public static final String BROWSER_TYPE = "browser.type";
+    public static final String SHOULD_CLOSE_WEB_DRIVERS_ON_ERROR = "browser.closeOnPlaybackError";
 
     public static final String RECORDING_ENABLED = "recording.enabled";
     public static final String HEADLESS_ENABLED = "headless.enabled";

@@ -1,20 +1,5 @@
 package com.focusit.jsflight.player.scenario;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.annotation.Nullable;
-
-import org.apache.commons.lang3.StringUtils;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.focusit.jsflight.player.cli.config.IConfig;
 import com.focusit.jsflight.player.configurations.CommonConfiguration;
 import com.focusit.jsflight.player.configurations.Configuration;
@@ -25,6 +10,19 @@ import com.focusit.jsflight.player.input.EventsParser;
 import com.focusit.jsflight.player.input.FileInput;
 import com.focusit.jsflight.player.script.PlayerScriptProcessor;
 import com.focusit.jsflight.script.player.PlayerContext;
+import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Recorded scenario encapsulation: parses file, plays the scenario by step, modifies the scenario, saves to a disk.
@@ -87,6 +85,7 @@ public class UserScenario
         commonConfiguration.setIntervalBetweenUiChecksMs(config.getIntervalBetweenUiChecksInMs());
         commonConfiguration.setTargetBaseUrl(config.getTargetBaseUrl());
         commonConfiguration.setMaxRequestsPerScenario(config.getMaximumCountOfRequestPerJMeterScenario());
+        commonConfiguration.setShouldCloseWebDriversOnError(config.shouldCloseWebDriversOnError());
 
         ScriptsConfiguration scriptsConfiguration = getConfiguration().getScriptsConfiguration();
         scriptsConfiguration.setUrlReplacementScript(readFile(config.getPathToUrlReplacementScript()));

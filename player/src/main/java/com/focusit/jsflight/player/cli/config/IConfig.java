@@ -75,4 +75,6 @@ public interface IConfig
     String getTargetBaseUrl();
 
     Long getMaximumCountOfRequestPerJMeterScenario();
+
+    Boolean shouldCloseWebDriversOnError();
 }

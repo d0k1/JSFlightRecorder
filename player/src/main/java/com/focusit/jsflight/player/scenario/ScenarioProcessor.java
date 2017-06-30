@@ -83,8 +83,8 @@ public class ScenarioProcessor
      * @param theWebDriver
      * @param position
      */
-    protected void makeAShot(UserScenario scenario, SeleniumDriver seleniumDriver, WebDriver theWebDriver, int position,
-            boolean isError)
+    protected void makeAShot(UserScenario scenario, SeleniumDriver seleniumDriver, WebDriver theWebDriver,
+            int position, boolean isError)
     {
         if (scenario.getConfiguration().getCommonConfiguration().getMakeShots())
         {
@@ -115,8 +115,8 @@ public class ScenarioProcessor
         scenario.getContext().setCurrentScenarioStep(event);
 
         ScriptsConfiguration scriptsConfiguration = scenario.getConfiguration().getScriptsConfiguration();
-        String eventUrl = new PlayerScriptProcessor(scenario)
-                .executeUrlReplacementScript(scriptsConfiguration.getUrlReplacementScript(), event);
+        String eventUrl = new PlayerScriptProcessor(scenario).executeUrlReplacementScript(
+                scriptsConfiguration.getUrlReplacementScript(), event);
         event.put(EventConstants.URL, eventUrl);
 
         String type = event.getString(EventConstants.TYPE);
@@ -180,8 +180,8 @@ public class ScenarioProcessor
 
             if (type.equalsIgnoreCase(EventType.SCRIPT))
             {
-                new PlayerScriptProcessor(scenario)
-                        .executeScriptEvent(scriptsConfiguration.getScriptEventHandlerScript(), event);
+                new PlayerScriptProcessor(scenario).executeScriptEvent(
+                        scriptsConfiguration.getScriptEventHandlerScript(), event);
                 return;
             }
 
@@ -298,20 +298,29 @@ public class ScenarioProcessor
         }
 
         int maxPosition = finish > 0 ? Math.min(finish, scenario.getStepsCount()) : scenario.getStepsCount();
-        LOG.info("Playing scenario. Start step: {}, finish step: {}. Steps count: {}", start, maxPosition,
-                maxPosition - start);
-        try {
-            while (scenario.getPosition() != maxPosition) {
+        LOG.info("Playing scenario. Start step: {}, finish step: {}. Steps count: {}", start, maxPosition, maxPosition
+                - start);
+        try
+        {
+            while (scenario.getPosition() != maxPosition)
+            {
                 LOG.info("Step " + scenario.getPosition());
                 applyStep(scenario, seleniumDriver, scenario.getPosition());
                 scenario.moveToNextStep();
             }
             LOG.info(String.format("Done(%d):playing", System.currentTimeMillis() - begin));
-        } catch (Throwable throwable) {
+        }
+        catch (Throwable throwable)
+        {
             LOG.error("Playing interrupted by unhandled exception", throwable);
             throw throwable;
-        } finally {
-            seleniumDriver.closeWebDrivers();
+        }
+        finally
+        {
+            if (scenario.getConfiguration().getCommonConfiguration().shouldCloseWebDriversOnError())
+            {
+                seleniumDriver.closeWebDrivers();
+            }
         }
     }
 }

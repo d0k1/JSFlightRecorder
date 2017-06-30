@@ -26,4 +26,5 @@ public final class DefaultValues {
 
     public static final Integer XVFB_ZERO_DISPLAY = 0;
     public static final Long MAX_REQUESTS_PER_SCENARIO = Long.MAX_VALUE;
+    public static final Boolean SHOULD_CLOSE_WEB_DRIVERS_ON_ERROR = true;
 }
