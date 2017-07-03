@@ -25,27 +25,35 @@ echo "Version: ${VERSION}"
 echo "Tag: ${TAG}"
 echo "New development version: ${NEW_DEV_VERSION}"
 
+remotes=( $(git remote) )
+if [[ ${#remotes[@]} != 1 ]]; then
+    echo "Which remote you want to use?"
+    select remote_name in ${remotes[@]}; do
+        if [[ ! -z ${remote_name} ]]; then
+            break
+        fi
+    done
+fi
+
 mvn -B versions:set -DnewVersion="${VERSION}" -DgenerateBackupPoms=false
 current_hash="$( git rev-parse HEAD )"
 git commit -am "Version ${VERSION}"
 git tag -a ${TAG} -m "Version ${VERSION}"
-git push origin ${TAG}
+git push ${remote_name} ${TAG}
 git reset --hard "${current_hash}"
 
 mvn -B versions:set -DnewVersion="${NEW_DEV_VERSION}" -DgenerateBackupPoms=false
 git commit -am "New development version: ${NEW_DEV_VERSION}"
 
 push_changes() {
-    echo "Which remote you want to use?"
-    remotes=( $(git remote) )
-    select remote_name in ${remotes[@]}; do
-        if [ ! -z "${remote_name}" ]; then
-            branch_name=$( git branch | grep '*' | cut -d' ' -f 2 )
-            read -p "Which branch to use (default: ${branch_name}): " TMP
-            if [ ! -z "${TMP}" ]; then
-                branch_name="${TMP}"
-            fi
-            git push ${remote_name} ${branch_name}
+    branch_name=$( git branch | grep '*' | cut -d' ' -f 2 )
+    read -p "Which branch to use (default: ${branch_name}): " TMP
+    if [ ! -z "${TMP}" ]; then
+        branch_name="${TMP}"
+    fi
+    while true; do
+        git push ${remote_name} ${branch_name}
+        if [[ $? == 0 ]]; then
             break
         fi
     done
