@@ -1,14 +1,12 @@
 package com.focusit.jsflight.player.script;
 
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.annotation.Nullable;
-
+import com.focusit.jsflight.player.constants.EventConstants;
+import com.focusit.jsflight.player.scenario.UserScenario;
+import com.focusit.jsflight.player.webdriver.SeleniumDriver;
+import com.focusit.jsflight.script.ScriptEngine;
+import com.focusit.jsflight.script.constants.ScriptBindingConstants;
+import groovy.lang.Binding;
+import groovy.lang.Script;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
@@ -18,16 +16,13 @@ import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.focusit.jsflight.player.constants.EventConstants;
-import com.focusit.jsflight.player.scenario.UserScenario;
-import com.focusit.jsflight.player.webdriver.SeleniumDriver;
-import com.focusit.jsflight.script.ScriptEngine;
-import com.focusit.jsflight.script.constants.ScriptBindingConstants;
-
-import groovy.lang.Binding;
-import groovy.lang.GroovyClassLoader;
-import groovy.lang.Script;
-import groovy.text.GStringTemplateEngine;
+import javax.annotation.Nullable;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * PlayerScriptProcessor that runs groovy scripts or GString templates
@@ -36,13 +31,10 @@ import groovy.text.GStringTemplateEngine;
  */
 public class PlayerScriptProcessor
 {
-    private static final GStringTemplateEngine templateEngine = new GStringTemplateEngine(
-            new GroovyClassLoader(ScriptEngine.getClassLoader()));
     private static final Logger LOG = LoggerFactory.getLogger(PlayerScriptProcessor.class);
 
     static
     {
-        System.setProperty("groovy.GStringTemplateEngine.reuseClassLoader", "true");
         Velocity.init();
     }
 
@@ -109,7 +101,7 @@ public class PlayerScriptProcessor
         }
         catch (Throwable e)
         {
-            LOG.warn("Failed to create duplicateHandler script. Default value is false", e);
+            LOG.warn("duplicateHandler script execution failed. Default value is false", e);
             return false;
         }
     }
@@ -133,14 +125,7 @@ public class PlayerScriptProcessor
         Map<String, Object> binding = getEmptyBindingsMap();
         binding.put(ScriptBindingConstants.EVENTS, events);
 
-        try
-        {
-            executeGroovyScript(script, binding);
-        }
-        catch (Throwable e)
-        {
-            LOG.error(e.getMessage(), e);
-        }
+        executeGroovyScript(script, binding);
     }
 
     public void runStepPrePostScript(JSONObject event, int step, boolean pre)
@@ -159,13 +144,7 @@ public class PlayerScriptProcessor
         binding.put(ScriptBindingConstants.PRE, pre);
         binding.put(ScriptBindingConstants.POST, !pre);
 
-        try
-        {
-            executeGroovyScript(script, binding);
-        }
-        catch (Throwable ignored)
-        {
-        }
+        executeGroovyScript(script, binding);
     }
 
     public JSONObject runStepTemplating(UserScenario scenario, JSONObject step)
@@ -250,6 +229,11 @@ public class PlayerScriptProcessor
         {
             LOG.error(ex.getMessage(), ex);
             return null;
+        }
+        catch (Throwable ex)
+        {
+            LOG.error("Script execution failed", ex);
+            throw ex;
         }
     }
 

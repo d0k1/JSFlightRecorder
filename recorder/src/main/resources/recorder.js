@@ -22,16 +22,17 @@ function unbind(el, eventType, handler) {
     if (el.removeEventListener) {
         el.removeEventListener(eventType, handler, false);
     } else if (el.detachEvent) {
-        el.detachEvent("on" + eventType, handler);
+        el.detachEvent('on' + eventType, handler);
     } else {
-        el["on" + eventType] = null;
+        el['on' + eventType] = null;
     }
 }
 
-addEventListeners = function(window, document) {
+function addEventListeners(window, document) {
     bind(document, 'click', jsflight.TrackMouse);
     bind(document, 'mousedown', jsflight.TrackMouse);
     bind(document, 'mousemove', jsflight.TrackMouse);
+    bind(document, 'mouseup', jsflight.TrackMouse);
     bind(document, 'mousewheel', jsflight.TrackMouse);
     bind(document, 'scroll', jsflight.TrackMouse);
     bind(document, 'keypress', jsflight.TrackKeyboard);
@@ -41,7 +42,7 @@ addEventListeners = function(window, document) {
     bind(window, 'hashchange', jsflight.TrackHash);
 }
 
-removeEventListeners = function(window, document) {
+function removeEventListeners(window, document) {
     unbind(document, 'click', jsflight.TrackMouse);
     unbind(document, 'mousedown', jsflight.TrackMouse);
     unbind(document, 'mousemove', jsflight.TrackMouse);
@@ -55,26 +56,26 @@ removeEventListeners = function(window, document) {
 
 function getXpathToIFrame(iframe) {
     if (iframe.id) {
-        return "//iframe[@id='" + iframe.id + "']";
+        return '//iframe[@id=\'' + iframe.id + '\']';
     }
     if (iframe.name) {
-        return "//iframe[@name='" + iframe.name + "']";
+        return '//iframe[@name=\'' + iframe.name + '\']';
     }
     if (iframe.title) {
-        return "//iframe[@title='" + iframe.title + "']";
+        return '//iframe[@title=\'' + iframe.title + '\']';
     }
     return Xpath.getElementXPath(iframe);
 }
 
 function findFrameLocalIndex(win) {
     win = win || window; // Assume self by default
-    if (win.parent != win) {
+    if (win.parent !== win) {
         for (var i = 0; i < win.parent.frames.length; i++) {
-            if (win.parent.frames[i] == win) {
+            if (win.parent.frames[i] === win) {
                 return i;
             }
         }
-        throw Error("In a frame, but could not find myself");
+        throw Error('In a frame, but could not find myself');
     } else {
         return -1;
     }
@@ -83,9 +84,9 @@ function findFrameLocalIndex(win) {
 function findFrameFullIndex(win) {
      win = win || window; // Assume self by default
      if (findFrameLocalIndex(win) < 0) {
-         return "";
+         return '';
      } else {
-         return findFrameFullIndex(win.parent) + "." + findFrameLocalIndex(win);
+         return findFrameFullIndex(win.parent) + '.' + findFrameLocalIndex(win);
      }
 }
 
@@ -102,7 +103,7 @@ function getDescendantWindows(window) {
         var windows = currentWindow.frames;
         for (var i = 0; i < windows.length; i++) {
             var iframeWindow = windows[i];
-            iframeWindow.xpath = (currentWindow.xpath ? currentWindow.xpath + "||" : "") +
+            iframeWindow.xpath = (currentWindow.xpath ? currentWindow.xpath + '||' : '') +
                 getXpathToIFrame(iframeWindow.frameElement);
             iframeWindow.iframeIndices = findFrameFullIndex(iframeWindow).substring(1);
             queue.push(iframeWindow);
@@ -119,7 +120,7 @@ jsflight.bindAllHandlers = function() {
         var win = windows[i];
         addEventListeners(win, win.document);
     }
-}
+};
 
 jsflight.unbindAllHandlers = function() {
     var windows = getDescendantWindows(window || document.defaultView);
@@ -127,12 +128,12 @@ jsflight.unbindAllHandlers = function() {
         var win = windows[i];
         removeEventListeners(win, win.document);
     }
-}
+};
 
 jsflight.rebindAllHandlers = function() {
     jsflight.unbindAllHandlers();
     jsflight.bindAllHandlers();
-}
+};
 
 /**
  * Start recorder
@@ -174,7 +175,7 @@ jsflight.stopRecorder = function() {
 
     jsflight.unbindAllHandlers();
 
-    if (typeof (window.sessionStorage) == "undefined") {
+    if (typeof (window.sessionStorage) === 'undefined') {
         console.log('No support of window.sessionStorage');
         return false;
     }
@@ -200,7 +201,7 @@ jsflight.shouldStartOnLoad = function() {
         return true;
     }
 
-    if (typeof (window.sessionStorage) == "undefined") {
+    if (typeof (window.sessionStorage) === 'undefined') {
         console.log('No support of window.sessionStorage');
         return false;
     }
@@ -230,7 +231,7 @@ jsflight.addJSFlightHooksOnDocumentLoad = function(options) {
     }
 
     // when document is rendered
-    window.onload = function() {
+    bind(window, 'load', function() {
 
         if(jsflight.options.saveInitialScreenshot || jsflight.options.saveInitialDom){
             window.setTimeout(200, initialDump());            
@@ -240,16 +241,16 @@ jsflight.addJSFlightHooksOnDocumentLoad = function(options) {
         }
 
         jsflight.addControlHook();
-    };
+    });
 
     // when tab is above to close
-    window.onbeforeunload = function() {
+    bind(window, 'beforeunload', function() {
         jsflight.stopTimers();
         // disable all event handlers
         jsflight.removeControlHook();
         // send captured events
         jsflight.sendEventData(true);
-    };
+    });
 };
 
 jsflight.startTimers = function() {
@@ -280,7 +281,7 @@ jsflight.take_a_screenshot = function() {
     html2canvas(document.body, {
         onrendered : function(canvas) {
             try {
-                event.image = canvas.toDataURL("image/png");
+                event.image = canvas.toDataURL('image/png');
                 event.type = 'screenshot';
                 event.timeStamp = Date.now();
                 event.eventId = jsflight.eventId;

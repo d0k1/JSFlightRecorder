@@ -139,7 +139,7 @@ public class ScenarioProcessor
         LOG.info("Current step eventId " + event.get(EventConstants.EVENT_ID).toString() + " URL: {}",
                 event.get(EventConstants.URL));
 
-        WebDriver theWebDriver = null;
+        WebDriver webDriver = null;
         boolean error = false;
         CommonConfiguration commonConfiguration = scenario.getConfiguration().getCommonConfiguration();
         try
@@ -205,18 +205,18 @@ public class ScenarioProcessor
                     .setGetWebDriverPidScript(scriptsConfiguration.getGetWebDriverPidScript())
                     .setKeepBrowserXpath(commonConfiguration.getFormOrDialogXpath());
 
-            theWebDriver = getWebDriver(scenario, seleniumDriver, event);
-            if (theWebDriver == null)
+            webDriver = getWebDriver(scenario, seleniumDriver, event);
+            if (webDriver == null)
             {
                 throw new NullPointerException("getWebDriver return null");
             }
-            seleniumDriver.openEventUrl(theWebDriver, event);
+            seleniumDriver.openEventUrl(webDriver, event);
 
-            LOG.info("Event {}. Display {}", position, seleniumDriver.getDriverDisplay(theWebDriver));
+            LOG.info("Event {}. Display {}", position, seleniumDriver.getDriverDisplay(webDriver));
 
-            seleniumDriver.waitWhileAsyncRequestsWillCompletedWithRefresh(theWebDriver, event);
+            seleniumDriver.waitWhileAsyncRequestsWillCompletedWithRefresh(webDriver, event);
 
-            FrameSwitcher.switchToWorkingFrame(theWebDriver, event);
+            FrameSwitcher.switchToWorkingFrame(webDriver, event);
 
             try
             {
@@ -225,30 +225,30 @@ public class ScenarioProcessor
                 switch (type)
                 {
                 case EventType.MOUSE_WHEEL:
-                    seleniumDriver.processMouseWheel(theWebDriver, event, target);
+                    seleniumDriver.processMouseWheel(webDriver, event, target);
                     break;
                 case EventType.SCROLL_EMULATION:
-                    seleniumDriver.processScroll(theWebDriver, event, target);
+                    seleniumDriver.processScroll(webDriver, event, target);
                     break;
                 case EventType.MOUSE_DOWN:
                 case EventType.CLICK:
-                    seleniumDriver.processMouseEvent(theWebDriver, event);
+                    seleniumDriver.processMouseEvent(webDriver, event);
                     break;
                 case EventType.KEY_UP:
                 case EventType.KEY_DOWN:
-                    seleniumDriver.processKeyDownKeyUpEvents(theWebDriver, event);
+                    seleniumDriver.processKeyDownKeyUpEvents(webDriver, event);
                     break;
                 case EventType.KEY_PRESS:
-                    seleniumDriver.processKeyPressEvent(theWebDriver, event);
+                    seleniumDriver.processKeyPressEvent(webDriver, event);
                     break;
                 default:
                     break;
                 }
 
-                seleniumDriver.waitWhileAsyncRequestsWillCompletedWithRefresh(theWebDriver, event);
-                new PlayerScriptProcessor(scenario).doWaitAfterEvent(seleniumDriver, theWebDriver, event);
+                seleniumDriver.waitWhileAsyncRequestsWillCompletedWithRefresh(webDriver, event);
+                new PlayerScriptProcessor(scenario).doWaitAfterEvent(seleniumDriver, webDriver, event);
 
-                throwIfBrowserHaveAnError(scenario, theWebDriver);
+                throwIfBrowserHaveAnError(scenario, webDriver);
             }
             catch (Exception e)
             {
@@ -264,15 +264,15 @@ public class ScenarioProcessor
         finally
         {
             //webdriver can stay null if event is ignored or bad, thus can`t be postprocessed
-            if (theWebDriver != null)
+            if (webDriver != null)
             {
                 if (!error)
                 {
                     scenario.updateEvent(event);
                     new PlayerScriptProcessor(scenario).runStepPrePostScript(event, position, false);
                 }
-                makeAShot(scenario, seleniumDriver, theWebDriver, position, error);
-                seleniumDriver.releaseBrowser(theWebDriver, event);
+                makeAShot(scenario, seleniumDriver, webDriver, position, error);
+                seleniumDriver.releaseBrowser(webDriver, event);
             }
             else
             {
@@ -304,6 +304,7 @@ public class ScenarioProcessor
         {
             while (scenario.getPosition() != maxPosition)
             {
+                LOG.info("=========================================================================================");
                 LOG.info("Step " + scenario.getPosition());
                 applyStep(scenario, seleniumDriver, scenario.getPosition());
                 scenario.moveToNextStep();

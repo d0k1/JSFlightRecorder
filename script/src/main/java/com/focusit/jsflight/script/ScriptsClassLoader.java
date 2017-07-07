@@ -13,6 +13,8 @@ public class ScriptsClassLoader extends URLClassLoader
     {
         super(Arrays.stream(urls)
                 .filter(url -> !url.getPath().contains("groovy"))
+                .filter(url -> !url.getPath().contains("log4j"))
+                .filter(url -> !url.getPath().contains("slf4j"))
                 .toArray(URL[]::new), parent);
     }
 

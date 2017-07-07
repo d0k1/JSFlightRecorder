@@ -12,6 +12,7 @@ public final class EventType
     public static final String KEY_UP = "keyup";
     public static final String KEY_DOWN = "keydown";
     public static final String MOUSE_DOWN = "mousedown";
+    public static final String MOUSE_UP = "mouseup";
     public static final String XHR = "xhr";
     public static final String KEY_PRESS = "keypress";
     public static final String HASH_CHANGE = "hashchange";

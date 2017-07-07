@@ -347,7 +347,7 @@ public class LocatedElement implements WebElement, WrapsElement, Locatable
             {
                 throw e;
             }
-            LOG.warn(e.toString(), e);
+            LOG.warn("Click via interface failed. Clicking using JavaScript");
             ((JavascriptExecutor)driver).executeScript("arguments[0].click()", delegate);
         }
     }
