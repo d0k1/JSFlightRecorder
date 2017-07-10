@@ -84,7 +84,7 @@ public class KeyPressEventHandler extends BaseEventHandler {
 
     private boolean isNoOp(JSONObject event, WebElement element)
     {
-        if (element.equals(NO_OP_ELEMENT))
+        if (NO_OP_ELEMENT.equals(element))
         {
             LOG.warn("Non operational element returned. Aborting event {} processing. Target xpath {}",
                     event.get(EventConstants.EVENT_ID), event.getString(EventConstants.SECOND_TARGET));

@@ -20,7 +20,7 @@ class WebDriverSpec extends BaseSpec {
     JSONObject event
 
     def setup() {
-        seleniumDriver = new SeleniumDriver(new UserScenario())
+        seleniumDriver = new SeleniumDriver(new UserScenario().getContext())
         def scriptsConfiguration = new ScriptsConfiguration();
         scriptsConfiguration.loadDefaults()
         seleniumDriver.setGetWebDriverPidScript(scriptsConfiguration.getGetWebDriverPidScript())

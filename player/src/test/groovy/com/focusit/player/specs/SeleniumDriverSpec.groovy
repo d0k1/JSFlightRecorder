@@ -18,7 +18,7 @@ class SeleniumDriverSpec extends BaseSpec {
 
     def setup() {
         ScriptEngine.init(ClassLoader.getSystemClassLoader())
-        sd = new SeleniumDriver(new UserScenario())
+        sd = new SeleniumDriver(new UserScenario().getContext())
         sd.setKeepBrowserXpath(keepBrowserXpath)
         sd.setGetWebDriverPidScript('"echo 1".execute().text')
         sd.setSendSignalToProcessScript("println()")
@@ -64,49 +64,6 @@ class SeleniumDriverSpec extends BaseSpec {
         1 * webDriver.getWindowHandle() >> "handle"
         1 * locator.window(_)
         1 * webDriver.quit()
-    }
-
-    def "processKeyPress must work with CHAR_CODE field of an event"() {
-        given:
-        JSONObject event = getSimpleEvent()
-        event.put(EventConstants.TYPE, "keypress")
-        event.put(EventConstants.CHAR_CODE, 48.0)
-        event.put(EventConstants.URL, "url")
-        WebDriver wd = getWd(event)
-        WebElement element = Mock(WebElement)
-        when:
-        sd.processKeyPressEvent(wd, event)
-        then:
-        1 * wd.findElement(_) >> element
-        1 * element.sendKeys('0')
-    }
-
-    def "processKeyPress must work with CHAR field of an event"() {
-        given:
-        JSONObject event = getSimpleEvent()
-        event.put(EventConstants.TYPE, "keypress")
-        event.put(EventConstants.CHAR, '0')
-        event.put(EventConstants.URL, "url")
-        WebDriver wd = getWd(event)
-        WebElement element = Mock(WebElement)
-        when:
-        sd.processKeyPressEvent(wd, event)
-        then:
-        1 * wd.findElement(_) >> element
-        1 * element.sendKeys('0')
-    }
-
-    def "processKeyPress throws exception if event has neither CHAR nor CHAR_COD"() {
-        given:
-        JSONObject event = getSimpleEvent()
-        event.put(EventConstants.TYPE, "keypress")
-        event.put(EventConstants.URL, "url")
-        WebDriver wd = getWd(event)
-        when:
-        sd.processKeyPressEvent(wd, event)
-        then:
-        1 * wd.findElement(_) >> Mock(WebElement)
-        thrown(IllegalStateException)
     }
 
     JSONObject getSimpleEvent() {

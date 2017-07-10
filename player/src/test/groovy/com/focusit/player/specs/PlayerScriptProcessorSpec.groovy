@@ -16,7 +16,7 @@ class PlayerScriptProcessorSpec extends BaseSpec {
     def setup() {
         ScriptEngine.init(ClassLoader.getSystemClassLoader())
         scenario = new UserScenario();
-        proc = new PlayerScriptProcessor(scenario);
+        proc = new PlayerScriptProcessor(scenario.getContext());
     }
 
     def "every step field could be evaluated by template engine"() {

@@ -297,8 +297,8 @@ public class ScenarioProcessor
 
     public ScenarioProcessor(UserScenario scenario, SeleniumDriver seleniumDriver)
     {
-        scenario = scenario;
-        seleniumDriver = seleniumDriver;
+        this.scenario = scenario;
+        this.seleniumDriver = seleniumDriver;
     }
 
     public void play()
